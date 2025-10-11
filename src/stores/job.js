@@ -219,4 +219,20 @@ export const useJobStore = defineStore('job', () => {
     loadJobFromGerbers,
     resetExtrusionTiming
   }
+}, {
+  persist: {
+    paths: [
+      'dispenseDegrees',
+      'retractionDegrees',
+      'dwellMilliseconds',
+      'boardSide',
+      'planeA',
+      'planeB',
+      'planeC',
+      'planeD',
+      'tipXoffset',
+      'tipYoffset',
+      'roughBoardPosition'
+    ]
+  }
 })

@@ -457,4 +457,8 @@ export const useSerialStore = defineStore('serial', () => {
     delay,
     download
   }
+}, {
+  persist: {
+    paths: ['autoConnect']
+  }
 })

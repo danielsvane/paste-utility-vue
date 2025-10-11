@@ -2,11 +2,13 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useSerialStore } from './serial'
 
-export const useControlsStore = defineStore('controls', () => {
-  const serialStore = useSerialStore()
+export const useControlsStore = defineStore(
+  'controls',
+  () => {
+    const serialStore = useSerialStore()
 
-  // State
-  const jogDistance = ref(2) // Default to 1mm (value 2)
+    // State
+    const jogDistance = ref(2) // Default to 1mm (value 2)
 
   // Computed
   const jogDistanceLabel = computed(() => {
@@ -63,21 +65,27 @@ export const useControlsStore = defineStore('controls', () => {
     serialStore.send(['G91', 'G0 B2', 'G90'])
   }
 
-  return {
-    // State
-    jogDistance,
+    return {
+      // State
+      jogDistance,
 
-    // Computed
-    jogDistanceLabel,
+      // Computed
+      jogDistanceLabel,
 
-    // Actions
-    jogYPlus,
-    jogYMinus,
-    jogXPlus,
-    jogXMinus,
-    jogZPlus,
-    jogZMinus,
-    extrude,
-    retract
+      // Actions
+      jogYPlus,
+      jogYMinus,
+      jogXPlus,
+      jogXMinus,
+      jogZPlus,
+      jogZMinus,
+      extrude,
+      retract
+    }
+  },
+  {
+    persist: {
+      paths: ['jogDistance']
+    }
   }
-})
+)
