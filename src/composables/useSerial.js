@@ -79,8 +79,8 @@ export function useSerial(modal) {
     isConnected.value = true
 
     // Send boot commands
-    send(bootCommands)
-    send(['M150 P255 R255 U255 B255'])
+    await send(bootCommands)
+    await send(['M150 P255 R255 U255 B255'])
 
     return true
   }
@@ -154,7 +154,7 @@ export function useSerial(modal) {
               break
             }
 
-            if (firstElement = 'echo:busy: processing') {
+            if (firstElement == 'echo:busy: processing') {
               clearTimeout(timeoutID)
               setOkRespTimeout()
             }
