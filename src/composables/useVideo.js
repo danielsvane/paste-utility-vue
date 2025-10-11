@@ -3,8 +3,9 @@ import { ref } from 'vue'
 export function useVideo(cv) {
   const video = ref(null)
   const canvas = ref(null)
-  const frame = ref(null)
-  const cvFrame = ref(null)
+  // Don't use refs for Mat objects - OpenCV can't work with Vue's reactive wrappers
+  let frame = null
+  let cvFrame = null
   const displayCv = ref(false)
   let cvDisplayTimer = null
   let processTimer = null
@@ -50,7 +51,17 @@ export function useVideo(cv) {
 
     await video.value.play()
 
-    frame.value = new cv.Mat(video.value.videoHeight, video.value.videoWidth, cv.CV_8UC4)
+    // Clean up existing frames if they exist
+    if (frame) {
+      frame.delete()
+      frame = null
+    }
+    if (cvFrame) {
+      cvFrame.delete()
+      cvFrame = null
+    }
+
+    frame = new cv.Mat(video.value.videoHeight, video.value.videoWidth, cv.CV_8UC4)
 
     videoTick()
   }
@@ -92,10 +103,10 @@ export function useVideo(cv) {
   function CVdetectCircle() {
     try {
       // Clone frame to cvFrame
-      cvFrame.value = frame.value.clone()
+      cvFrame = frame.clone()
 
       let gray = new cv.Mat()
-      cv.cvtColor(cvFrame.value, gray, cv.COLOR_RGBA2GRAY)
+      cv.cvtColor(cvFrame, gray, cv.COLOR_RGBA2GRAY)
       cv.GaussianBlur(gray, gray, new cv.Size(9, 9), 2, 2)
       let circles = new cv.Mat()
 
@@ -110,14 +121,16 @@ export function useVideo(cv) {
         bestCircle = [x, y, radius]
 
         // Draw that circle
-        cv.circle(cvFrame.value, new cv.Point(x, y), 3, new cv.Scalar(0, 255, 0, 255), -1)
-        cv.circle(cvFrame.value, new cv.Point(x, y), radius, new cv.Scalar(255, 0, 0, 255), 3)
+        cv.circle(cvFrame, new cv.Point(x, y), 3, new cv.Scalar(0, 255, 0, 255), -1)
+        cv.circle(cvFrame, new cv.Point(x, y), radius, new cv.Scalar(255, 0, 0, 255), 3)
       }
 
       gray.delete()
       circles.delete()
 
-      addReticle(cvFrame.value)
+      const frameWithReticle = addReticle(cvFrame)
+      cvFrame.delete()
+      cvFrame = frameWithReticle
 
       return bestCircle
     } catch (error) {
@@ -132,18 +145,19 @@ export function useVideo(cv) {
     context.drawImage(video.value, 0, 0, video.value.videoWidth, video.value.videoHeight)
     const imageData = context.getImageData(0, 0, video.value.videoWidth, video.value.videoHeight)
     const tempMat = cv.matFromImageData(imageData)
-    tempMat.copyTo(frame.value)
+    tempMat.copyTo(frame)
     tempMat.delete()
-    cv.flip(frame.value, frame.value, -1)
+    cv.flip(frame, frame, -1)
   }
 
   function videoTick() {
     if (displayCv.value) {
-      showFrame(cvFrame.value)
+      showFrame(cvFrame)
     } else {
       loadNewFrame()
-      frame.value = addReticle(frame.value)
-      showFrame(frame.value)
+      const frameWithReticle = addReticle(frame)
+      showFrame(frameWithReticle)
+      frameWithReticle.delete()
     }
 
     // Set next frame to fire
@@ -160,9 +174,9 @@ export function useVideo(cv) {
 
     processTimer = setTimeout(() => {
       displayCv.value = false
-      if (cvFrame.value) {
-        cvFrame.value.delete()
-        cvFrame.value = null
+      if (cvFrame) {
+        cvFrame.delete()
+        cvFrame = null
       }
       processTimer = null
     }, time)
@@ -174,9 +188,9 @@ export function useVideo(cv) {
       processTimer = null
     }
 
-    if (cvFrame.value) {
-      cvFrame.value.delete()
-      cvFrame.value = null
+    if (cvFrame) {
+      cvFrame.delete()
+      cvFrame = null
     }
 
     if (video.value && video.value.srcObject) {
@@ -185,9 +199,9 @@ export function useVideo(cv) {
       video.value = null
     }
 
-    if (frame.value) {
-      frame.value.delete()
-      frame.value = null
+    if (frame) {
+      frame.delete()
+      frame = null
     }
 
     if (canvas.value) {
