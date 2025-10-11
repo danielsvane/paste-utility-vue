@@ -1,13 +1,35 @@
+import cvPromise from '@techstark/opencv-js'
+
+let cvInstance = null
+
 export function getOpenCV() {
-  return cv // 'cv' is the global object created by opencv.js
+  return cvInstance
 }
 
-export function onOpenCVReady(callback) {
-  if (window.cv) {
-    window.cv.then(resolvedCv => callback(resolvedCv))
-  } else {
-    window.onOpenCVReady = () => {
-      window.cv.then(resolvedCv => callback(resolvedCv))
+export function logOpenCVVersion(cv) {
+  try {
+    const buildInfo = cv.getBuildInformation()
+    console.log('=== OpenCV.js Build Information ===')
+    console.log(buildInfo)
+    console.log('===================================')
+
+    // Try to extract just the version number for easy reference
+    const versionMatch = buildInfo.match(/General configuration for OpenCV ([\d.]+)/)
+    if (versionMatch) {
+      console.log(`OpenCV Version: ${versionMatch[1]}`)
     }
+  } catch (error) {
+    console.warn('Could not retrieve OpenCV build information:', error)
+  }
+}
+
+export async function onOpenCVReady(callback) {
+  // @techstark/opencv-js exports a promise that resolves when cv is ready
+  try {
+    const cv = await cvPromise
+    cvInstance = cv
+    callback(cv)
+  } catch (error) {
+    console.error('Failed to load OpenCV:', error)
   }
 }

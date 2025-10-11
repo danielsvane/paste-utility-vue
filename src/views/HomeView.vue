@@ -57,7 +57,7 @@
 
 <script setup>
 import { ref, onMounted, inject } from 'vue'
-import { onOpenCVReady } from '../composables/useOpenCV'
+import { onOpenCVReady, logOpenCVVersion } from '../composables/useOpenCV'
 import { useSerial } from '../composables/useSerial'
 import { useVideo } from '../composables/useVideo'
 import JobControls from '../components/JobControls.vue'
@@ -76,6 +76,9 @@ onMounted(() => {
   onOpenCVReady(async resolvedCv => {
     cv = resolvedCv
     console.log('OpenCV loaded')
+
+    // Log OpenCV version and build information
+    logOpenCVVersion(cv)
 
     // Initialize video manager
     videoComposable = useVideo(cv)
