@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-gray-700 rounded-lg p-6">
+  <div v-if="serialStore.isConnected" class="bg-gray-700 rounded-lg p-6">
     <h2 class="text-2xl font-medium text-white mb-4">Calibration</h2>
 
     <div class="space-y-3">
@@ -61,8 +61,10 @@
 <script setup>
 import { computed } from 'vue'
 import { useJobStore } from '../stores/job'
+import { useSerialStore } from '../stores/serial'
 
 const jobStore = useJobStore()
+const serialStore = useSerialStore()
 
 // Computed properties for calibration status
 const hasNozzleOffset = computed(() => {

@@ -1,6 +1,7 @@
+import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-export function useSerial(modal) {
+export const useSerialStore = defineStore('serial', () => {
   const encoder = new TextEncoder()
   const decoder = new TextDecoder()
   const port = ref(null)
@@ -16,6 +17,7 @@ export function useSerial(modal) {
 
   const okRespTimeout = ref(false)
   let timeoutID = undefined
+  let modalRef = null
 
   const bootCommands = [
     'G90',
@@ -31,6 +33,10 @@ export function useSerial(modal) {
     'M260 S1',
     'G0 F35000'
   ]
+
+  function setModal(modal) {
+    modalRef = modal
+  }
 
   function appendToConsole(message, direction) {
     const timestamp = new Date().toISOString()
@@ -53,7 +59,7 @@ export function useSerial(modal) {
 
   async function connect() {
     if (!navigator.serial) {
-      modal.show(
+      modalRef?.show(
         'Browser Support',
         "Please use a browser that supports WebSerial, like Chrome, Opera, or Edge. <a href='https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API#browser_compatibility'>Supported Browsers."
       )
@@ -129,7 +135,10 @@ export function useSerial(modal) {
     })
   }
 
-  async function send(commandArray) {
+  async function send(commands) {
+    // Accept either a string or array
+    const commandArray = Array.isArray(commands) ? commands : [commands]
+
     console.log('sending: ', commandArray)
 
     if (port.value?.writable) {
@@ -168,7 +177,7 @@ export function useSerial(modal) {
         writer.releaseLock()
       }
     } else {
-      modal.show('Cannot Write', 'Cannot write to port. Have you connected?')
+      modalRef?.show('Cannot Write', 'Cannot write to port. Have you connected?')
     }
   }
 
@@ -176,12 +185,12 @@ export function useSerial(modal) {
     // Adding current command to buffer for up arrow access later
     sentCommandBuffer.value.splice(1, 0, command)
     sentCommandBufferIndex.value = 0
-    send([command])
+    send(command)
   }
 
   async function readLeftVac() {
     if (!port.value?.writable) {
-      modal.show('Cannot Write', 'Cannot write to port. Have you connected?')
+      modalRef?.show('Cannot Write', 'Cannot write to port. Have you connected?')
       return false
     }
 
@@ -247,7 +256,7 @@ export function useSerial(modal) {
       result = result - 2 ** 24
     }
 
-    await modal.show('Left Vacuum Sensor Value', result)
+    await modalRef?.show('Left Vacuum Sensor Value', result)
     clearInspectBuffer()
   }
 
@@ -270,6 +279,7 @@ export function useSerial(modal) {
   }
 
   return {
+    // State
     port,
     isConnected,
     consoleMessages,
@@ -277,6 +287,9 @@ export function useSerial(modal) {
     inspectBuffer,
     sentCommandBuffer,
     sentCommandBufferIndex,
+
+    // Methods
+    setModal,
     connect,
     send,
     sendRepl,
@@ -288,4 +301,4 @@ export function useSerial(modal) {
     delay,
     download
   }
-}
+})

@@ -20,18 +20,18 @@
       </select>
       <button
         @click="handleConnect"
-        :disabled="isConnected"
+        :disabled="serialStore.isConnected"
         :class="[
           'px-6 py-2 rounded font-medium',
-          isConnected
+          serialStore.isConnected
             ? 'bg-green-600 text-white cursor-not-allowed'
             : 'text-white'
         ]"
-        :style="!isConnected ? { backgroundColor: 'var(--color-goldenrod)' } : {}"
-        @mouseenter="e => !isConnected && (e.target.style.backgroundColor = 'var(--color-goldenrod-dark)')"
-        @mouseleave="e => !isConnected && (e.target.style.backgroundColor = 'var(--color-goldenrod)')"
+        :style="!serialStore.isConnected ? { backgroundColor: 'var(--color-goldenrod)' } : {}"
+        @mouseenter="e => !serialStore.isConnected && (e.target.style.backgroundColor = 'var(--color-goldenrod-dark)')"
+        @mouseleave="e => !serialStore.isConnected && (e.target.style.backgroundColor = 'var(--color-goldenrod)')"
       >
-        {{ isConnected ? 'Connected' : 'Connect' }}
+        {{ serialStore.isConnected ? 'Connected' : 'Connect' }}
       </button>
     </div>
 
@@ -58,7 +58,7 @@
 <script setup>
 import { ref, onMounted, inject } from 'vue'
 import { onOpenCVReady, logOpenCVVersion } from '../composables/useOpenCV'
-import { useSerial } from '../composables/useSerial'
+import { useSerialStore } from '../stores/serial'
 import { useVideo } from '../composables/useVideo'
 import JobControls from '../components/JobControls.vue'
 import VideoControls from '../components/VideoControls.vue'
@@ -66,10 +66,10 @@ import VideoControls from '../components/VideoControls.vue'
 const modalRef = inject('modal')
 const cameras = ref([])
 const selectedCamera = ref(null)
-const isConnected = ref(false)
+
+const serialStore = useSerialStore()
 
 let cv = null
-let serialComposable = null
 let videoComposable = null
 
 onMounted(() => {
@@ -93,19 +93,18 @@ onMounted(() => {
       selectedCamera.value = cameraList[0].deviceId
     }
 
-    // Initialize serial manager
-    serialComposable = useSerial(modalRef.value)
+    // Initialize serial store with modal reference
+    serialStore.setModal(modalRef.value)
   })
 })
 
 async function handleConnect() {
-  if (isConnected.value) return
+  if (serialStore.isConnected) return
 
   try {
-    await serialComposable.connect()
+    await serialStore.connect()
     const canvas = document.getElementById('opencv-canvas')
     await videoComposable.startVideo(selectedCamera.value, canvas)
-    isConnected.value = true
   } catch (err) {
     alert('Error: ' + err.message)
   }
