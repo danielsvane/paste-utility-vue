@@ -56,33 +56,33 @@
         <!-- Jog Buttons -->
         <div class="grid grid-cols-3 gap-2">
           <div></div>
-          <button @click="handleJogYPlus" class="btn-goldenrod w-16 h-16">Y+</button>
+          <button @click="controls.jogYPlus" class="btn-goldenrod w-16 h-16">Y+</button>
           <div></div>
-          <button @click="handleJogXMinus" class="btn-goldenrod w-16 h-16">X-</button>
+          <button @click="controls.jogXMinus" class="btn-goldenrod w-16 h-16">X-</button>
           <div></div>
-          <button @click="handleJogXPlus" class="btn-goldenrod w-16 h-16">X+</button>
+          <button @click="controls.jogXPlus" class="btn-goldenrod w-16 h-16">X+</button>
           <div></div>
-          <button @click="handleJogYMinus" class="btn-goldenrod w-16 h-16">Y-</button>
+          <button @click="controls.jogYMinus" class="btn-goldenrod w-16 h-16">Y-</button>
           <div></div>
         </div>
 
         <!-- Z Controls -->
         <div class="flex gap-2">
-          <button @click="handleJogZPlus" class="btn-goldenrod">Z+</button>
-          <button @click="handleJogZMinus" class="btn-goldenrod">Z-</button>
+          <button @click="controls.jogZPlus" class="btn-goldenrod">Z+</button>
+          <button @click="controls.jogZMinus" class="btn-goldenrod">Z-</button>
         </div>
 
         <!-- Extrude/Retract -->
         <div class="flex gap-2">
-          <button @click="handleExtrude" class="btn-goldenrod">Extrude</button>
-          <button @click="handleRetract" class="btn-goldenrod">Retract</button>
+          <button @click="controls.extrude" class="btn-goldenrod">Extrude</button>
+          <button @click="controls.retract" class="btn-goldenrod">Retract</button>
         </div>
 
         <!-- Jog Distance Slider -->
         <div class="w-full">
           <input
             type="range"
-            v-model="jogDistance"
+            v-model="controls.jogDistance"
             min="1"
             max="4"
             step="1"
@@ -95,7 +95,7 @@
             <option value="3">10mm</option>
             <option value="4">100mm</option>
           </datalist>
-          <div class="text-center text-sm text-gray-400 mt-2">{{ jogDistanceLabel }}</div>
+          <div class="text-center text-sm text-gray-400 mt-2">{{ controls.jogDistanceLabel }}</div>
         </div>
 
         <button class="btn-goldenrod w-full mt-2">Update Z Offset</button>
@@ -146,68 +146,17 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useSerialStore } from '../stores/serial'
+import { useControlsStore } from '../stores/controls'
 
 const serial = useSerialStore()
+const controls = useControlsStore()
 
-const jogDistance = ref(2)
 const replInput = ref('')
 const consoleDiv = ref(null)
-
-const jogDistanceLabel = computed(() => {
-  const labels = { 1: '0.1mm', 2: '1mm', 3: '10mm', 4: '100mm' }
-  return labels[jogDistance.value] || '1mm'
-})
 
 const consoleMessages = computed(() => {
   return serial.consoleMessages
 })
-
-function getJogDistance() {
-  const distLUT = jogDistance.value
-  if (distLUT == 1) return 0.1
-  else if (distLUT == 2) return 1
-  else if (distLUT == 3) return 10
-  else if (distLUT == 4) return 100
-  else return 1
-}
-
-function handleJogYPlus() {
-  const dist = getJogDistance()
-  serial.send(['G91', `G0 Y${dist}`, 'G90'])
-}
-
-function handleJogYMinus() {
-  const dist = getJogDistance()
-  serial.send(['G91', `G0 Y-${dist}`, 'G90'])
-}
-
-function handleJogXPlus() {
-  const dist = getJogDistance()
-  serial.send(['G91', `G0 X${dist}`, 'G90'])
-}
-
-function handleJogXMinus() {
-  const dist = getJogDistance()
-  serial.send(['G91', `G0 X-${dist}`, 'G90'])
-}
-
-function handleJogZPlus() {
-  const dist = getJogDistance()
-  serial.send(['G91', `G0 Z${dist}`, 'G90'])
-}
-
-function handleJogZMinus() {
-  const dist = getJogDistance()
-  serial.send(['G91', `G0 Z-${dist}`, 'G90'])
-}
-
-function handleExtrude() {
-  serial.send(['G91', 'G0 B-2', 'G90'])
-}
-
-function handleRetract() {
-  serial.send(['G91', 'G0 B2', 'G90'])
-}
 
 function handleSendCommand() {
   if (replInput.value.trim()) {
