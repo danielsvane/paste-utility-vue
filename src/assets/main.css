@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap');
+
+@theme {
+  --color-goldenrod: #DAA520;
+  --color-goldenrod-dark: #B8860B;
+}
+
+body {
+  font-family: 'Figtree', system-ui, -apple-system, sans-serif;
+}
