@@ -1,6 +1,6 @@
 <template>
   <button :class="buttonClasses" :disabled="disabled" @click="$emit('click', $event)">
-    <font-awesome-icon v-if="icon" :icon="icon" />
+    <font-awesome-icon class="opacity-50" v-if="icon" :icon="icon" />
     <span v-if="text">{{ text }}</span>
   </button>
 </template>

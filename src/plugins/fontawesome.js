@@ -14,7 +14,11 @@ import {
   faStop,
   faLink,
   faLinkSlash,
-  faLeftRight
+  faLeftRight,
+  faArrowLeft,
+  faArrowRight,
+  faArrowUp,
+  faArrowDown
 } from '@fortawesome/free-solid-svg-icons'
 
 // Add icons to the library
@@ -29,7 +33,11 @@ library.add(
   faStop,
   faLink,
   faLinkSlash,
-  faLeftRight
+  faLeftRight,
+  faArrowLeft,
+  faArrowRight,
+  faArrowUp,
+  faArrowDown
 )
 
 // Export plugin function
