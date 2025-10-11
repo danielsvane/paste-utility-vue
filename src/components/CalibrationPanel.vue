@@ -3,12 +3,14 @@
     <div class="space-y-3">
       <!-- Nozzle Offset Calibration -->
       <div class="calibration-item">
-        <Button @click="handleNozzleOffsetCal" :full-width="true" class="justify-between">
-          <span class="flex-1 text-left">Nozzle Offset Cal</span>
+        <div class="grid grid-cols-2 gap-4 items-center">
+          <Button @click="handleNozzleOffsetCal">
+            Nozzle Offset Cal
+          </Button>
           <span class="status-indicator" :class="{ completed: hasNozzleOffset }">
             {{ hasNozzleOffset ? '✓' : '' }}
           </span>
-        </Button>
+        </div>
         <div v-if="hasNozzleOffset" class="calibration-result">
           X: {{ tipXoffset.toFixed(3) }}mm, Y: {{ tipYoffset.toFixed(3) }}mm
         </div>
@@ -16,12 +18,14 @@
 
       <!-- Get Rough Board Position -->
       <div class="calibration-item">
-        <Button @click="handleGetRoughPosition" :full-width="true" class="justify-between">
-          <span class="flex-1 text-left">Get Rough Board Position</span>
+        <div class="grid grid-cols-2 gap-4 items-center">
+          <Button @click="handleGetRoughPosition">
+            Get Rough Board Position
+          </Button>
           <span class="status-indicator" :class="{ completed: hasRoughPosition }">
             {{ hasRoughPosition ? '✓' : '' }}
           </span>
-        </Button>
+        </div>
         <div v-if="hasRoughPosition" class="calibration-result">
           X: {{ roughPosition.x.toFixed(3) }}, Y: {{ roughPosition.y.toFixed(3) }}, Z: {{ roughPosition.z.toFixed(3) }}
         </div>
@@ -29,12 +33,14 @@
 
       <!-- Get Displacement Plane -->
       <div class="calibration-item">
-        <Button @click="handleGetDisplacementPlane" :full-width="true" class="justify-between">
-          <span class="flex-1 text-left">Get Displacement Plane</span>
+        <div class="grid grid-cols-2 gap-4 items-center">
+          <Button @click="handleGetDisplacementPlane">
+            Get Displacement Plane
+          </Button>
           <span class="status-indicator" :class="{ completed: hasDisplacementPlane }">
             {{ hasDisplacementPlane ? '✓' : '' }}
           </span>
-        </Button>
+        </div>
         <div v-if="hasDisplacementPlane" class="calibration-result">
           {{ planeFormula }}
         </div>
@@ -42,12 +48,14 @@
 
       <!-- Perform Fid Cal -->
       <div class="calibration-item">
-        <Button @click="handlePerformFidCal" :full-width="true" class="justify-between">
-          <span class="flex-1 text-left">Perform Fid Cal</span>
+        <div class="grid grid-cols-2 gap-4 items-center">
+          <Button @click="handlePerformFidCal">
+            Perform Fid Cal
+          </Button>
           <span class="status-indicator" :class="{ completed: hasFidCal }">
             {{ hasFidCal ? '✓' : '' }}
           </span>
-        </Button>
+        </div>
         <div v-if="hasFidCal" class="calibration-result">
           {{ fidCalStatus }}
         </div>

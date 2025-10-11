@@ -1,43 +1,87 @@
 <template>
-  <div class="flex gap-4 items-center">
-    <button
-      @click="handleConnect"
-      :disabled="serialStore.isConnected"
-      :class="[
-        'px-6 py-2 rounded font-medium',
-        serialStore.isConnected
-          ? 'bg-green-600 text-white cursor-not-allowed'
-          : 'text-white'
-      ]"
-      :style="!serialStore.isConnected ? { backgroundColor: 'var(--color-goldenrod)' } : {}"
-      @mouseenter="e => !serialStore.isConnected && (e.target.style.backgroundColor = 'var(--color-goldenrod-dark)')"
-      @mouseleave="e => !serialStore.isConnected && (e.target.style.backgroundColor = 'var(--color-goldenrod)')"
-    >
-      {{ connectButtonText }}
-    </button>
+  <div class="serial-connection">
+    <!-- Connection Status -->
+    <div class="status-section">
+      <Label
+        :type="serialStore.isConnected ? 'success' : 'default'"
+        :text="serialStore.isConnected ? 'Connected' : 'Not Connected'"
+        :icon="serialStore.isConnected ? '●' : '○'"
+      />
 
-    <button
-      v-if="!serialStore.isConnected && hasAuthorizedPorts"
-      @click="handlePickNewDevice"
-      class="px-4 py-2 rounded bg-gray-600 hover:bg-gray-500 text-white text-sm"
-    >
-      Pick Different Device
-    </button>
+      <!-- Device Information -->
+      <div v-if="serialStore.isConnected && serialStore.deviceInfo" class="device-info">
+        <div class="device-name">USB Serial Device</div>
+        <div class="device-details">
+          VID: 0x{{ deviceVendorId }}, PID: 0x{{ deviceProductId }}
+        </div>
+      </div>
+      <div v-else-if="hasAuthorizedPorts" class="device-info">
+        <div class="device-name-secondary">Last device available</div>
+      </div>
+      <div v-else class="device-info">
+        <div class="device-name-secondary">No device selected</div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions-section">
+      <!-- Primary action button -->
+      <Button
+        v-if="!serialStore.isConnected"
+        type="primary"
+        @click="handleConnect"
+      >
+        {{ hasAuthorizedPorts ? 'Connect' : 'Select Device' }}
+      </Button>
+
+      <!-- Disconnect button when connected -->
+      <Button
+        v-if="serialStore.isConnected"
+        type="secondary"
+        @click="handleDisconnect"
+      >
+        Disconnect
+      </Button>
+
+      <!-- Change device tertiary action -->
+      <Button
+        v-if="hasAuthorizedPorts || serialStore.isConnected"
+        type="tertiary"
+        size="small"
+        @click="handlePickNewDevice"
+      >
+        Change Device
+      </Button>
+    </div>
+
+    <!-- Auto-connect checkbox -->
+    <label class="auto-connect-label">
+      <input
+        type="checkbox"
+        v-model="serialStore.autoConnect"
+        class="checkbox"
+      />
+      <span class="checkbox-text">Auto-connect on startup</span>
+    </label>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, inject } from 'vue'
 import { useSerialStore } from '../stores/serial'
+import Button from './Button.vue'
+import Label from './Label.vue'
 
 const modalRef = inject('modal')
 const serialStore = useSerialStore()
 const hasAuthorizedPorts = ref(false)
 
-const connectButtonText = computed(() => {
-  if (serialStore.isConnected) return 'Connected'
-  if (hasAuthorizedPorts.value) return 'Reconnect to Device'
-  return 'Connect'
+const deviceVendorId = computed(() => {
+  return serialStore.deviceInfo?.usbVendorId?.toString(16).padStart(4, '0') || '0000'
+})
+
+const deviceProductId = computed(() => {
+  return serialStore.deviceInfo?.usbProductId?.toString(16).padStart(4, '0') || '0000'
 })
 
 onMounted(async () => {
@@ -53,7 +97,7 @@ onMounted(async () => {
 
   // Attempt to auto-connect to previously authorized device
   try {
-    await serialStore.autoConnect()
+    await serialStore.tryAutoConnect()
   } catch (err) {
     console.error('Auto-connect on mount failed:', err)
   }
@@ -69,6 +113,16 @@ async function handleConnect() {
     hasAuthorizedPorts.value = authorizedPorts.length > 0
   } catch (err) {
     alert('Error connecting to serial: ' + err.message)
+  }
+}
+
+async function handleDisconnect() {
+  if (!serialStore.isConnected) return
+
+  try {
+    await serialStore.disconnect()
+  } catch (err) {
+    alert('Error disconnecting from serial: ' + err.message)
   }
 }
 
@@ -115,3 +169,71 @@ async function handlePickNewDevice() {
   }
 }
 </script>
+
+<style scoped>
+.serial-connection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Status Section */
+.status-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Device Information */
+.device-info {
+  margin-left: 1.5rem;
+}
+
+.device-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f3f4f6; /* gray-100 */
+}
+
+.device-name-secondary {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #9ca3af; /* gray-400 */
+}
+
+.device-details {
+  font-size: 0.75rem;
+  color: #6b7280; /* gray-500 */
+  margin-top: 0.25rem;
+  font-family: 'Courier New', monospace;
+}
+
+/* Actions Section */
+.actions-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Auto-connect Checkbox */
+.auto-connect-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  color: #e5e7eb; /* gray-200 */
+  font-size: 0.875rem;
+}
+
+.checkbox {
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+  accent-color: var(--color-goldenrod);
+}
+
+.checkbox-text {
+  user-select: none;
+}
+</style>

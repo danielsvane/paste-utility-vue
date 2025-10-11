@@ -16,7 +16,7 @@ const props = defineProps({
   type: {
     type: String,
     default: 'primary',
-    validator: (value) => ['primary', 'secondary'].includes(value)
+    validator: (value) => ['primary', 'secondary', 'tertiary', 'destructive'].includes(value)
   },
   size: {
     type: String,
@@ -43,6 +43,10 @@ const buttonClasses = computed(() => {
     classes.push('btn-primary')
   } else if (props.type === 'secondary') {
     classes.push('btn-secondary')
+  } else if (props.type === 'tertiary') {
+    classes.push('btn-tertiary')
+  } else if (props.type === 'destructive') {
+    classes.push('btn-destructive')
   }
 
   // Size classes
@@ -89,6 +93,23 @@ const buttonClasses = computed(() => {
 
 .btn-secondary:hover:not(:disabled) {
   @apply bg-gray-600;
+}
+
+.btn-tertiary {
+  @apply bg-transparent text-gray-300 hover:text-white hover:underline;
+  @apply px-2;
+}
+
+.btn-tertiary:hover:not(:disabled) {
+  @apply bg-transparent;
+}
+
+.btn-destructive {
+  @apply bg-transparent text-red-500 border-2 border-red-500;
+}
+
+.btn-destructive:hover:not(:disabled) {
+  @apply bg-red-500/10 text-red-400 border-red-400;
 }
 
 /* Size styles */

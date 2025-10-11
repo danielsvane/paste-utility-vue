@@ -7,6 +7,9 @@ export const useSerialStore = defineStore('serial', () => {
   const port = ref(null)
   const shouldListen = ref(true)
   const isConnected = ref(false)
+  const deviceInfo = ref(null)
+  const autoConnect = ref(true)
+  let reader = null
 
   const receiveBuffer = ref([])
   const inspectBuffer = ref([])
@@ -47,8 +50,8 @@ export const useSerialStore = defineStore('serial', () => {
     navigator.serial.addEventListener('connect', async (event) => {
       console.log('Serial device connected:', event)
 
-      // If we're not currently connected, try to auto-connect
-      if (!isConnected.value) {
+      // If we're not currently connected and auto-connect is enabled, try to auto-connect
+      if (!isConnected.value && autoConnect.value) {
         const connectedPort = event.target
         const info = connectedPort.getInfo()
 
@@ -72,6 +75,7 @@ export const useSerialStore = defineStore('serial', () => {
       if (event.target === port.value) {
         isConnected.value = false
         port.value = null
+        deviceInfo.value = null
       }
     })
   }
@@ -122,6 +126,10 @@ export const useSerialStore = defineStore('serial', () => {
 
     console.log('Port Opened.')
     port.value = portToOpen
+
+    // Store device info
+    deviceInfo.value = portToOpen.getInfo()
+
     listen()
 
     isConnected.value = true
@@ -133,7 +141,12 @@ export const useSerialStore = defineStore('serial', () => {
     return true
   }
 
-  async function autoConnect() {
+  async function tryAutoConnect() {
+    // Only auto-connect if the setting is enabled
+    if (!autoConnect.value) {
+      return false
+    }
+
     try {
       const authorizedPorts = await getAuthorizedPorts()
 
@@ -174,11 +187,64 @@ export const useSerialStore = defineStore('serial', () => {
     return await openPort(selectedPort)
   }
 
+  async function disconnect() {
+    if (!port.value) {
+      return
+    }
+
+    try {
+      // Stop listening - this will cause the reader to exit its loop
+      shouldListen.value = false
+
+      // Cancel the reader if it exists
+      if (reader) {
+        try {
+          await reader.cancel()
+        } catch (cancelErr) {
+          console.warn('Error canceling reader:', cancelErr)
+        }
+      }
+
+      // Wait for the listen loop to fully exit and release the lock
+      await delay(100)
+
+      // Close the port
+      if (port.value) {
+        try {
+          await port.value.close()
+        } catch (closeErr) {
+          // Port might already be closed or in a bad state
+          console.warn('Port close warning:', closeErr)
+        }
+      }
+
+      // Clear state
+      isConnected.value = false
+      port.value = null
+      deviceInfo.value = null
+      reader = null
+
+      // Re-enable listening for future connections
+      shouldListen.value = true
+
+      console.log('Disconnected successfully')
+    } catch (err) {
+      console.error('Error disconnecting:', err)
+      // Still clear state even if there was an error
+      isConnected.value = false
+      port.value = null
+      deviceInfo.value = null
+      reader = null
+      shouldListen.value = true
+      throw err
+    }
+  }
+
   async function listen() {
     while (port.value?.readable && shouldListen.value) {
       console.log('Port is readable: Starting to listen.')
       let metabuffer = ''
-      const reader = port.value.readable.getReader()
+      reader = port.value.readable.getReader()
       try {
         while (shouldListen.value) {
           const { value, done } = await reader.read()
@@ -204,6 +270,7 @@ export const useSerialStore = defineStore('serial', () => {
         console.error('Reading error.', error)
       } finally {
         reader.releaseLock()
+        reader = null
       }
     }
   }
@@ -365,6 +432,8 @@ export const useSerialStore = defineStore('serial', () => {
     // State
     port,
     isConnected,
+    deviceInfo,
+    autoConnect,
     consoleMessages,
     receiveBuffer,
     inspectBuffer,
@@ -375,8 +444,9 @@ export const useSerialStore = defineStore('serial', () => {
     setModal,
     setupEventListeners,
     getAuthorizedPorts,
-    autoConnect,
+    tryAutoConnect,
     connect,
+    disconnect,
     send,
     sendRepl,
     clearBuffer,

@@ -22,7 +22,9 @@
 
       <!-- Right Column -->
       <div class="p-6 overflow-y-auto bg-gray-900 space-y-6">
-        <SerialConnection />
+        <Card title="Serial Connection">
+          <SerialConnection />
+        </Card>
         <VideoControls />
         <MachineControls v-if="serialStore.isConnected" />
         <ConsoleRepl v-if="serialStore.isConnected" />
@@ -38,6 +40,7 @@
 
 <script setup>
 import { useSerialStore } from '../stores/serial'
+import Card from '../components/Card.vue'
 import SerialConnection from '../components/SerialConnection.vue'
 import CalibrationPanel from '../components/CalibrationPanel.vue'
 import JobImport from '../components/JobImport.vue'
