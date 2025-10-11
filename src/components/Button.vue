@@ -64,60 +64,48 @@ const buttonClasses = computed(() => {
 </script>
 
 <style scoped>
+@reference "../assets/main.css";
+
 .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  border-radius: 0.25rem;
-  font-weight: 500;
-  transition: background-color 0.2s;
-  cursor: pointer;
-  border: none;
+  @apply inline-flex items-center justify-center gap-2 rounded font-semibold transition-colors cursor-pointer tracking-wide;
 }
 
 .btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  @apply opacity-50 cursor-not-allowed;
 }
 
 /* Type styles */
 .btn-primary {
-  background-color: var(--color-goldenrod);
-  color: white;
+  @apply bg-goldenrod-dark text-white;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--color-goldenrod-dark);
+  @apply bg-goldenrod;
 }
 
 .btn-secondary {
-  background-color: rgb(55, 65, 81); /* gray-700 */
-  color: white;
+  @apply bg-gray-700 text-white;
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background-color: rgb(75, 85, 99); /* gray-600 */
+  @apply bg-gray-600;
 }
 
 /* Size styles */
 .btn-small {
-  padding: 0.375rem 0.75rem;
-  font-size: 0.875rem;
+  @apply px-3 h-9 text-sm;
 }
 
 .btn-medium {
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
+  @apply px-4 h-11 text-base;
 }
 
 .btn-large {
-  padding: 0.75rem 1.5rem;
-  font-size: 1.125rem;
+  @apply px-6 h-14 text-lg;
 }
 
 /* Full width */
 .btn-full-width {
-  width: 100%;
+  @apply w-full;
 }
 </style>
