@@ -1,56 +1,48 @@
 <template>
   <Card title="Calibration">
-    <div class="space-y-3">
-      <!-- Nozzle Offset Calibration -->
-      <div class="calibration-item">
-        <div class="grid grid-cols-2 gap-4 items-center">
-          <Button @click="handleNozzleOffsetCal" text="Nozzle Offset Cal" />
-          <span class="status-indicator" :class="{ completed: hasNozzleOffset }">
-            {{ hasNozzleOffset ? '✓' : '' }}
-          </span>
-        </div>
-        <div v-if="hasNozzleOffset" class="calibration-result">
-          X: {{ tipXoffset.toFixed(3) }}mm, Y: {{ tipYoffset.toFixed(3) }}mm
-        </div>
-      </div>
-
+    <div class="calibration-grid">
       <!-- Get Rough Board Position -->
-      <div class="calibration-item">
-        <div class="grid grid-cols-2 gap-4 items-center">
-          <Button @click="handleGetRoughPosition" text="Get Rough Board Position" />
-          <span class="status-indicator" :class="{ completed: hasRoughPosition }">
-            {{ hasRoughPosition ? '✓' : '' }}
-          </span>
-        </div>
-        <div v-if="hasRoughPosition" class="calibration-result">
-          X: {{ roughPosition.x.toFixed(3) }}, Y: {{ roughPosition.y.toFixed(3) }}, Z: {{ roughPosition.z.toFixed(3) }}
-        </div>
-      </div>
-
-      <!-- Get Displacement Plane -->
-      <div class="calibration-item">
-        <div class="grid grid-cols-2 gap-4 items-center">
-          <Button @click="handleGetDisplacementPlane" text="Get Displacement Plane" />
-          <span class="status-indicator" :class="{ completed: hasDisplacementPlane }">
-            {{ hasDisplacementPlane ? '✓' : '' }}
-          </span>
-        </div>
-        <div v-if="hasDisplacementPlane" class="calibration-result">
-          {{ planeFormula }}
-        </div>
+      <Button @click="handleGetRoughPosition" text="Get Rough Board Position" type="secondary" />
+      <div class="status-container">
+        <span class="status-indicator" :class="{ completed: hasRoughPosition }">
+          {{ hasRoughPosition ? '✓' : '' }}
+        </span>
+        <span class="status-text" :class="{ calibrated: hasRoughPosition }">
+          {{ roughPositionStatusText }}
+        </span>
       </div>
 
       <!-- Perform Fid Cal -->
-      <div class="calibration-item">
-        <div class="grid grid-cols-2 gap-4 items-center">
-          <Button @click="handlePerformFidCal" text="Perform Fid Cal" />
-          <span class="status-indicator" :class="{ completed: hasFidCal }">
-            {{ hasFidCal ? '✓' : '' }}
-          </span>
-        </div>
-        <div v-if="hasFidCal" class="calibration-result">
-          {{ fidCalStatus }}
-        </div>
+      <Button @click="handlePerformFidCal" text="Perform Fid Cal" type="secondary" />
+      <div class="status-container">
+        <span class="status-indicator" :class="{ completed: hasFidCal }">
+          {{ hasFidCal ? '✓' : '' }}
+        </span>
+        <span class="status-text" :class="{ calibrated: hasFidCal }">
+          {{ fidCalStatusText }}
+        </span>
+      </div>
+
+      <!-- Nozzle Offset Calibration -->
+      <Button @click="handleNozzleOffsetCal" text="Nozzle Offset Cal" type="secondary" />
+      <div class="status-container">
+        <span class="status-indicator" :class="{ completed: hasNozzleOffset }">
+          {{ hasNozzleOffset ? '✓' : '' }}
+        </span>
+        <span class="status-text" :class="{ calibrated: hasNozzleOffset }">
+          {{ nozzleOffsetStatusText }}
+        </span>
+      </div>
+
+      <!-- Get Displacement Plane -->
+      <Button @click="handleGetDisplacementPlane" text="Get Displacement Plane" type="secondary" />
+      <div class="status-container">
+        <span class="status-indicator" :class="{ completed: hasDisplacementPlane }">
+          {{ hasDisplacementPlane ? '✓' : '' }}
+        </span>
+        <span class="status-text" :class="{ calibrated: hasDisplacementPlane }">
+          {{ displacementPlaneStatusText }}
+        </span>
       </div>
     </div>
   </Card>
@@ -112,6 +104,36 @@ const fidCalStatus = computed(() => {
   return `${calibratedCount} of ${jobStore.fiducials.length} fiducials calibrated`
 })
 
+// Status text for each calibration item
+const nozzleOffsetStatusText = computed(() => {
+  if (!hasNozzleOffset.value) {
+    return 'Nozzle offset not calibrated'
+  }
+  return `X: ${tipXoffset.value.toFixed(3)}mm, Y: ${tipYoffset.value.toFixed(3)}mm`
+})
+
+const roughPositionStatusText = computed(() => {
+  if (!hasRoughPosition.value) {
+    return 'Board position not calibrated'
+  }
+  const pos = roughPosition.value
+  return `X: ${pos.x.toFixed(3)}, Y: ${pos.y.toFixed(3)}, Z: ${pos.z.toFixed(3)}`
+})
+
+const displacementPlaneStatusText = computed(() => {
+  if (!hasDisplacementPlane.value) {
+    return 'Displacement plane not calibrated'
+  }
+  return planeFormula.value
+})
+
+const fidCalStatusText = computed(() => {
+  if (!hasFidCal.value) {
+    return 'Fiducials not calibrated'
+  }
+  return fidCalStatus.value
+})
+
 // Event handlers
 function handleNozzleOffsetCal() {
   console.log('Nozzle Offset Cal clicked')
@@ -141,19 +163,28 @@ function handlePerformFidCal() {
 <style scoped>
 @reference "tailwindcss";
 
-.calibration-item {
-  @apply space-y-2;
+.calibration-grid {
+  @apply grid gap-x-4 gap-y-3 items-center;
+  grid-template-columns: max-content 1fr;
+}
+
+.status-container {
+  @apply flex items-center gap-2;
 }
 
 .status-indicator {
-  @apply w-6 h-6 flex items-center justify-center rounded-full border-2 border-gray-500 text-sm;
+  @apply w-6 h-6 flex items-center justify-center rounded-full border-2 border-gray-500 text-sm flex-shrink-0;
 }
 
 .status-indicator.completed {
   @apply border-green-500 bg-green-500 text-white;
 }
 
-.calibration-result {
-  @apply ml-4 text-sm text-gray-300 bg-gray-800 rounded px-3 py-2 font-mono;
+.status-text {
+  @apply text-sm text-gray-500;
+}
+
+.status-text.calibrated {
+  @apply text-green-400 font-mono;
 }
 </style>
