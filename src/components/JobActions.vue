@@ -1,8 +1,8 @@
 <template>
   <Card title="Job Actions">
     <div class="flex gap-3">
-      <Button @click="handleExportJob">Export Job</Button>
-      <Button @click="handleRunJob">Run Job</Button>
+      <Button @click="handleExportJob" text="Export Job" />
+      <Button @click="handleRunJob" text="Run Job" />
     </div>
   </Card>
 </template>

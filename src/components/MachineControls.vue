@@ -3,26 +3,26 @@
     <div class="space-y-6">
       <!-- Control Buttons -->
       <div class="flex gap-3 flex-wrap">
-        <Button>Jog to Fid in View</Button>
-        <Button>Visual Home</Button>
+        <Button text="Jog to Fid in View" />
+        <Button text="Visual Home" />
       </div>
 
       <div class="flex gap-3 flex-wrap">
-        <Button>Pressurize</Button>
-        <Button>Depressurize</Button>
+        <Button text="Pressurize" />
+        <Button text="Depressurize" />
       </div>
 
       <div class="flex gap-3 flex-wrap">
-        <Button>Extrude</Button>
-        <Button>Start Slow Extrude</Button>
-        <Button>Stop Extrude</Button>
-        <Button>Retract & Raise</Button>
+        <Button text="Extrude" />
+        <Button text="Start Slow Extrude" />
+        <Button text="Stop Extrude" />
+        <Button text="Retract & Raise" />
       </div>
 
       <div class="flex gap-3 flex-wrap">
-        <Button>Extrude Next Position</Button>
-        <Button :disabled="true">Continue Automatically</Button>
-        <Button>Reset Timer</Button>
+        <Button text="Extrude Next Position" />
+        <Button :disabled="true" text="Continue Automatically" />
+        <Button text="Reset Timer" />
       </div>
 
       <div class="text-center text-goldenrod text-sm p-2 bg-gray-700 rounded">
@@ -31,10 +31,10 @@
 
       <!-- Homing Controls -->
       <div class="flex gap-3">
-        <Button @click="serial.send('G28')" type="secondary">Home All</Button>
-        <Button @click="serial.send('G28 X')" type="secondary">Home X</Button>
-        <Button @click="serial.send('G28 Y')" type="secondary">Home Y</Button>
-        <Button @click="serial.send('G28 Z')" type="secondary">Home Z</Button>
+        <Button @click="serial.send('G28')" type="secondary" text="Home All" />
+        <Button @click="serial.send('G28 X')" type="secondary" text="Home X" />
+        <Button @click="serial.send('G28 Y')" type="secondary" text="Home Y" />
+        <Button @click="serial.send('G28 Z')" type="secondary" text="Home Z" />
       </div>
 
       <!-- Jog Controls -->
@@ -43,26 +43,26 @@
         <!-- Jog Buttons -->
         <div class="grid grid-cols-3 gap-2">
           <div></div>
-          <Button @click="controls.jogYPlus" class="w-16 h-16">Y+</Button>
+          <Button @click="controls.jogYPlus" class="w-16 h-16" text="Y+" />
           <div></div>
-          <Button @click="controls.jogXMinus" class="w-16 h-16">X-</Button>
+          <Button @click="controls.jogXMinus" class="w-16 h-16" text="X-" />
           <div></div>
-          <Button @click="controls.jogXPlus" class="w-16 h-16">X+</Button>
+          <Button @click="controls.jogXPlus" class="w-16 h-16" text="X+" />
           <div></div>
-          <Button @click="controls.jogYMinus" class="w-16 h-16">Y-</Button>
+          <Button @click="controls.jogYMinus" class="w-16 h-16" text="Y-" />
           <div></div>
         </div>
 
         <!-- Z Controls -->
         <div class="flex gap-2">
-          <Button @click="controls.jogZPlus">Z+</Button>
-          <Button @click="controls.jogZMinus">Z-</Button>
+          <Button @click="controls.jogZPlus" text="Z+" />
+          <Button @click="controls.jogZMinus" text="Z-" />
         </div>
 
         <!-- Extrude/Retract -->
         <div class="flex gap-2">
-          <Button @click="controls.extrude">Extrude</Button>
-          <Button @click="controls.retract">Retract</Button>
+          <Button @click="controls.extrude" text="Extrude" />
+          <Button @click="controls.retract" text="Retract" />
         </div>
 
         <!-- Jog Distance Slider -->
@@ -85,24 +85,24 @@
           <div class="text-center text-sm text-gray-400 mt-2">{{ controls.jogDistanceLabel }}</div>
         </div>
 
-        <Button :full-width="true" class="mt-2">Update Z Offset</Button>
+        <Button :full-width="true" class="mt-2" text="Update Z Offset" />
       </div>
     </div>
 
     <!-- Light and Air Controls -->
     <div class="flex gap-3 flex-wrap">
-      <Button type="secondary">Ring Lights On</Button>
-      <Button type="secondary">Ring Lights Off</Button>
+      <Button type="secondary" text="Ring Lights On" />
+      <Button type="secondary" text="Ring Lights Off" />
     </div>
 
     <div class="flex gap-3 flex-wrap">
-      <Button type="secondary">Left Air On</Button>
-      <Button type="secondary">Left Air Off</Button>
-      <Button type="secondary">Left Vac</Button>
+      <Button type="secondary" text="Left Air On" />
+      <Button type="secondary" text="Left Air Off" />
+      <Button type="secondary" text="Left Vac" />
     </div>
 
       <div>
-        <Button type="secondary">Disable Steppers</Button>
+        <Button type="secondary" text="Disable Steppers" />
       </div>
     </div>
   </Card>

@@ -1,8 +1,11 @@
 <template>
   <div class="flex flex-col min-h-screen">
     <!-- Header -->
-    <div class="bg-gray-800 px-8 py-5 flex justify-between items-center">
-      <h1 class="text-3xl font-semibold text-white">LumenPnP Pasting Utility</h1>
+    <div class="bg-gray-800 px-8 py-5 flex justify-between items-center gap-6">
+      <h1 class="text-2xl font-light text-white">LumenPnP Pasting Utility</h1>
+      <div class="flex-1 flex items-center gap-4">
+        <SerialConnection />
+      </div>
       <a href="/help.html" class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded">
         Docs
       </a>
@@ -22,9 +25,6 @@
 
       <!-- Right Column -->
       <div class="p-6 overflow-y-auto bg-gray-900 space-y-6">
-        <Card title="Serial Connection">
-          <SerialConnection />
-        </Card>
         <VideoControls />
         <MachineControls v-if="serialStore.isConnected" />
         <ConsoleRepl v-if="serialStore.isConnected" />

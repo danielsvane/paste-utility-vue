@@ -4,9 +4,7 @@
       <!-- Nozzle Offset Calibration -->
       <div class="calibration-item">
         <div class="grid grid-cols-2 gap-4 items-center">
-          <Button @click="handleNozzleOffsetCal">
-            Nozzle Offset Cal
-          </Button>
+          <Button @click="handleNozzleOffsetCal" text="Nozzle Offset Cal" />
           <span class="status-indicator" :class="{ completed: hasNozzleOffset }">
             {{ hasNozzleOffset ? '✓' : '' }}
           </span>
@@ -19,9 +17,7 @@
       <!-- Get Rough Board Position -->
       <div class="calibration-item">
         <div class="grid grid-cols-2 gap-4 items-center">
-          <Button @click="handleGetRoughPosition">
-            Get Rough Board Position
-          </Button>
+          <Button @click="handleGetRoughPosition" text="Get Rough Board Position" />
           <span class="status-indicator" :class="{ completed: hasRoughPosition }">
             {{ hasRoughPosition ? '✓' : '' }}
           </span>
@@ -34,9 +30,7 @@
       <!-- Get Displacement Plane -->
       <div class="calibration-item">
         <div class="grid grid-cols-2 gap-4 items-center">
-          <Button @click="handleGetDisplacementPlane">
-            Get Displacement Plane
-          </Button>
+          <Button @click="handleGetDisplacementPlane" text="Get Displacement Plane" />
           <span class="status-indicator" :class="{ completed: hasDisplacementPlane }">
             {{ hasDisplacementPlane ? '✓' : '' }}
           </span>
@@ -49,9 +43,7 @@
       <!-- Perform Fid Cal -->
       <div class="calibration-item">
         <div class="grid grid-cols-2 gap-4 items-center">
-          <Button @click="handlePerformFidCal">
-            Perform Fid Cal
-          </Button>
+          <Button @click="handlePerformFidCal" text="Perform Fid Cal" />
           <span class="status-indicator" :class="{ completed: hasFidCal }">
             {{ hasFidCal ? '✓' : '' }}
           </span>

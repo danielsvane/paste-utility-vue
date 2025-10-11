@@ -36,9 +36,8 @@
           @click="handleOk"
           @keyup.enter="handleOk"
           ref="okButton"
-        >
-          OK
-        </Button>
+          text="OK"
+        />
       </div>
     </div>
   </div>

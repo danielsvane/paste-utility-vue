@@ -17,22 +17,17 @@
         class="hidden"
       />
 
-      <Button @click="$refs.jobFileInput.click()">Import Job</Button>
+      <Button @click="$refs.jobFileInput.click()" text="Import Job" />
       <span class="text-gray-400">OR</span>
-      <Button @click="$refs.pasteGerberInput.click()">
-        Select Paste Gerber
-      </Button>
+      <Button @click="$refs.pasteGerberInput.click()" text="Select Paste Gerber" />
       <span v-if="pasteGerberFile" class="text-sm text-gray-300">{{ pasteGerberFile.name }}</span>
-      <Button @click="$refs.maskGerberInput.click()">
-        Select Mask Gerber
-      </Button>
+      <Button @click="$refs.maskGerberInput.click()" text="Select Mask Gerber" />
       <span v-if="maskGerberFile" class="text-sm text-gray-300">{{ maskGerberFile.name }}</span>
       <Button
         @click="handleLoadGerbers"
         :disabled="!pasteGerberFile || !maskGerberFile"
-      >
-        Load Gerbers
-      </Button>
+        text="Load Gerbers"
+      />
     </div>
   </Card>
 </template>

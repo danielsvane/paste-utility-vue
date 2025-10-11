@@ -1,7 +1,7 @@
 <template>
   <Card title="Job Positions">
     <template #actions>
-      <Button>Capture New Position</Button>
+      <Button text="Capture New Position" />
     </template>
 
     <div class="positions-list text-gray-300">

@@ -1,6 +1,6 @@
 <template>
   <div :class="labelClasses">
-    <span v-if="icon" class="label-icon">{{ icon }}</span>
+    <font-awesome-icon v-if="icon" :icon="icon" class="label-icon" />
     <span class="label-text">{{ text }}</span>
   </div>
 </template>
@@ -41,7 +41,7 @@ const labelClasses = computed(() => {
 @reference "../assets/main.css";
 
 .label {
-  @apply flex w-fit items-center gap-2 px-3 py-1.5 font-medium rounded-full;
+  @apply flex w-fit items-center gap-2 px-3 py-2 font-medium rounded-full;
 }
 
 .label-success {

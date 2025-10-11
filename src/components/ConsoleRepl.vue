@@ -16,7 +16,7 @@
         placeholder="Send Gcode"
         class="flex-1 bg-gray-700 text-white border border-gray-600 rounded px-3 py-2"
       />
-      <Button @click="handleSendCommand">Send</Button>
+      <Button @click="handleSendCommand" text="Send" />
     </div>
   </Card>
 </template>

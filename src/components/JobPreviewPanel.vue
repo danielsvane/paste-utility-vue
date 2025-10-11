@@ -8,23 +8,20 @@
             @click="handleZoomIn"
             size="small"
             title="Zoom In"
-          >
-            +
-          </Button>
+            text="+"
+          />
           <Button
             @click="handleZoomOut"
             size="small"
             title="Zoom Out"
-          >
-            −
-          </Button>
+            text="−"
+          />
           <Button
             @click="handleResetZoom"
             size="small"
             title="Reset Zoom & Pan"
-          >
-            Reset
-          </Button>
+            text="Reset"
+          />
         </div>
         <span class="text-sm text-gray-300">Board Side:</span>
         <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">

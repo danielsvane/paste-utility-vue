@@ -1,11 +1,7 @@
 <template>
-  <button
-    :class="buttonClasses"
-    :disabled="disabled"
-    @click="$emit('click', $event)"
-  >
-    <slot name="icon"></slot>
-    <slot></slot>
+  <button :class="buttonClasses" :disabled="disabled" @click="$emit('click', $event)">
+    <font-awesome-icon v-if="icon" :icon="icon" />
+    <span v-if="text">{{ text }}</span>
   </button>
 </template>
 
@@ -13,6 +9,14 @@
 import { computed } from 'vue'
 
 const props = defineProps({
+  text: {
+    type: String,
+    default: ''
+  },
+  icon: {
+    type: String,
+    default: ''
+  },
   type: {
     type: String,
     default: 'primary',
@@ -96,12 +100,11 @@ const buttonClasses = computed(() => {
 }
 
 .btn-tertiary {
-  @apply bg-transparent text-gray-300 hover:text-white hover:underline;
-  @apply px-2;
+  @apply bg-transparent text-gray-300;
 }
 
 .btn-tertiary:hover:not(:disabled) {
-  @apply bg-transparent;
+  @apply bg-gray-700/50 text-white;
 }
 
 .btn-destructive {
