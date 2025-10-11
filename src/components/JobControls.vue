@@ -1,5 +1,8 @@
 <template>
   <div class="space-y-6">
+    <!-- Calibration Section -->
+    <CalibrationPanel />
+
     <!-- Job Import/Export Section -->
     <div class="bg-gray-700 rounded-lg p-6">
       <div class="flex flex-wrap gap-3 items-center">
@@ -44,8 +47,6 @@
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-2xl font-medium text-white">Job Positions</h2>
         <div class="flex gap-2">
-          <button class="btn-goldenrod">Get Rough Board Position</button>
-          <button class="btn-goldenrod">Perform Fid Cal</button>
           <button class="btn-goldenrod">Capture New Position</button>
         </div>
       </div>
@@ -202,6 +203,7 @@
 import { ref } from 'vue'
 import { useJobStore } from '../stores/job'
 import JobPreview from './JobPreview.vue'
+import CalibrationPanel from './CalibrationPanel.vue'
 
 const jobStore = useJobStore()
 

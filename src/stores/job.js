@@ -31,6 +31,11 @@ export const useJobStore = defineStore('job', () => {
   const planeC = ref(null)
   const planeD = ref(null)
 
+  // Calibration data
+  const tipXoffset = ref(0)
+  const tipYoffset = ref(0)
+  const roughBoardPosition = ref(null) // { x, y, z }
+
   // Methods
   function calculateBoardPlane() {
     if (fiducials.value.length !== 3) {
@@ -202,6 +207,9 @@ export const useJobStore = defineStore('job', () => {
     planeB,
     planeC,
     planeD,
+    tipXoffset,
+    tipYoffset,
+    roughBoardPosition,
 
     // Methods
     calculateBoardPlane,

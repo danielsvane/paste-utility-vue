@@ -9,7 +9,6 @@
     <div class="flex gap-3 flex-wrap">
       <button class="btn-goldenrod">Jog to Fid in View</button>
       <button class="btn-goldenrod">Visual Home</button>
-      <button class="btn-goldenrod">Nozzle Offset Cal</button>
     </div>
 
     <div class="flex gap-3 flex-wrap">

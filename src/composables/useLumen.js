@@ -1,8 +1,8 @@
 import { ref } from 'vue'
+import { useJobStore } from '../stores/job'
 
 export function useLumen(serial, video) {
-  const tipXoffset = ref(0)
-  const tipYoffset = ref(0)
+  const jobStore = useJobStore()
 
   async function grabBoardPosition() {
     console.log('grabbing board position')
@@ -33,6 +33,16 @@ export function useLumen(serial, video) {
     }
 
     console.log('positionArray: ', positionArray)
+
+    // Store in job store if valid
+    if (positionArray.length === 3) {
+      jobStore.roughBoardPosition = {
+        x: parseFloat(positionArray[0]),
+        y: parseFloat(positionArray[1]),
+        z: parseFloat(positionArray[2])
+      }
+    }
+
     return positionArray
   }
 
@@ -61,8 +71,6 @@ export function useLumen(serial, video) {
   }
 
   return {
-    tipXoffset,
-    tipYoffset,
     grabBoardPosition,
     jogToFiducial
   }
