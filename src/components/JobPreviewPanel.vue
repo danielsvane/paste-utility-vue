@@ -5,27 +5,27 @@
       <div class="flex items-center gap-4">
         <!-- Zoom Controls -->
         <div class="flex items-center gap-2 border-r border-gray-600 pr-4">
-          <button
+          <Button
             @click="handleZoomIn"
-            class="btn-goldenrod-sm"
+            size="small"
             title="Zoom In"
           >
             +
-          </button>
-          <button
+          </Button>
+          <Button
             @click="handleZoomOut"
-            class="btn-goldenrod-sm"
+            size="small"
             title="Zoom Out"
           >
             −
-          </button>
-          <button
+          </Button>
+          <Button
             @click="handleResetZoom"
-            class="btn-goldenrod-sm"
+            size="small"
             title="Reset Zoom & Pan"
           >
             Reset
-          </button>
+          </Button>
         </div>
         <span class="text-sm text-gray-300">Board Side:</span>
         <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
@@ -60,6 +60,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import Button from './Button.vue'
 import { useJobStore } from '../stores/job'
 import JobPreview from './JobPreview.vue'
 
@@ -85,17 +86,3 @@ function handleResetZoom() {
 }
 </script>
 
-<style scoped>
-.btn-goldenrod-sm {
-  background-color: var(--color-goldenrod);
-  color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 0.25rem;
-  font-weight: 500;
-  font-size: 0.875rem;
-}
-
-.btn-goldenrod-sm:hover {
-  background-color: var(--color-goldenrod-dark);
-}
-</style>

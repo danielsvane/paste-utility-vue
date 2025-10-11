@@ -32,17 +32,13 @@
         >
           Cancel
         </button>
-        <button
+        <Button
           @click="handleOk"
           @keyup.enter="handleOk"
-          class="px-4 py-2 rounded text-white font-medium"
-          style="background-color: var(--color-goldenrod)"
-          @mouseenter="e => e.target.style.backgroundColor = 'var(--color-goldenrod-dark)'"
-          @mouseleave="e => e.target.style.backgroundColor = 'var(--color-goldenrod)'"
           ref="okButton"
         >
           OK
-        </button>
+        </Button>
       </div>
     </div>
   </div>
@@ -50,6 +46,7 @@
 
 <script setup>
 import { ref, watch, nextTick } from 'vue'
+import Button from './Button.vue'
 
 const isVisible = ref(false)
 const title = ref('')

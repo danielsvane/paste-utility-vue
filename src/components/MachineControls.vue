@@ -2,26 +2,26 @@
   <div class="space-y-6">
     <!-- Control Buttons -->
     <div class="flex gap-3 flex-wrap">
-      <button class="btn-goldenrod">Jog to Fid in View</button>
-      <button class="btn-goldenrod">Visual Home</button>
+      <Button>Jog to Fid in View</Button>
+      <Button>Visual Home</Button>
     </div>
 
     <div class="flex gap-3 flex-wrap">
-      <button class="btn-goldenrod">Pressurize</button>
-      <button class="btn-goldenrod">Depressurize</button>
+      <Button>Pressurize</Button>
+      <Button>Depressurize</Button>
     </div>
 
     <div class="flex gap-3 flex-wrap">
-      <button class="btn-goldenrod">Extrude</button>
-      <button class="btn-goldenrod">Start Slow Extrude</button>
-      <button class="btn-goldenrod">Stop Extrude</button>
-      <button class="btn-goldenrod">Retract & Raise</button>
+      <Button>Extrude</Button>
+      <Button>Start Slow Extrude</Button>
+      <Button>Stop Extrude</Button>
+      <Button>Retract & Raise</Button>
     </div>
 
     <div class="flex gap-3 flex-wrap">
-      <button class="btn-goldenrod">Extrude Next Position</button>
-      <button class="btn-goldenrod" disabled>Continue Automatically</button>
-      <button class="btn-goldenrod">Reset Timer</button>
+      <Button>Extrude Next Position</Button>
+      <Button :disabled="true">Continue Automatically</Button>
+      <Button>Reset Timer</Button>
     </div>
 
     <div class="text-center text-goldenrod text-sm p-2 bg-gray-800 rounded">
@@ -30,10 +30,10 @@
 
     <!-- Homing Controls -->
     <div class="flex gap-3">
-      <button @click="serial.send('G28')" class="btn-gray">Home All</button>
-      <button @click="serial.send('G28 X')" class="btn-gray">Home X</button>
-      <button @click="serial.send('G28 Y')" class="btn-gray">Home Y</button>
-      <button @click="serial.send('G28 Z')" class="btn-gray">Home Z</button>
+      <Button @click="serial.send('G28')" type="secondary">Home All</Button>
+      <Button @click="serial.send('G28 X')" type="secondary">Home X</Button>
+      <Button @click="serial.send('G28 Y')" type="secondary">Home Y</Button>
+      <Button @click="serial.send('G28 Z')" type="secondary">Home Z</Button>
     </div>
 
     <!-- Jog Controls -->
@@ -42,26 +42,26 @@
         <!-- Jog Buttons -->
         <div class="grid grid-cols-3 gap-2">
           <div></div>
-          <button @click="controls.jogYPlus" class="btn-goldenrod w-16 h-16">Y+</button>
+          <Button @click="controls.jogYPlus" class="w-16 h-16">Y+</Button>
           <div></div>
-          <button @click="controls.jogXMinus" class="btn-goldenrod w-16 h-16">X-</button>
+          <Button @click="controls.jogXMinus" class="w-16 h-16">X-</Button>
           <div></div>
-          <button @click="controls.jogXPlus" class="btn-goldenrod w-16 h-16">X+</button>
+          <Button @click="controls.jogXPlus" class="w-16 h-16">X+</Button>
           <div></div>
-          <button @click="controls.jogYMinus" class="btn-goldenrod w-16 h-16">Y-</button>
+          <Button @click="controls.jogYMinus" class="w-16 h-16">Y-</Button>
           <div></div>
         </div>
 
         <!-- Z Controls -->
         <div class="flex gap-2">
-          <button @click="controls.jogZPlus" class="btn-goldenrod">Z+</button>
-          <button @click="controls.jogZMinus" class="btn-goldenrod">Z-</button>
+          <Button @click="controls.jogZPlus">Z+</Button>
+          <Button @click="controls.jogZMinus">Z-</Button>
         </div>
 
         <!-- Extrude/Retract -->
         <div class="flex gap-2">
-          <button @click="controls.extrude" class="btn-goldenrod">Extrude</button>
-          <button @click="controls.retract" class="btn-goldenrod">Retract</button>
+          <Button @click="controls.extrude">Extrude</Button>
+          <Button @click="controls.retract">Retract</Button>
         </div>
 
         <!-- Jog Distance Slider -->
@@ -84,29 +84,30 @@
           <div class="text-center text-sm text-gray-400 mt-2">{{ controls.jogDistanceLabel }}</div>
         </div>
 
-        <button class="btn-goldenrod w-full mt-2">Update Z Offset</button>
+        <Button :full-width="true" class="mt-2">Update Z Offset</Button>
       </div>
     </div>
 
     <!-- Light and Air Controls -->
     <div class="flex gap-3 flex-wrap">
-      <button class="btn-gray">Ring Lights On</button>
-      <button class="btn-gray">Ring Lights Off</button>
+      <Button type="secondary">Ring Lights On</Button>
+      <Button type="secondary">Ring Lights Off</Button>
     </div>
 
     <div class="flex gap-3 flex-wrap">
-      <button class="btn-gray">Left Air On</button>
-      <button class="btn-gray">Left Air Off</button>
-      <button class="btn-gray">Left Vac</button>
+      <Button type="secondary">Left Air On</Button>
+      <Button type="secondary">Left Air Off</Button>
+      <Button type="secondary">Left Vac</Button>
     </div>
 
     <div>
-      <button class="btn-gray">Disable Steppers</button>
+      <Button type="secondary">Disable Steppers</Button>
     </div>
   </div>
 </template>
 
 <script setup>
+import Button from './Button.vue'
 import { useSerialStore } from '../stores/serial'
 import { useControlsStore } from '../stores/controls'
 
@@ -116,20 +117,4 @@ const controls = useControlsStore()
 
 <style scoped>
 @import "tailwindcss" reference;
-
-.btn-goldenrod {
-  background-color: var(--color-goldenrod);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.25rem;
-  font-weight: 500;
-}
-
-.btn-goldenrod:hover {
-  background-color: var(--color-goldenrod-dark);
-}
-
-.btn-gray {
-  @apply bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded font-medium;
-}
 </style>

@@ -18,29 +18,29 @@
         class="hidden"
       />
 
-      <button @click="$refs.jobFileInput.click()" class="btn-goldenrod">Import Job</button>
+      <Button @click="$refs.jobFileInput.click()">Import Job</Button>
       <span class="text-gray-400">OR</span>
-      <button @click="$refs.pasteGerberInput.click()" class="btn-goldenrod">
+      <Button @click="$refs.pasteGerberInput.click()">
         Select Paste Gerber
-      </button>
+      </Button>
       <span v-if="pasteGerberFile" class="text-sm text-gray-300">{{ pasteGerberFile.name }}</span>
-      <button @click="$refs.maskGerberInput.click()" class="btn-goldenrod">
+      <Button @click="$refs.maskGerberInput.click()">
         Select Mask Gerber
-      </button>
+      </Button>
       <span v-if="maskGerberFile" class="text-sm text-gray-300">{{ maskGerberFile.name }}</span>
-      <button
+      <Button
         @click="handleLoadGerbers"
         :disabled="!pasteGerberFile || !maskGerberFile"
-        class="btn-goldenrod disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Load Gerbers
-      </button>
+      </Button>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
+import Button from './Button.vue'
 import { useJobStore } from '../stores/job'
 
 const jobStore = useJobStore()
@@ -81,16 +81,3 @@ async function handleLoadGerbers() {
 }
 </script>
 
-<style scoped>
-.btn-goldenrod {
-  background-color: var(--color-goldenrod);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.25rem;
-  font-weight: 500;
-}
-
-.btn-goldenrod:hover {
-  background-color: var(--color-goldenrod-dark);
-}
-</style>

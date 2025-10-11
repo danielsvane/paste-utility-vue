@@ -17,13 +17,14 @@
         placeholder="Send Gcode"
         class="flex-1 bg-gray-700 text-white border border-gray-600 rounded px-3 py-2"
       />
-      <button @click="handleSendCommand" class="btn-goldenrod">Send</button>
+      <Button @click="handleSendCommand">Send</Button>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
+import Button from './Button.vue'
 import { useSerialStore } from '../stores/serial'
 
 const serial = useSerialStore()
@@ -58,16 +59,3 @@ function handleArrowDown() {
 }
 </script>
 
-<style scoped>
-.btn-goldenrod {
-  background-color: var(--color-goldenrod);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.25rem;
-  font-weight: 500;
-}
-
-.btn-goldenrod:hover {
-  background-color: var(--color-goldenrod-dark);
-}
-</style>

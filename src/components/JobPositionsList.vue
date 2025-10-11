@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-2xl font-medium text-white">Job Positions</h2>
       <div class="flex gap-2">
-        <button class="btn-goldenrod">Capture New Position</button>
+        <Button>Capture New Position</Button>
       </div>
     </div>
     <div class="positions-list text-gray-300">
@@ -51,21 +51,9 @@
 </template>
 
 <script setup>
+import Button from './Button.vue'
 import { useJobStore } from '../stores/job'
 
 const jobStore = useJobStore()
 </script>
 
-<style scoped>
-.btn-goldenrod {
-  background-color: var(--color-goldenrod);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.25rem;
-  font-weight: 500;
-}
-
-.btn-goldenrod:hover {
-  background-color: var(--color-goldenrod-dark);
-}
-</style>
