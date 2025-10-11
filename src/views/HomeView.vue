@@ -36,15 +36,22 @@
     </div>
 
     <!-- Main Content -->
-    <div class="flex flex-1 overflow-hidden">
+    <div class="grid grid-cols-2 flex-1 overflow-hidden">
       <!-- Left Column -->
-      <div class="flex-1 p-6 overflow-y-auto bg-gray-800">
-        <JobControls />
+      <div class="p-6 overflow-y-auto bg-gray-800 space-y-6">
+        <CalibrationPanel v-if="serialStore.isConnected" />
+        <JobImport />
+        <JobPositionsList />
+        <JobPreviewPanel />
+        <JobSettings />
+        <JobActions />
       </div>
 
       <!-- Right Column -->
-      <div class="flex-1 p-6 overflow-y-auto bg-gray-900 border-l border-gray-700">
+      <div class="p-6 overflow-y-auto bg-gray-900 border-l border-gray-700 space-y-6">
         <VideoControls />
+        <MachineControls v-if="serialStore.isConnected" />
+        <ConsoleRepl v-if="serialStore.isConnected" />
       </div>
     </div>
 
@@ -60,8 +67,15 @@ import { ref, onMounted, inject } from 'vue'
 import { onOpenCVReady, logOpenCVVersion } from '../composables/useOpenCV'
 import { useSerialStore } from '../stores/serial'
 import { useVideo } from '../composables/useVideo'
-import JobControls from '../components/JobControls.vue'
+import CalibrationPanel from '../components/CalibrationPanel.vue'
+import JobImport from '../components/JobImport.vue'
+import JobPositionsList from '../components/JobPositionsList.vue'
+import JobPreviewPanel from '../components/JobPreviewPanel.vue'
+import JobSettings from '../components/JobSettings.vue'
+import JobActions from '../components/JobActions.vue'
 import VideoControls from '../components/VideoControls.vue'
+import MachineControls from '../components/MachineControls.vue'
+import ConsoleRepl from '../components/ConsoleRepl.vue'
 
 const modalRef = inject('modal')
 const cameras = ref([])
