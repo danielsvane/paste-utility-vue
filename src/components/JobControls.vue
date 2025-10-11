@@ -8,14 +8,14 @@
           type="file"
           ref="pasteGerberInput"
           @change="handlePasteGerberSelect"
-          accept=".gbr"
+          accept=".gbr,.gbp,.gtp"
           class="hidden"
         />
         <input
           type="file"
           ref="maskGerberInput"
           @change="handleMaskGerberSelect"
-          accept=".gbr"
+          accept=".gbr,.gbs,.gts"
           class="hidden"
         />
 
@@ -97,6 +97,30 @@
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-2xl font-medium text-white">Job Preview</h2>
         <div class="flex items-center gap-4">
+          <!-- Zoom Controls -->
+          <div class="flex items-center gap-2 border-r border-gray-600 pr-4">
+            <button
+              @click="handleZoomIn"
+              class="btn-goldenrod-sm"
+              title="Zoom In"
+            >
+              +
+            </button>
+            <button
+              @click="handleZoomOut"
+              class="btn-goldenrod-sm"
+              title="Zoom Out"
+            >
+              −
+            </button>
+            <button
+              @click="handleResetZoom"
+              class="btn-goldenrod-sm"
+              title="Reset Zoom & Pan"
+            >
+              Reset
+            </button>
+          </div>
           <span class="text-sm text-gray-300">Board Side:</span>
           <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
             <input
@@ -119,6 +143,7 @@
         </div>
       </div>
       <JobPreview
+        ref="jobPreviewRef"
         :placements="jobStore.placements"
         :fiducials="jobStore.fiducials"
         :side="jobStore.boardSide"
@@ -185,6 +210,7 @@ const pasteGerberInput = ref(null)
 const maskGerberInput = ref(null)
 const pasteGerberFile = ref(null)
 const maskGerberFile = ref(null)
+const jobPreviewRef = ref(null)
 
 async function handleJobImport(event) {
   const file = event.target.files[0]
@@ -223,6 +249,24 @@ function handleRunJob() {
   console.log('Run job clicked')
   // Job running logic will be implemented
 }
+
+function handleZoomIn() {
+  if (jobPreviewRef.value) {
+    jobPreviewRef.value.zoomIn()
+  }
+}
+
+function handleZoomOut() {
+  if (jobPreviewRef.value) {
+    jobPreviewRef.value.zoomOut()
+  }
+}
+
+function handleResetZoom() {
+  if (jobPreviewRef.value) {
+    jobPreviewRef.value.resetZoom()
+  }
+}
 </script>
 
 <style scoped>
@@ -235,6 +279,19 @@ function handleRunJob() {
 }
 
 .btn-goldenrod:hover {
+  background-color: var(--color-goldenrod-dark);
+}
+
+.btn-goldenrod-sm {
+  background-color: var(--color-goldenrod);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.btn-goldenrod-sm:hover {
   background-color: var(--color-goldenrod-dark);
 }
 </style>

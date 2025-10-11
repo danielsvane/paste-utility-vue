@@ -36,7 +36,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import Panzoom from '@panzoom/panzoom'
 
 const props = defineProps({
   placements: {
@@ -63,6 +64,7 @@ const emit = defineEmits(['fiducial-clicked'])
 
 const svgRef = ref(null)
 const selectedFiducials = ref(new Set())
+const panzoomInstance = ref(null)
 const SVG_WIDTH = 800
 const SVG_HEIGHT = 600
 const MARGIN_PERCENT = 0.1 // 10% margin
@@ -188,10 +190,51 @@ watch(() => props.clickMode, (newMode) => {
   }
 })
 
+// Initialize panzoom
+onMounted(() => {
+  if (svgRef.value) {
+    panzoomInstance.value = Panzoom(svgRef.value, {
+      maxScale: 10,
+      minScale: 0.5,
+      step: 0.3,
+      canvas: true, // Enable better SVG panning
+      contain: 'outside', // Allow panning outside the container
+      cursor: 'default' // Don't change cursor for panning
+    })
+
+    // Enable mouse wheel zoom
+    const parent = svgRef.value.parentElement
+    if (parent) {
+      parent.addEventListener('wheel', panzoomInstance.value.zoomWithWheel)
+    }
+  }
+})
+
+onBeforeUnmount(() => {
+  if (panzoomInstance.value) {
+    panzoomInstance.value.destroy()
+  }
+})
+
 // Reset selected fiducials when starting new selection
 defineExpose({
   resetSelection() {
     selectedFiducials.value.clear()
+  },
+  resetZoom() {
+    if (panzoomInstance.value) {
+      panzoomInstance.value.reset()
+    }
+  },
+  zoomIn() {
+    if (panzoomInstance.value) {
+      panzoomInstance.value.zoomIn()
+    }
+  },
+  zoomOut() {
+    if (panzoomInstance.value) {
+      panzoomInstance.value.zoomOut()
+    }
   }
 })
 </script>
@@ -236,8 +279,6 @@ defineExpose({
 
 .placement-point {
   fill: #ef4444; /* red-500 */
-  stroke: #b91c1c; /* red-700 */
-  stroke-width: 0.5;
   transition: all 0.2s ease;
 }
 
