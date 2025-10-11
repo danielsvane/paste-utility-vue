@@ -1,7 +1,5 @@
 <template>
-  <div class="bg-gray-700 rounded-lg p-6">
-    <h2 class="text-2xl font-medium text-white mb-4">Calibration</h2>
-
+  <Card title="Calibration">
     <div class="space-y-3">
       <!-- Nozzle Offset Calibration -->
       <div class="calibration-item">
@@ -55,12 +53,13 @@
         </div>
       </div>
     </div>
-  </div>
+  </Card>
 </template>
 
 <script setup>
 import { computed } from 'vue'
 import Button from './Button.vue'
+import Card from './Card.vue'
 import { useJobStore } from '../stores/job'
 import { useSerialStore } from '../stores/serial'
 

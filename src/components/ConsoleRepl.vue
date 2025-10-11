@@ -1,6 +1,5 @@
 <template>
-  <div class="bg-gray-800 rounded-lg p-4">
-    <h3 class="text-xl font-medium text-white mb-3">Console</h3>
+  <Card title="Console">
     <div
       ref="consoleDiv"
       class="bg-black text-green-400 font-mono text-sm p-3 rounded h-48 overflow-y-auto mb-3"
@@ -19,12 +18,13 @@
       />
       <Button @click="handleSendCommand">Send</Button>
     </div>
-  </div>
+  </Card>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
 import Button from './Button.vue'
+import Card from './Card.vue'
 import { useSerialStore } from '../stores/serial'
 
 const serial = useSerialStore()

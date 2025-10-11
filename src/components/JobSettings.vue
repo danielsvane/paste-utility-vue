@@ -1,6 +1,5 @@
 <template>
-  <div class="bg-gray-700 rounded-lg p-6">
-    <h2 class="text-2xl font-medium text-white mb-4">Job Settings</h2>
+  <Card title="Job Settings">
     <div class="grid grid-cols-3 gap-4">
       <div>
         <label class="block text-sm text-gray-300 mb-1">Dispense Degrees:</label>
@@ -33,10 +32,11 @@
         />
       </div>
     </div>
-  </div>
+  </Card>
 </template>
 
 <script setup>
+import Card from './Card.vue'
 import { useJobStore } from '../stores/job'
 
 const jobStore = useJobStore()

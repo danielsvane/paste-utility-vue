@@ -1,11 +1,9 @@
 <template>
-  <div class="bg-gray-700 rounded-lg p-6">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-2xl font-medium text-white">Job Positions</h2>
-      <div class="flex gap-2">
-        <Button>Capture New Position</Button>
-      </div>
-    </div>
+  <Card title="Job Positions">
+    <template #actions>
+      <Button>Capture New Position</Button>
+    </template>
+
     <div class="positions-list text-gray-300">
       <p class="text-sm font-semibold mb-3">
         {{ jobStore.placements.length }} placements, {{ jobStore.fiducials.length }} fiducials
@@ -47,11 +45,12 @@
         </p>
       </div>
     </div>
-  </div>
+  </Card>
 </template>
 
 <script setup>
 import Button from './Button.vue'
+import Card from './Card.vue'
 import { useJobStore } from '../stores/job'
 
 const jobStore = useJobStore()

@@ -1,7 +1,6 @@
 <template>
-  <div class="bg-gray-700 rounded-lg p-6">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-2xl font-medium text-white">Job Preview</h2>
+  <Card title="Job Preview">
+    <template #actions>
       <div class="flex items-center gap-4">
         <!-- Zoom Controls -->
         <div class="flex items-center gap-2 border-r border-gray-600 pr-4">
@@ -47,7 +46,8 @@
           Back
         </label>
       </div>
-    </div>
+    </template>
+
     <JobPreview
       ref="jobPreviewRef"
       :placements="jobStore.placements"
@@ -55,12 +55,13 @@
       :side="jobStore.boardSide"
       :click-mode="null"
     />
-  </div>
+  </Card>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import Button from './Button.vue'
+import Card from './Card.vue'
 import { useJobStore } from '../stores/job'
 import JobPreview from './JobPreview.vue'
 

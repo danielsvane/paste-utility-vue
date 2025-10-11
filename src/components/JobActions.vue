@@ -1,14 +1,15 @@
 <template>
-  <div class="bg-gray-700 rounded-lg p-6">
+  <Card title="Job Actions">
     <div class="flex gap-3">
       <Button @click="handleExportJob">Export Job</Button>
       <Button @click="handleRunJob">Run Job</Button>
     </div>
-  </div>
+  </Card>
 </template>
 
 <script setup>
 import Button from './Button.vue'
+import Card from './Card.vue'
 import { useJobStore } from '../stores/job'
 
 const jobStore = useJobStore()

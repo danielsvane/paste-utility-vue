@@ -1,7 +1,6 @@
 <template>
-  <div class="bg-gray-800 rounded-lg p-4">
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-2xl font-medium text-white">Video Feed</h2>
+  <Card title="Video Feed">
+    <template #actions>
       <select
         v-model="selectedCamera"
         class="bg-gray-700 text-white px-4 py-2 rounded border border-gray-600"
@@ -12,18 +11,20 @@
           {{ camera.label }}
         </option>
       </select>
-    </div>
+    </template>
+
     <canvas id="opencv-canvas" class="w-full bg-black rounded"></canvas>
     <div v-if="videoError" class="mt-2 text-red-400 text-sm">
       Error: {{ videoError }}
     </div>
-  </div>
+  </Card>
 </template>
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { onOpenCVReady, logOpenCVVersion } from '../composables/useOpenCV'
 import { useVideo } from '../composables/useVideo'
+import Card from './Card.vue'
 
 const cameras = ref([])
 const selectedCamera = ref(null)

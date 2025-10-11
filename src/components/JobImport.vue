@@ -1,6 +1,5 @@
 <template>
-  <div class="bg-gray-700 rounded-lg p-6">
-    <h2 class="text-2xl font-medium text-white mb-4">Job Import</h2>
+  <Card title="Job Import">
     <div class="flex flex-wrap gap-3 items-center">
       <input type="file" ref="jobFileInput" @change="handleJobImport" accept=".json" class="hidden" />
       <input
@@ -35,12 +34,13 @@
         Load Gerbers
       </Button>
     </div>
-  </div>
+  </Card>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import Button from './Button.vue'
+import Card from './Card.vue'
 import { useJobStore } from '../stores/job'
 
 const jobStore = useJobStore()
