@@ -6,9 +6,7 @@
       <div class="flex-1 flex items-center gap-4">
         <SerialConnection />
       </div>
-      <a href="/help.html" class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded">
-        Docs
-      </a>
+      <Button @click="$router.push('/help')" text="Help" type="tertiary" />
     </div>
 
     <!-- Main Content -->
@@ -41,6 +39,7 @@
 <script setup>
 import { useSerialStore } from '../stores/serial'
 import Card from '../components/Card.vue'
+import Button from '../components/Button.vue'
 import SerialConnection from '../components/SerialConnection.vue'
 import CalibrationPanel from '../components/CalibrationPanel.vue'
 import JobImport from '../components/JobImport.vue'
