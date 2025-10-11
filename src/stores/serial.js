@@ -38,6 +38,44 @@ export const useSerialStore = defineStore('serial', () => {
     modalRef = modal
   }
 
+  function setupEventListeners() {
+    if (!navigator.serial) {
+      return
+    }
+
+    // Listen for device connect events
+    navigator.serial.addEventListener('connect', async (event) => {
+      console.log('Serial device connected:', event)
+
+      // If we're not currently connected, try to auto-connect
+      if (!isConnected.value) {
+        const connectedPort = event.target
+        const info = connectedPort.getInfo()
+
+        // Check if it's our vendor ID
+        if (info.usbVendorId === 0x0483) {
+          console.log('Our device connected, attempting to auto-connect...')
+          try {
+            await openPort(connectedPort)
+          } catch (err) {
+            console.error('Failed to auto-connect on device connection:', err)
+          }
+        }
+      }
+    })
+
+    // Listen for device disconnect events
+    navigator.serial.addEventListener('disconnect', (event) => {
+      console.log('Serial device disconnected:', event)
+
+      // Update connection state if our port was disconnected
+      if (event.target === port.value) {
+        isConnected.value = false
+        port.value = null
+      }
+    })
+  }
+
   function appendToConsole(message, direction) {
     const timestamp = new Date().toISOString()
     const dir = direction ? '[SEND]' : '[RECE]'
@@ -57,20 +95,23 @@ export const useSerialStore = defineStore('serial', () => {
     return new Promise(resolve => setTimeout(resolve, delayInms))
   }
 
-  async function connect() {
+  async function getAuthorizedPorts() {
     if (!navigator.serial) {
-      modalRef?.show(
-        'Browser Support',
-        "Please use a browser that supports WebSerial, like Chrome, Opera, or Edge. <a href='https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API#browser_compatibility'>Supported Browsers."
-      )
-      return false
+      return []
     }
 
     const usbVendorId = 0x0483
-    port.value = await navigator.serial.requestPort({ filters: [{ usbVendorId }] })
-    console.log('Port Selected.')
+    const ports = await navigator.serial.getPorts()
 
-    await port.value.open({
+    // Filter for our specific vendor ID
+    return ports.filter(p => {
+      const info = p.getInfo()
+      return info.usbVendorId === usbVendorId
+    })
+  }
+
+  async function openPort(portToOpen) {
+    await portToOpen.open({
       baudRate: 115200,
       bufferSize: 255,
       dataBits: 8,
@@ -80,6 +121,7 @@ export const useSerialStore = defineStore('serial', () => {
     })
 
     console.log('Port Opened.')
+    port.value = portToOpen
     listen()
 
     isConnected.value = true
@@ -89,6 +131,47 @@ export const useSerialStore = defineStore('serial', () => {
     await send(['M150 P255 R255 U255 B255'])
 
     return true
+  }
+
+  async function autoConnect() {
+    try {
+      const authorizedPorts = await getAuthorizedPorts()
+
+      if (authorizedPorts.length > 0) {
+        console.log('Found previously authorized port, auto-connecting...')
+        return await openPort(authorizedPorts[0])
+      }
+
+      return false
+    } catch (err) {
+      console.error('Auto-connect failed:', err)
+      return false
+    }
+  }
+
+  async function connect() {
+    if (!navigator.serial) {
+      modalRef?.show(
+        'Browser Support',
+        "Please use a browser that supports WebSerial, like Chrome, Opera, or Edge. <a href='https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API#browser_compatibility'>Supported Browsers."
+      )
+      return false
+    }
+
+    // First, check if we have previously authorized ports
+    const authorizedPorts = await getAuthorizedPorts()
+
+    if (authorizedPorts.length > 0) {
+      console.log('Reconnecting to previously authorized port...')
+      return await openPort(authorizedPorts[0])
+    }
+
+    // If no authorized ports, show the picker
+    const usbVendorId = 0x0483
+    const selectedPort = await navigator.serial.requestPort({ filters: [{ usbVendorId }] })
+    console.log('Port Selected.')
+
+    return await openPort(selectedPort)
   }
 
   async function listen() {
@@ -290,6 +373,9 @@ export const useSerialStore = defineStore('serial', () => {
 
     // Methods
     setModal,
+    setupEventListeners,
+    getAuthorizedPorts,
+    autoConnect,
     connect,
     send,
     sendRepl,

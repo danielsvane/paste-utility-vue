@@ -23,7 +23,7 @@
         @mouseenter="e => !serialStore.isConnected && (e.target.style.backgroundColor = 'var(--color-goldenrod-dark)')"
         @mouseleave="e => !serialStore.isConnected && (e.target.style.backgroundColor = 'var(--color-goldenrod)')"
       >
-        {{ serialStore.isConnected ? 'Connected' : 'Connect' }}
+        {{ connectButtonText }}
       </button>
     </div>
 
@@ -55,7 +55,7 @@
 </template>
 
 <script setup>
-import { onMounted, inject } from 'vue'
+import { onMounted, inject, ref, computed } from 'vue'
 import { useSerialStore } from '../stores/serial'
 import CalibrationPanel from '../components/CalibrationPanel.vue'
 import JobImport from '../components/JobImport.vue'
@@ -69,10 +69,31 @@ import ConsoleRepl from '../components/ConsoleRepl.vue'
 
 const modalRef = inject('modal')
 const serialStore = useSerialStore()
+const hasAuthorizedPorts = ref(false)
 
-onMounted(() => {
+const connectButtonText = computed(() => {
+  if (serialStore.isConnected) return 'Connected'
+  if (hasAuthorizedPorts.value) return 'Reconnect to Device'
+  return 'Connect'
+})
+
+onMounted(async () => {
   // Initialize serial store with modal reference
   serialStore.setModal(modalRef.value)
+
+  // Setup event listeners for device connect/disconnect
+  serialStore.setupEventListeners()
+
+  // Check if we have authorized ports
+  const authorizedPorts = await serialStore.getAuthorizedPorts()
+  hasAuthorizedPorts.value = authorizedPorts.length > 0
+
+  // Attempt to auto-connect to previously authorized device
+  try {
+    await serialStore.autoConnect()
+  } catch (err) {
+    console.error('Auto-connect on mount failed:', err)
+  }
 })
 
 async function handleConnect() {
