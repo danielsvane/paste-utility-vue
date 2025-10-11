@@ -96,15 +96,26 @@
     <div class="bg-gray-700 rounded-lg p-6">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-2xl font-medium text-white">Job Preview</h2>
-        <div class="flex items-center gap-2">
-          <label class="text-sm text-gray-300">Board Side:</label>
-          <select
-            v-model="jobStore.boardSide"
-            class="bg-gray-800 text-white border border-gray-600 rounded px-3 py-1 text-sm"
-          >
-            <option value="front">Front</option>
-            <option value="back">Back</option>
-          </select>
+        <div class="flex items-center gap-4">
+          <span class="text-sm text-gray-300">Board Side:</span>
+          <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+            <input
+              type="radio"
+              v-model="jobStore.boardSide"
+              value="front"
+              class="cursor-pointer"
+            />
+            Front
+          </label>
+          <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+            <input
+              type="radio"
+              v-model="jobStore.boardSide"
+              value="back"
+              class="cursor-pointer"
+            />
+            Back
+          </label>
         </div>
       </div>
       <JobPreview
