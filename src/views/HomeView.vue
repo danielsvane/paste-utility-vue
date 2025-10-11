@@ -1,36 +1,17 @@
 <template>
   <div class="flex flex-col min-h-screen">
     <!-- Header -->
-    <div class="bg-gray-800 px-8 py-5">
+    <div class="bg-gray-800 px-8 py-5 flex justify-between items-center">
       <h1 class="text-3xl font-semibold text-white">LumenPnP Pasting Utility</h1>
-    </div>
-
-    <!-- Top Controls -->
-    <div class="bg-gray-800 px-8 py-4 flex gap-4 items-center border-t border-gray-700">
       <a href="/help.html" class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded">
         Docs
       </a>
-      <button
-        @click="handleConnect"
-        :disabled="serialStore.isConnected"
-        :class="[
-          'px-6 py-2 rounded font-medium',
-          serialStore.isConnected
-            ? 'bg-green-600 text-white cursor-not-allowed'
-            : 'text-white'
-        ]"
-        :style="!serialStore.isConnected ? { backgroundColor: 'var(--color-goldenrod)' } : {}"
-        @mouseenter="e => !serialStore.isConnected && (e.target.style.backgroundColor = 'var(--color-goldenrod-dark)')"
-        @mouseleave="e => !serialStore.isConnected && (e.target.style.backgroundColor = 'var(--color-goldenrod)')"
-      >
-        {{ connectButtonText }}
-      </button>
     </div>
 
     <!-- Main Content -->
     <div class="grid grid-cols-2 flex-1 overflow-hidden">
       <!-- Left Column -->
-      <div class="p-6 overflow-y-auto bg-gray-800 space-y-6">
+      <div class="p-6 overflow-y-auto bg-gray-900 space-y-6">
         <CalibrationPanel v-if="serialStore.isConnected" />
         <JobImport />
         <JobPositionsList />
@@ -40,7 +21,8 @@
       </div>
 
       <!-- Right Column -->
-      <div class="p-6 overflow-y-auto bg-gray-900 border-l border-gray-700 space-y-6">
+      <div class="p-6 overflow-y-auto bg-gray-900 space-y-6">
+        <SerialConnection />
         <VideoControls />
         <MachineControls v-if="serialStore.isConnected" />
         <ConsoleRepl v-if="serialStore.isConnected" />
@@ -55,8 +37,8 @@
 </template>
 
 <script setup>
-import { onMounted, inject, ref, computed } from 'vue'
 import { useSerialStore } from '../stores/serial'
+import SerialConnection from '../components/SerialConnection.vue'
 import CalibrationPanel from '../components/CalibrationPanel.vue'
 import JobImport from '../components/JobImport.vue'
 import JobPositionsList from '../components/JobPositionsList.vue'
@@ -67,42 +49,5 @@ import VideoControls from '../components/VideoControls.vue'
 import MachineControls from '../components/MachineControls.vue'
 import ConsoleRepl from '../components/ConsoleRepl.vue'
 
-const modalRef = inject('modal')
 const serialStore = useSerialStore()
-const hasAuthorizedPorts = ref(false)
-
-const connectButtonText = computed(() => {
-  if (serialStore.isConnected) return 'Connected'
-  if (hasAuthorizedPorts.value) return 'Reconnect to Device'
-  return 'Connect'
-})
-
-onMounted(async () => {
-  // Initialize serial store with modal reference
-  serialStore.setModal(modalRef.value)
-
-  // Setup event listeners for device connect/disconnect
-  serialStore.setupEventListeners()
-
-  // Check if we have authorized ports
-  const authorizedPorts = await serialStore.getAuthorizedPorts()
-  hasAuthorizedPorts.value = authorizedPorts.length > 0
-
-  // Attempt to auto-connect to previously authorized device
-  try {
-    await serialStore.autoConnect()
-  } catch (err) {
-    console.error('Auto-connect on mount failed:', err)
-  }
-})
-
-async function handleConnect() {
-  if (serialStore.isConnected) return
-
-  try {
-    await serialStore.connect()
-  } catch (err) {
-    alert('Error connecting to serial: ' + err.message)
-  }
-}
 </script>
