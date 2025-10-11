@@ -21,9 +21,9 @@
       icon="left-right" />
 
     <!-- Auto-connect checkbox (only when connected) -->
-    <label v-if="serialStore.isConnected" class="auto-connect-label">
-      <input type="checkbox" v-model="serialStore.autoConnect" class="checkbox" />
-      <span class="checkbox-text">Auto-connect</span>
+    <label v-if="serialStore.isConnected">
+      <input type="checkbox" v-model="serialStore.autoConnect" />
+      Auto-connect
     </label>
   </div>
 </template>
@@ -129,18 +129,5 @@ async function handlePickNewDevice() {
 
 .serial-connection {
   @apply flex items-center gap-3 flex-wrap;
-}
-
-.auto-connect-label {
-  @apply flex items-center gap-1.5 cursor-pointer text-gray-200;
-}
-
-.checkbox {
-  @apply w-3.5 h-3.5 cursor-pointer;
-  accent-color: var(--color-goldenrod);
-}
-
-.checkbox-text {
-  @apply select-none whitespace-nowrap;
 }
 </style>

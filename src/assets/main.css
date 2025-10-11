@@ -10,3 +10,12 @@
 body {
   font-family: 'Figtree', system-ui, -apple-system, sans-serif;
 }
+
+input[type="checkbox"] {
+  @apply w-3.5 h-3.5 cursor-pointer;
+  accent-color: var(--color-goldenrod);
+}
+
+label:has(input[type="checkbox"]) {
+  @apply flex items-center gap-2 cursor-pointer;
+}
