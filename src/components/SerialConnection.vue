@@ -132,7 +132,7 @@ async function handlePickNewDevice() {
 }
 
 .auto-connect-label {
-  @apply flex items-center gap-1.5 cursor-pointer text-gray-200 text-[0.8125rem];
+  @apply flex items-center gap-1.5 cursor-pointer text-gray-200;
 }
 
 .checkbox {
