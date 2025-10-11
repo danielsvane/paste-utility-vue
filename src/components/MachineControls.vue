@@ -1,52 +1,43 @@
 <template>
   <div class="space-y-6">
-    <!-- Connection Required Notice -->
-    <div v-if="!serial.isConnected" class="text-center text-gray-400 text-sm p-4 bg-gray-800 rounded border border-gray-600">
-      Connect to machine to access controls
+    <!-- Control Buttons -->
+    <div class="flex gap-3 flex-wrap">
+      <button class="btn-goldenrod">Jog to Fid in View</button>
+      <button class="btn-goldenrod">Visual Home</button>
     </div>
 
-    <!-- Control Buttons -->
-    <template v-if="serial.isConnected">
-      <div class="flex gap-3 flex-wrap">
-        <button class="btn-goldenrod">Jog to Fid in View</button>
-        <button class="btn-goldenrod">Visual Home</button>
-      </div>
+    <div class="flex gap-3 flex-wrap">
+      <button class="btn-goldenrod">Pressurize</button>
+      <button class="btn-goldenrod">Depressurize</button>
+    </div>
 
-      <div class="flex gap-3 flex-wrap">
-        <button class="btn-goldenrod">Pressurize</button>
-        <button class="btn-goldenrod">Depressurize</button>
-      </div>
+    <div class="flex gap-3 flex-wrap">
+      <button class="btn-goldenrod">Extrude</button>
+      <button class="btn-goldenrod">Start Slow Extrude</button>
+      <button class="btn-goldenrod">Stop Extrude</button>
+      <button class="btn-goldenrod">Retract & Raise</button>
+    </div>
 
-      <div class="flex gap-3 flex-wrap">
-        <button class="btn-goldenrod">Extrude</button>
-        <button class="btn-goldenrod">Start Slow Extrude</button>
-        <button class="btn-goldenrod">Stop Extrude</button>
-        <button class="btn-goldenrod">Retract & Raise</button>
-      </div>
+    <div class="flex gap-3 flex-wrap">
+      <button class="btn-goldenrod">Extrude Next Position</button>
+      <button class="btn-goldenrod" disabled>Continue Automatically</button>
+      <button class="btn-goldenrod">Reset Timer</button>
+    </div>
 
-      <div class="flex gap-3 flex-wrap">
-        <button class="btn-goldenrod">Extrude Next Position</button>
-        <button class="btn-goldenrod" disabled>Continue Automatically</button>
-        <button class="btn-goldenrod">Reset Timer</button>
-      </div>
-    </template>
+    <div class="text-center text-goldenrod text-sm p-2 bg-gray-800 rounded">
+      Manual mode - learning extrusion times
+    </div>
 
-    <template v-if="serial.isConnected">
-      <div class="text-center text-goldenrod text-sm p-2 bg-gray-800 rounded">
-        Manual mode - learning extrusion times
-      </div>
-
-      <!-- Homing Controls -->
-      <div class="flex gap-3">
-        <button @click="serial.send('G28')" class="btn-gray">Home All</button>
-        <button @click="serial.send('G28 X')" class="btn-gray">Home X</button>
-        <button @click="serial.send('G28 Y')" class="btn-gray">Home Y</button>
-        <button @click="serial.send('G28 Z')" class="btn-gray">Home Z</button>
-      </div>
-    </template>
+    <!-- Homing Controls -->
+    <div class="flex gap-3">
+      <button @click="serial.send('G28')" class="btn-gray">Home All</button>
+      <button @click="serial.send('G28 X')" class="btn-gray">Home X</button>
+      <button @click="serial.send('G28 Y')" class="btn-gray">Home Y</button>
+      <button @click="serial.send('G28 Z')" class="btn-gray">Home Z</button>
+    </div>
 
     <!-- Jog Controls -->
-    <div v-if="serial.isConnected" class="bg-gray-800 rounded-lg p-6">
+    <div class="bg-gray-800 rounded-lg p-6">
       <div class="flex flex-col items-center gap-4">
         <!-- Jog Buttons -->
         <div class="grid grid-cols-3 gap-2">
@@ -98,30 +89,26 @@
     </div>
 
     <!-- Light and Air Controls -->
-    <div v-if="serial.isConnected" class="flex gap-3 flex-wrap">
+    <div class="flex gap-3 flex-wrap">
       <button class="btn-gray">Ring Lights On</button>
       <button class="btn-gray">Ring Lights Off</button>
     </div>
 
-    <div v-if="serial.isConnected" class="flex gap-3 flex-wrap">
+    <div class="flex gap-3 flex-wrap">
       <button class="btn-gray">Left Air On</button>
       <button class="btn-gray">Left Air Off</button>
       <button class="btn-gray">Left Vac</button>
     </div>
 
-    <div v-if="serial.isConnected">
+    <div>
       <button class="btn-gray">Disable Steppers</button>
     </div>
-
-    <!-- Console REPL -->
-    <ConsoleRepl />
   </div>
 </template>
 
 <script setup>
 import { useSerialStore } from '../stores/serial'
 import { useControlsStore } from '../stores/controls'
-import ConsoleRepl from './ConsoleRepl.vue'
 
 const serial = useSerialStore()
 const controls = useControlsStore()

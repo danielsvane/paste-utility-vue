@@ -1,5 +1,5 @@
 <template>
-  <div v-if="serialStore.isConnected" class="bg-gray-700 rounded-lg p-6">
+  <div class="bg-gray-700 rounded-lg p-6">
     <h2 class="text-2xl font-medium text-white mb-4">Calibration</h2>
 
     <div class="space-y-3">

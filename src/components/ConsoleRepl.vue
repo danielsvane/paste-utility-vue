@@ -1,5 +1,5 @@
 <template>
-  <div v-if="serial.isConnected" class="bg-gray-800 rounded-lg p-4">
+  <div class="bg-gray-800 rounded-lg p-4">
     <h3 class="text-xl font-medium text-white mb-3">Console</h3>
     <div
       ref="consoleDiv"
