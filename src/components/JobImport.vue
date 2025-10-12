@@ -2,32 +2,16 @@
   <Card title="Job Import">
     <div class="flex flex-wrap gap-3 items-center">
       <input type="file" ref="jobFileInput" @change="handleJobImport" accept=".json" class="hidden" />
-      <input
-        type="file"
-        ref="pasteGerberInput"
-        @change="handlePasteGerberSelect"
-        accept=".gbr,.gbp,.gtp"
-        class="hidden"
-      />
-      <input
-        type="file"
-        ref="maskGerberInput"
-        @change="handleMaskGerberSelect"
-        accept=".gbr,.gbs,.gts"
-        class="hidden"
-      />
+      <input type="file" ref="pasteGerberInput" @change="handlePasteGerberSelect" accept=".gbr,.gbp,.gtp"
+        class="hidden" />
+      <input type="file" ref="maskGerberInput" @change="handleMaskGerberSelect" accept=".gbr,.gbs,.gts"
+        class="hidden" />
 
       <Button @click="$refs.jobFileInput.click()" text="Import Job" />
       <span class="text-gray-400">OR</span>
-      <Button @click="$refs.pasteGerberInput.click()" text="Select Paste Gerber" />
-      <span v-if="pasteGerberFile" class="text-sm text-gray-300">{{ pasteGerberFile.name }}</span>
-      <Button @click="$refs.maskGerberInput.click()" text="Select Mask Gerber" />
-      <span v-if="maskGerberFile" class="text-sm text-gray-300">{{ maskGerberFile.name }}</span>
-      <Button
-        @click="handleLoadGerbers"
-        :disabled="!pasteGerberFile || !maskGerberFile"
-        text="Load Gerbers"
-      />
+      <Button @click="$refs.pasteGerberInput.click()" text="Select Paste Gerber" :sub-label="pasteGerberFile?.name" />
+      <Button @click="$refs.maskGerberInput.click()" text="Select Mask Gerber" :sub-label="maskGerberFile?.name" />
+      <Button @click="handleLoadGerbers" :disabled="!pasteGerberFile || !maskGerberFile" text="Load Gerbers" />
     </div>
   </Card>
 </template>
@@ -75,4 +59,3 @@ async function handleLoadGerbers() {
   }
 }
 </script>
-

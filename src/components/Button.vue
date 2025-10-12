@@ -1,7 +1,10 @@
 <template>
   <button :class="buttonClasses" :disabled="disabled" @click="$emit('click', $event)">
     <font-awesome-icon class="opacity-50" v-if="icon" :icon="icon" />
-    <span v-if="text">{{ text }}</span>
+    <div v-if="text || subLabel" class="flex flex-col items-center -space-y-1">
+      <span v-if="text">{{ text }}</span>
+      <span v-if="subLabel" class="text-xs opacity-80 truncate font-normal">{{ subLabel }}</span>
+    </div>
   </button>
 </template>
 
@@ -10,6 +13,10 @@ import { computed } from 'vue'
 
 const props = defineProps({
   text: {
+    type: String,
+    default: ''
+  },
+  subLabel: {
     type: String,
     default: ''
   },
@@ -131,5 +138,10 @@ const buttonClasses = computed(() => {
 /* Full width */
 .btn-full-width {
   @apply w-full;
+}
+
+/* Sub label styling */
+.sub-label {
+  @apply text-xs opacity-70 truncate max-w-full;
 }
 </style>
