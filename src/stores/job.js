@@ -9,6 +9,9 @@ import { fromTriangles, applyToPoint } from 'transformation-matrix'
 import { SAFE_Z_HEIGHT, DEFAULT_Z_HEIGHT, EXTRUSION_HEIGHT } from '../constants'
 
 export const useJobStore = defineStore('job', () => {
+  // Store references
+  const serialStore = useSerialStore()
+
   // IMMUTABLE ORIGINALS - Never mutated after load
   const originalPlacements = ref([])  // { x, y, z: 31.5 }
   const originalFiducials = ref([])   // { x, y, z: 31.5 }
@@ -308,16 +311,35 @@ export const useJobStore = defineStore('job', () => {
     extrusionStartTime.value = null
     isLearningMode.value = true
     autoExtrusionDuration.value = null
+    currentPlacementIndex.value = -1
     console.log('Extrusion timing data has been reset')
   }
 
-  function moveCameraToPosition(position, placementIndex = -1) {
-    const { send } = useSerialStore()
+  function recordExtrusionTiming() {
+    if (extrusionStartTime.value === null || currentPlacementIndex.value <= 0) {
+      return
+    }
+
+    const extrusionDuration = Date.now() - extrusionStartTime.value
+    extrusionTimings.value.push(extrusionDuration)
+    console.log(`Pad ${currentPlacementIndex.value + 1} extrusion duration: ${(extrusionDuration / 1000).toFixed(2)}s`)
+
+    // Calculate and display average (excluding first pad)
+    if (extrusionTimings.value.length > 0) {
+      const average = extrusionTimings.value.reduce((a, b) => a + b, 0) / extrusionTimings.value.length
+      console.log(`Average extrusion time: ${(average / 1000).toFixed(2)}s (based on ${extrusionTimings.value.length} pads)`)
+
+      // Update the auto extrusion duration
+      autoExtrusionDuration.value = average
+    }
+  }
+
+  async function moveCameraToPosition(position, placementIndex = -1) {
     // Move to XY position at safe height without changing Z
     // Position should be from calibratedPlacements or calibratedFiducials
 
     // Safety: lift to safe Z first, then move XY
-    send([
+    await serialStore.send([
       'G90',
       `G0 Z${SAFE_Z_HEIGHT}`,  // Lift to safe height first
       `G0 X${position.x.toFixed(3)} Y${position.y.toFixed(3)}`  // Move XY at safe height
@@ -329,8 +351,7 @@ export const useJobStore = defineStore('job', () => {
     }
   }
 
-  function moveNozzleToPosition(position, placementIndex = -1) {
-    const { send } = useSerialStore()
+  async function moveNozzleToPosition(position, placementIndex = -1) {
     // Move to XYZ position with tip offset applied
     // Position should be from calibratedPlacements or calibratedFiducials
     const x = position.x + tipXoffset.value
@@ -338,7 +359,7 @@ export const useJobStore = defineStore('job', () => {
     const z = position.z - EXTRUSION_HEIGHT  // Add extrusion height above board surface
 
     // Safety: lift to safe Z, move XY, then descend to extrusion height
-    send([
+    await serialStore.send([
       'G90',
       `G0 Z${SAFE_Z_HEIGHT}`,  // Lift to safe height first
       `G0 X${x.toFixed(3)} Y${y.toFixed(3)}`,  // Move XY at safe height
@@ -472,8 +493,6 @@ export const useJobStore = defineStore('job', () => {
   }
 
   async function findBoardRoughPosition(toast) {
-    const serialStore = useSerialStore()
-
     // Validate we have fiducials
     if (originalFiducials.value.length < 3) {
       throw new Error('Need at least 3 fiducials to perform rough board position')
@@ -533,8 +552,6 @@ export const useJobStore = defineStore('job', () => {
   }
 
   async function performFiducialCalibration() {
-    const serialStore = useSerialStore()
-
     // Requires rough calibration first
     if (!hasRoughCalibration.value) {
       throw new Error('Must perform rough board position first')
@@ -602,40 +619,178 @@ export const useJobStore = defineStore('job', () => {
   }
 
   async function pressurize() {
-    const { send } = useSerialStore()
-    await send(['G91', 'G0 B-200', 'G90'])
+    await serialStore.send(['G91', 'G0 B-200', 'G90'])
   }
 
   async function depressurize() {
-    const { send } = useSerialStore()
-    await send(['G91', 'G0 B200', 'G90'])
+    await serialStore.send(['G91', 'G0 B200', 'G90'])
   }
 
   async function extrude() {
     const EXTRUDE_AMOUNT = 10
-    const { send } = useSerialStore()
-    await send(['G91', `G0 B-${EXTRUDE_AMOUNT}`, 'G90'])
+    await serialStore.send(['G91', `G0 B-${EXTRUDE_AMOUNT}`, 'G90'])
   }
 
   async function startSlowExtrude() {
-    const { send } = useSerialStore()
-    await send(['G91', 'G1 B-20000 F400', 'G90'])
+    await serialStore.send(['G91', 'G1 B-20000 F400', 'G90'])
   }
 
   async function stopExtrude() {
-    const { send } = useSerialStore()
-    await send(['M410', 'G90', 'G0 F35000'])
+    await serialStore.send(['M410', 'G90', 'G0 F35000'])
   }
 
   async function retractAndRaise() {
     const RETRACTION_AMOUNT = 10
-    const { send } = useSerialStore()
-    await send(['G91', `G0 B${RETRACTION_AMOUNT}`, 'G90', `G0 Z${SAFE_Z_HEIGHT}`])
+    await serialStore.send(['G91', `G0 B${RETRACTION_AMOUNT}`, 'G90', `G0 Z${SAFE_Z_HEIGHT}`])
+  }
+
+  // Sequential extrusion workflow: stop extrude, retract, raise, move to next position, pressurize, start slow extrude
+  async function extrudeNextPosition() {
+    // Determine next position index
+    let nextIndex
+    const isFirstPosition = currentPlacementIndex.value < 0
+
+    if (isFirstPosition) {
+      // No position clicked yet, start at first position
+      nextIndex = 0
+    } else {
+      // Move to next position
+      nextIndex = currentPlacementIndex.value + 1
+    }
+
+    // Check if we're past the end
+    if (nextIndex >= calibratedPlacements.value.length) {
+      console.log('No more positions to extrude')
+      return
+    }
+
+    // Only stop extrude, retract and raise if not the first position
+    if (!isFirstPosition) {
+      // Record timing for the previous extrusion
+      recordExtrusionTiming()
+
+      // Step 1: Stop extrude
+      await stopExtrude()
+
+      // Step 2: Retract and raise
+      await retractAndRaise()
+    }
+
+    // Step 3: Get next position
+    const position = calibratedPlacements.value[nextIndex]
+
+    // Step 4: Move to next position
+    await moveNozzleToPosition(position, nextIndex)
+
+    // Step 5: Extrude
+    await extrude()
+
+    // Step 6: Start slow extrude and start timing (skip first pad)
+    await startSlowExtrude()
+
+    // Start timing for this extrusion (skip the very first pad)
+    if (nextIndex > 0) {
+      extrusionStartTime.value = Date.now()
+    }
+
+    // Update current index
+    currentPlacementIndex.value = nextIndex
+
+    console.log(`Moved to position ${nextIndex + 1} of ${calibratedPlacements.value.length}`)
+  }
+
+  // Automated extrusion workflow using calculated average timing
+  async function runAutomatedExtrusion(toast) {
+    // Verify we have calculated duration
+    if (autoExtrusionDuration.value === null || extrusionTimings.value.length < 2) {
+      console.error('Need at least 2 timed extrusions before running automated mode')
+      return
+    }
+
+    // Switch to auto mode
+    isLearningMode.value = false
+
+    // Track if user cancelled
+    let cancelled = false
+
+    // Show cancellable toast - it resolves with false when user closes it
+    const toastPromise = toast.value.show(`Running automated extrusion (${(autoExtrusionDuration.value / 1000).toFixed(1)}s per pad). Close to cancel.`)
+    toastPromise.then((result) => {
+      if (result === false) {
+        cancelled = true
+        console.log('User cancelled automated extrusion')
+      }
+    })
+
+    // Get remaining placements (everything after current index)
+    const remainingCount = calibratedPlacements.value.length - (currentPlacementIndex.value + 1)
+    console.log(`Starting automated extrusion for ${remainingCount} remaining pads`)
+
+    try {
+      for (let i = currentPlacementIndex.value + 1; i < calibratedPlacements.value.length; i++) {
+        // Check if user cancelled
+        if (cancelled) {
+          console.log('Stopping automated extrusion due to user cancellation')
+          break
+        }
+
+        // Stop previous extrusion if not first in auto sequence
+        if (i > currentPlacementIndex.value + 1) {
+          await stopExtrude()
+          await retractAndRaise()
+        } else {
+          // For the first pad in auto sequence, stop the current manual extrusion
+          await stopExtrude()
+          await retractAndRaise()
+        }
+
+        // Check cancellation again after stopping
+        if (cancelled) {
+          console.log('Stopping automated extrusion due to user cancellation')
+          break
+        }
+
+        // Get position
+        const position = calibratedPlacements.value[i]
+
+        // Move to position
+        await moveNozzleToPosition(position, i)
+
+        // Extrude
+        await extrude()
+
+        // Start slow extrude
+        await startSlowExtrude()
+
+        // Wait for the calculated average duration
+        console.log(`Extruding pad ${i + 1} for ${(autoExtrusionDuration.value / 1000).toFixed(1)}s`)
+        await new Promise(resolve => setTimeout(resolve, autoExtrusionDuration.value))
+
+        // Update current index
+        currentPlacementIndex.value = i
+      }
+
+      // Final cleanup after all pads (or cancellation)
+      if (cancelled) {
+        // If cancelled, make sure we stop and go to safe position
+        await stopExtrude()
+        await retractAndRaise()
+        await serialStore.send(['G0 X5 Y5'])
+        console.log('Automated extrusion cancelled - returned to safe position')
+      } else {
+        // Normal completion
+        await stopExtrude()
+        await retractAndRaise()
+        await serialStore.send(['G0 X5 Y5'])
+        console.log('Automated extrusion complete')
+      }
+    } finally {
+      // Switch back to learning mode
+      isLearningMode.value = true
+    }
   }
 
   async function performTipCalibration(toast) {
-    const serialStore = useSerialStore()
-
     await toast.show('Please jog the camera to be centered on any fiducial.')
 
     // Grab current camera position
@@ -661,8 +816,6 @@ export const useJobStore = defineStore('job', () => {
 
   // Manual plane calibration methods
   async function saveCalibrationPointForPlacement(placementIndex) {
-    const serialStore = useSerialStore()
-
     // Get current position
     const position = await serialStore.grabBoardPosition()
     const x = parseFloat(position[0])
@@ -817,6 +970,8 @@ export const useJobStore = defineStore('job', () => {
     startSlowExtrude,
     stopExtrude,
     retractAndRaise,
+    extrudeNextPosition,
+    runAutomatedExtrusion,
     saveCalibrationPointForPlacement,
     deleteCalibrationPoint,
     clearCalibrationPoints,
