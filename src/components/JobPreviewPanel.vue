@@ -51,7 +51,10 @@
       :fiducials="displayFiducials"
       :side="jobStore.boardSide"
       :click-mode="clickMode"
+      :active-placement-index="jobStore.lastNavigatedPlacementIndex"
+      :calibrated-placement-indices="calibratedPlacementIndices"
       @fiducial-clicked="handleFiducialClicked"
+      @placement-clicked="handlePlacementClicked"
     />
   </Card>
 </template>
@@ -82,9 +85,29 @@ const clickMode = computed(() => {
   return jobStore.isFiducialSelectionMode ? 'fiducial-selection' : null
 })
 
+// Get indices of placements with calibration points
+const calibratedPlacementIndices = computed(() => {
+  return jobStore.planeCalibrationPoints.map(p => p.placementIndex)
+})
+
 function handleFiducialClicked(event) {
   // Forward the click event to the store
   jobStore.handleFiducialClick(event.index)
+}
+
+function handlePlacementClicked(event) {
+  // Move nozzle to the clicked placement
+  // Use calibrated position if available, otherwise use original
+  const placement = jobStore.isCalibrated && jobStore.calibratedPlacements.length > event.index
+    ? jobStore.calibratedPlacements[event.index]
+    : event.placement
+
+  if (!jobStore.isCalibrated) {
+    alert('Please complete "Get Rough Board Position" calibration first')
+    return
+  }
+
+  jobStore.moveNozzleToPosition(placement, event.index)
 }
 
 function handleZoomIn() {

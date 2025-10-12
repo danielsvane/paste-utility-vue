@@ -69,22 +69,30 @@
               {{ jobStore.originalPlacements.length }} <span class="text-gray-300">placements</span>
             </div>
 
-            <div v-for="(placement, index) in displayPlacements" :key="`placement-${index}`" class="grid-row">
+            <div v-for="(placement, index) in displayPlacements" :key="`placement-${index}`"
+                 class="grid-row"
+                 :class="{ 'active-placement': jobStore.lastNavigatedPlacementIndex === index }">
               <div class="grid-cell text-gray-400">{{ index + 1 }}</div>
               <div class="grid-cell">{{ placement.x !== null ? placement.x.toFixed(3) : 'N/A' }}</div>
               <div class="grid-cell">{{ placement.y !== null ? placement.y.toFixed(3) : 'N/A' }}</div>
-              <div class="grid-cell">{{ placement.z !== null ? placement.z.toFixed(3) : 'N/A' }}</div>
+              <div class="grid-cell" :class="{ 'calibrated-z': jobStore.hasCalibrationPoint(index) }">
+                {{ placement.z !== null ? placement.z.toFixed(3) : 'N/A' }}
+              </div>
               <div class="grid-cell"></div>
               <div class="grid-cell">
                 <div class="action-buttons">
                   <Button icon="eye" size="small" type="tertiary"
-                    @click="handleMoveCameraToPosition(placement)"
+                    @click="handleMoveCameraToPosition(placement, index)"
                     :disabled="!jobStore.isCalibrated"
                     title="Move camera to position" />
                   <Button icon="syringe" size="small" type="tertiary"
-                    @click="handleMoveNozzleToPosition(placement)"
+                    @click="handleMoveNozzleToPosition(placement, index)"
                     :disabled="!jobStore.isCalibrated"
                     title="Move nozzle to position" />
+                  <Button icon="save" size="small" type="tertiary"
+                    @click="handleSaveCalibrationPoint(index)"
+                    :disabled="!jobStore.isCalibrated"
+                    :title="jobStore.hasCalibrationPoint(index) ? 'Update calibration Z height' : 'Save current Z height for plane calibration'" />
                   <Button icon="trash" size="small" type="tertiary"
                     @click="handleDeletePlacement(index)"
                     title="Delete position" />
@@ -190,12 +198,12 @@ async function handleSelectFiducials() {
   }
 }
 
-function handleMoveCameraToPosition(position) {
-  jobStore.moveCameraToPosition(position)
+function handleMoveCameraToPosition(position, index) {
+  jobStore.moveCameraToPosition(position, index)
 }
 
-function handleMoveNozzleToPosition(position) {
-  jobStore.moveNozzleToPosition(position)
+function handleMoveNozzleToPosition(position, index) {
+  jobStore.moveNozzleToPosition(position, index)
 }
 
 function handleDeletePlacement(index) {
@@ -207,6 +215,16 @@ function handleDeletePlacement(index) {
 function handleDeleteFiducial(index) {
   if (confirm(`Delete fiducial ${index + 1}?`)) {
     jobStore.deleteFiducial(index)
+  }
+}
+
+async function handleSaveCalibrationPoint(index) {
+  try {
+    await jobStore.saveCalibrationPointForPlacement(index)
+    console.log(`Saved calibration point for placement ${index + 1}`)
+  } catch (error) {
+    console.error('Error saving calibration point:', error)
+    alert('Failed to save calibration point: ' + error.message)
   }
 }
 </script>
@@ -257,7 +275,15 @@ function handleDeleteFiducial(index) {
   @apply bg-gray-700;
 }
 
+.grid-row.active-placement {
+  @apply bg-blue-900/30 border-l-4 border-blue-500;
+}
+
 .action-buttons {
   @apply flex gap-1 justify-end;
+}
+
+.calibrated-z {
+  @apply text-green-400 font-semibold;
 }
 </style>

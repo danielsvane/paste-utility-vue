@@ -44,7 +44,21 @@
       </div>
 
       <!-- Get Displacement Plane -->
-      <Button @click="handleGetDisplacementPlane" text="Get Displacement Plane" type="secondary" />
+      <div class="flex gap-2">
+        <Button
+          v-if="!hasDisplacementPlane"
+          @click="handleGetDisplacementPlane"
+          text="Get Displacement Plane (Legacy)"
+          type="secondary"
+        />
+        <Button
+          v-if="hasDisplacementPlane && jobStore.planeCalibrationPoints.length > 0"
+          @click="handleClearCalibrationPoints"
+          text="Clear"
+          type="tertiary"
+          class="!px-3"
+        />
+      </div>
       <div class="status-container">
         <span class="status-indicator" :class="{ completed: hasDisplacementPlane }">
           {{ hasDisplacementPlane ? '✓' : '' }}
@@ -114,10 +128,16 @@ const roughPositionStatusText = computed(() => {
 })
 
 const displacementPlaneStatusText = computed(() => {
+  const calibrationPointCount = jobStore.planeCalibrationPoints.length
+
   if (!hasDisplacementPlane.value) {
+    if (calibrationPointCount > 0) {
+      return `${calibrationPointCount} placement${calibrationPointCount > 1 ? 's' : ''} with custom Z (need ≥3)`
+    }
     return 'Displacement plane not calibrated'
   }
-  return planeFormula.value
+
+  return `${planeFormula.value} (from ${calibrationPointCount} point${calibrationPointCount > 1 ? 's' : ''})`
 })
 
 const fidCalStatusText = computed(() => {
@@ -151,10 +171,17 @@ async function handleGetRoughPosition() {
 
 function handleGetDisplacementPlane() {
   console.log('Get Displacement Plane clicked')
-  // Calculate plane from fiducials
+  // Calculate plane from fiducials (legacy method)
   const success = jobStore.calculateBoardPlane()
   if (!success) {
     alert('Failed to calculate displacement plane. Ensure 3 fiducials have calZ values.')
+  }
+}
+
+function handleClearCalibrationPoints() {
+  if (confirm('Are you sure you want to clear all calibration points and the displacement plane?')) {
+    jobStore.clearCalibrationPoints()
+    console.log('Calibration points cleared')
   }
 }
 

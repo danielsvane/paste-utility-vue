@@ -27,8 +27,13 @@
           :key="`placement-${index}`"
           :cx="placement.x"
           :cy="placement.y"
-          r="3"
+          :r="placement.index === activePlacementIndex ? 6 : 3"
           class="placement-point"
+          :class="{
+            'active-placement': placement.index === activePlacementIndex,
+            'calibrated-placement': calibratedPlacementIndices.includes(placement.index) && placement.index !== activePlacementIndex,
+            'clickable': clickMode !== 'fiducial-selection'
+          }"
         />
       </g>
     </svg>
@@ -57,10 +62,18 @@ const props = defineProps({
     type: String,
     default: 'front', // 'front' or 'back'
     validator: value => ['front', 'back'].includes(value)
+  },
+  activePlacementIndex: {
+    type: Number,
+    default: -1
+  },
+  calibratedPlacementIndices: {
+    type: Array,
+    default: () => []
   }
 })
 
-const emit = defineEmits(['fiducial-clicked'])
+const emit = defineEmits(['fiducial-clicked', 'placement-clicked'])
 
 const svgRef = ref(null)
 const selectedFiducials = ref(new Set())
@@ -162,9 +175,27 @@ function findClosestFiducial(clickX, clickY) {
   return closestIndex
 }
 
-function handleClick(event) {
-  if (props.clickMode !== 'fiducial-selection') return
+// Find closest placement to click coordinates
+function findClosestPlacement(clickX, clickY) {
+  const THRESHOLD = 15 // pixels
+  let closestIndex = -1
+  let minDistance = Infinity
 
+  transformedPlacements.value.forEach((placement, index) => {
+    const dx = placement.x - clickX
+    const dy = placement.y - clickY
+    const distance = Math.sqrt(dx * dx + dy * dy)
+
+    if (distance < THRESHOLD && distance < minDistance) {
+      minDistance = distance
+      closestIndex = index
+    }
+  })
+
+  return closestIndex
+}
+
+function handleClick(event) {
   const svg = svgRef.value
   const rect = svg.getBoundingClientRect()
 
@@ -172,13 +203,27 @@ function handleClick(event) {
   const clickX = ((event.clientX - rect.left) / rect.width) * SVG_WIDTH
   const clickY = ((event.clientY - rect.top) / rect.height) * SVG_HEIGHT
 
-  const closestIndex = findClosestFiducial(clickX, clickY)
+  // Handle fiducial selection mode
+  if (props.clickMode === 'fiducial-selection') {
+    const closestIndex = findClosestFiducial(clickX, clickY)
 
-  if (closestIndex !== -1) {
-    selectedFiducials.value.add(closestIndex)
-    emit('fiducial-clicked', {
-      index: closestIndex,
-      fiducial: props.fiducials[closestIndex]
+    if (closestIndex !== -1) {
+      selectedFiducials.value.add(closestIndex)
+      emit('fiducial-clicked', {
+        index: closestIndex,
+        fiducial: props.fiducials[closestIndex]
+      })
+    }
+    return
+  }
+
+  // Handle normal placement clicks
+  const closestPlacementIndex = findClosestPlacement(clickX, clickY)
+
+  if (closestPlacementIndex !== -1) {
+    emit('placement-clicked', {
+      index: closestPlacementIndex,
+      placement: props.placements[closestPlacementIndex]
     })
   }
 }
@@ -282,8 +327,39 @@ defineExpose({
   transition: all 0.2s ease;
 }
 
+.placement-point.clickable {
+  cursor: pointer;
+}
+
 .placement-point:hover {
   fill: #f87171; /* red-400 */
   stroke-width: 1;
+}
+
+.placement-point.active-placement {
+  fill: #3b82f6; /* blue-500 */
+  stroke: #60a5fa; /* blue-400 */
+  stroke-width: 2;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.placement-point.calibrated-placement {
+  fill: #10b981; /* green-500 */
+  stroke: #059669; /* green-600 */
+  stroke-width: 1.5;
+}
+
+.placement-point.calibrated-placement:hover {
+  fill: #34d399; /* green-400 */
+  stroke-width: 2;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
 }
 </style>

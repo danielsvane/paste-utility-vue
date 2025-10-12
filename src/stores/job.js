@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { loadGerberFiles } from '../utils/gerberParser'
 import { createPoint, createFiducial } from '../utils/factories'
-import { calculatePlaneCoefficients, getZForPlane } from '../utils/geometry'
+import { calculatePlaneCoefficients, getZForPlane, calculateBestFitPlane } from '../utils/geometry'
 import { parseJobFile, exportJobToFile } from '../utils/jobFileService'
 import { useSerialStore } from './serial'
 import { fromTriangles, applyToPoint } from 'transformation-matrix'
@@ -24,6 +24,7 @@ export const useJobStore = defineStore('job', () => {
 
   const clickedFidBuffer = ref([])
   const currentPlacementIndex = ref(-1)
+  const lastNavigatedPlacementIndex = ref(-1)  // Track last navigated placement for UI highlighting
 
   // Adaptive extrusion timing
   const extrusionTimings = ref([])
@@ -36,6 +37,7 @@ export const useJobStore = defineStore('job', () => {
   const fidCalMatrix = ref(null)          // From fiducial calibration (CV refinement)
   const baseZ = ref(null)                 // From rough board position
   const planeCoefficients = ref(null)     // { A, B, C, D } from plane calibration
+  const planeCalibrationPoints = ref([])  // [{ placementIndex, x, y, z }] manual Z calibration points
   const tipXoffset = ref(0)
   const tipYoffset = ref(0)
 
@@ -308,20 +310,38 @@ export const useJobStore = defineStore('job', () => {
     console.log('Extrusion timing data has been reset')
   }
 
-  function moveCameraToPosition(position) {
+  function moveCameraToPosition(position, placementIndex = -1) {
     const { send } = useSerialStore()
     // Move to XY position at safe height without changing Z
     // Position should be from calibratedPlacements or calibratedFiducials
     send(['G90', `G0 X${position.x.toFixed(3)} Y${position.y.toFixed(3)}`])
+
+    // Track which placement was navigated to for UI highlighting
+    if (placementIndex >= 0) {
+      lastNavigatedPlacementIndex.value = placementIndex
+    }
   }
 
-  function moveNozzleToPosition(position) {
+  function moveNozzleToPosition(position, placementIndex = -1) {
     const { send } = useSerialStore()
     // Move to XYZ position with tip offset applied
     // Position should be from calibratedPlacements or calibratedFiducials
     const x = position.x + tipXoffset.value
     const y = position.y + tipYoffset.value
-    send(['G90', `G0 X${x.toFixed(3)} Y${y.toFixed(3)} Z${position.z.toFixed(3)}`])
+    const safeZ = 31.5  // Safe Z height for travel
+
+    // Safety: lift to safe Z, move XY, then descend to target Z
+    send([
+      'G90',
+      `G0 Z${safeZ}`,  // Lift to safe height first
+      `G0 X${x.toFixed(3)} Y${y.toFixed(3)}`,  // Move XY at safe height
+      `G0 Z${position.z.toFixed(3)}`  // Descend to target Z
+    ])
+
+    // Track which placement was navigated to for UI highlighting
+    if (placementIndex >= 0) {
+      lastNavigatedPlacementIndex.value = placementIndex
+    }
   }
 
   function deletePlacement(index) {
@@ -610,6 +630,86 @@ export const useJobStore = defineStore('job', () => {
     console.log(`Tip offset calibrated: X=${tipXoffset.value.toFixed(3)}, Y=${tipYoffset.value.toFixed(3)}`)
   }
 
+  // Manual plane calibration methods
+  async function saveCalibrationPointForPlacement(placementIndex) {
+    const serialStore = useSerialStore()
+
+    // Get current position
+    const position = await serialStore.grabBoardPosition()
+    const x = parseFloat(position[0])
+    const y = parseFloat(position[1])
+    const z = parseFloat(position[2])
+
+    // Check if we already have a calibration point for this placement
+    const existingIndex = planeCalibrationPoints.value.findIndex(p => p.placementIndex === placementIndex)
+
+    if (existingIndex >= 0) {
+      // Update existing point
+      planeCalibrationPoints.value[existingIndex] = { placementIndex, x, y, z }
+      console.log(`Updated calibration point for placement ${placementIndex}: (${x.toFixed(3)}, ${y.toFixed(3)}, ${z.toFixed(3)})`)
+    } else {
+      // Add new point
+      planeCalibrationPoints.value.push({ placementIndex, x, y, z })
+      console.log(`Added calibration point for placement ${placementIndex}: (${x.toFixed(3)}, ${y.toFixed(3)}, ${z.toFixed(3)})`)
+    }
+  }
+
+  function deleteCalibrationPoint(placementIndex) {
+    const index = planeCalibrationPoints.value.findIndex(p => p.placementIndex === placementIndex)
+    if (index >= 0) {
+      planeCalibrationPoints.value.splice(index, 1)
+      console.log(`Deleted calibration point for placement ${placementIndex}`)
+    }
+  }
+
+  function clearCalibrationPoints() {
+    planeCalibrationPoints.value = []
+    planeCoefficients.value = null
+    console.log('Cleared all calibration points and plane coefficients')
+  }
+
+  function calculatePlaneFromCalibrationPoints() {
+    if (planeCalibrationPoints.value.length < 3) {
+      console.warn('Need at least 3 calibration points to calculate plane')
+      return false
+    }
+
+    // Calculate best-fit plane from calibration points
+    const coeffs = calculateBestFitPlane(planeCalibrationPoints.value)
+
+    if (!coeffs) {
+      console.error('Failed to calculate plane from calibration points')
+      return false
+    }
+
+    // Store plane coefficients
+    planeCoefficients.value = coeffs
+
+    console.log('Plane calculated from calibration points:', coeffs)
+    console.log(`Using ${planeCalibrationPoints.value.length} calibration points`)
+
+    return true
+  }
+
+  // Helper to check if a placement has a calibration point
+  function hasCalibrationPoint(placementIndex) {
+    return planeCalibrationPoints.value.some(p => p.placementIndex === placementIndex)
+  }
+
+  // Auto-calculate plane when we have 3 or more calibration points
+  watch(
+    () => planeCalibrationPoints.value.length,
+    (newLength) => {
+      if (newLength >= 3) {
+        calculatePlaneFromCalibrationPoints()
+      } else if (newLength < 3) {
+        // Clear plane coefficients if we drop below 3 points
+        planeCoefficients.value = null
+        console.log('Plane coefficients cleared - need at least 3 calibration points')
+      }
+    }
+  )
+
   return {
     // Original immutable state
     originalPlacements,
@@ -626,6 +726,7 @@ export const useJobStore = defineStore('job', () => {
     boardSide,
     clickedFidBuffer,
     currentPlacementIndex,
+    lastNavigatedPlacementIndex,
 
     // Adaptive extrusion
     extrusionTimings,
@@ -638,6 +739,7 @@ export const useJobStore = defineStore('job', () => {
     fidCalMatrix,
     baseZ,
     planeCoefficients,
+    planeCalibrationPoints,
     tipXoffset,
     tipYoffset,
 
@@ -681,7 +783,12 @@ export const useJobStore = defineStore('job', () => {
     clearFiducialCalibration,
     performTipCalibration,
     pressurize,
-    depressurize
+    depressurize,
+    saveCalibrationPointForPlacement,
+    deleteCalibrationPoint,
+    clearCalibrationPoints,
+    calculatePlaneFromCalibrationPoints,
+    hasCalibrationPoint
   }
 }, {
   persist: {
@@ -696,6 +803,7 @@ export const useJobStore = defineStore('job', () => {
       'fidCalMatrix',
       'baseZ',
       'planeCoefficients',
+      'planeCalibrationPoints',
       'tipXoffset',
       'tipYoffset'
     ]
