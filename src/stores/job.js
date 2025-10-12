@@ -6,6 +6,7 @@ import { calculatePlaneCoefficients, getZForPlane, calculateBestFitPlane } from 
 import { parseJobFile, exportJobToFile } from '../utils/jobFileService'
 import { useSerialStore } from './serial'
 import { fromTriangles, applyToPoint } from 'transformation-matrix'
+import { SAFE_Z_HEIGHT, DEFAULT_Z_HEIGHT } from '../constants'
 
 export const useJobStore = defineStore('job', () => {
   // IMMUTABLE ORIGINALS - Never mutated after load
@@ -265,7 +266,7 @@ export const useJobStore = defineStore('job', () => {
       isFiducialSelectionMode.value = false
 
       // Default Z height
-      const defaultZ = 31.5
+      const defaultZ = DEFAULT_Z_HEIGHT
 
       // Create plain objects for paste positions
       for (const pointData of pastePoints) {
@@ -314,7 +315,13 @@ export const useJobStore = defineStore('job', () => {
     const { send } = useSerialStore()
     // Move to XY position at safe height without changing Z
     // Position should be from calibratedPlacements or calibratedFiducials
-    send(['G90', `G0 X${position.x.toFixed(3)} Y${position.y.toFixed(3)}`])
+
+    // Safety: lift to safe Z first, then move XY
+    send([
+      'G90',
+      `G0 Z${SAFE_Z_HEIGHT}`,  // Lift to safe height first
+      `G0 X${position.x.toFixed(3)} Y${position.y.toFixed(3)}`  // Move XY at safe height
+    ])
 
     // Track which placement was navigated to for UI highlighting
     if (placementIndex >= 0) {
@@ -328,12 +335,11 @@ export const useJobStore = defineStore('job', () => {
     // Position should be from calibratedPlacements or calibratedFiducials
     const x = position.x + tipXoffset.value
     const y = position.y + tipYoffset.value
-    const safeZ = 31.5  // Safe Z height for travel
 
     // Safety: lift to safe Z, move XY, then descend to target Z
     send([
       'G90',
-      `G0 Z${safeZ}`,  // Lift to safe height first
+      `G0 Z${SAFE_Z_HEIGHT}`,  // Lift to safe height first
       `G0 X${x.toFixed(3)} Y${y.toFixed(3)}`,  // Move XY at safe height
       `G0 Z${position.z.toFixed(3)}`  // Descend to target Z
     ])
@@ -492,7 +498,7 @@ export const useJobStore = defineStore('job', () => {
     // Grab z pos directly - no offset
     let zPos = await serialStore.grabBoardPosition()
 
-    await serialStore.send(['G0 Z31.5'])
+    await serialStore.send([`G0 Z${SAFE_Z_HEIGHT}`])
 
     zPos = parseFloat(zPos[2])
 
@@ -612,7 +618,7 @@ export const useJobStore = defineStore('job', () => {
     // Grab current camera position
     const camPos = await serialStore.grabBoardPosition()
 
-    await serialStore.send(['G0 Z31.5'])
+    await serialStore.send([`G0 Z${SAFE_Z_HEIGHT}`])
 
     await serialStore.goToRelative(-45, 63)
 
@@ -622,7 +628,7 @@ export const useJobStore = defineStore('job', () => {
 
     const nozPos = await serialStore.grabBoardPosition()
 
-    await serialStore.send(['G0 Z31.5'])
+    await serialStore.send([`G0 Z${SAFE_Z_HEIGHT}`])
 
     tipXoffset.value = nozPos[0] - camPos[0]
     tipYoffset.value = nozPos[1] - camPos[1]
