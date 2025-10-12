@@ -22,7 +22,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import Button from './Button.vue'
 import Card from './Card.vue'
 import { useSerialStore } from '../stores/serial'
@@ -36,17 +36,18 @@ const consoleMessages = computed(() => {
   return serial.consoleMessages
 })
 
+// Auto-scroll to bottom on mount and whenever new messages are added
+watch(consoleMessages, async () => {
+  await nextTick()
+  if (consoleDiv.value) {
+    consoleDiv.value.scrollTop = consoleDiv.value.scrollHeight
+  }
+}, { deep: true, immediate: true })
+
 function handleSendCommand() {
   if (replInput.value.trim()) {
     serial.sendRepl(replInput.value)
     replInput.value = ''
-
-    // Auto-scroll to bottom
-    setTimeout(() => {
-      if (consoleDiv.value) {
-        consoleDiv.value.scrollTop = consoleDiv.value.scrollHeight
-      }
-    }, 0)
   }
 }
 
