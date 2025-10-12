@@ -22,6 +22,9 @@ export const useSerialStore = defineStore('serial', () => {
   let timeoutID = undefined
   let modalRef = null
 
+  // Flag to track if a send operation is in progress
+  let isSending = false
+
   const bootCommands = [
     'G90',
     'M260 A112 B1 S1',
@@ -286,48 +289,59 @@ export const useSerialStore = defineStore('serial', () => {
   }
 
   async function send(commands) {
+    // Ignore new commands if already sending
+    if (isSending) {
+      console.log('Already sending, ignoring new command')
+      return
+    }
+
     // Accept either a string or array
     const commandArray = Array.isArray(commands) ? commands : [commands]
 
     console.log('sending: ', commandArray)
 
-    if (port.value?.writable) {
-      const writer = await port.value.writable.getWriter()
-      try {
-        for (const element of commandArray) {
-          await writer.write(encoder.encode(element + '\n'))
+    isSending = true
+    try {
+      if (port.value?.writable) {
+        const writer = await port.value.writable.getWriter()
+        try {
+          for (const element of commandArray) {
+            await writer.write(encoder.encode(element + '\n'))
 
-          setOkRespTimeout()
-          appendToConsole(element, true)
+            setOkRespTimeout()
+            appendToConsole(element, true)
 
-          // Check that we got an ok back
-          clearBuffer()
+            // Check that we got an ok back
+            clearBuffer()
 
-          while (true) {
-            if (okRespTimeout.value) break
+            while (true) {
+              if (okRespTimeout.value) break
 
-            let firstElement = receiveBuffer.value.shift()
+              let firstElement = receiveBuffer.value.shift()
 
-            if (firstElement == 'ok') {
-              clearTimeout(timeoutID)
-              break
+              if (firstElement == 'ok') {
+                clearTimeout(timeoutID)
+                break
+              }
+
+              if (firstElement == 'echo:busy: processing') {
+                clearTimeout(timeoutID)
+                setOkRespTimeout()
+              }
+
+              await new Promise(resolve => setTimeout(resolve, 50))
             }
 
-            if (firstElement == 'echo:busy: processing') {
-              clearTimeout(timeoutID)
-              setOkRespTimeout()
-            }
-
-            await new Promise(resolve => setTimeout(resolve, 50))
+            okRespTimeout.value = false
           }
-
-          okRespTimeout.value = false
+        } finally {
+          writer.releaseLock()
         }
-      } finally {
-        writer.releaseLock()
+      } else {
+        modalRef?.show('Cannot Write', 'Cannot write to port. Have you connected?')
       }
-    } else {
-      modalRef?.show('Cannot Write', 'Cannot write to port. Have you connected?')
+    } finally {
+      isSending = false
     }
   }
 
