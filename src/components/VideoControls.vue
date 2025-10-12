@@ -24,6 +24,11 @@
       <Button type="tertiary" text="Jog to Fid in View" @click="controls.jogToFid()" />
       <Button type="tertiary" text="Visual Home" @click="controls.visualHome()" />
     </div>
+
+    <!-- Jog Control Arrows -->
+    <div v-if="serial.isConnected && videoStore.isVideoStarted" class="mt-4">
+      <JogControls />
+    </div>
   </Card>
 </template>
 
@@ -35,6 +40,7 @@ import { useControlsStore } from '../stores/controls'
 import { useVideoStore } from '../stores/video'
 import Card from './Card.vue'
 import Button from './Button.vue'
+import JogControls from './JogControls.vue'
 
 const serial = useSerialStore()
 const controls = useControlsStore()
