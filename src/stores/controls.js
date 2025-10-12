@@ -76,7 +76,7 @@ export const useControlsStore = defineStore(
       return
     }
 
-    const circle = videoComposable.CVdetectCircle()
+    const circle = await videoComposable.CVdetectCircle()
 
     // Set a 1 second timer to show whatever's in video.cvFrame
     videoComposable.displayCvFrame(1000)

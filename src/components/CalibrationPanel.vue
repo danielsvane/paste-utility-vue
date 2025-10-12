@@ -13,7 +13,16 @@
       </div>
 
       <!-- Perform Fid Cal -->
-      <Button @click="handlePerformFidCal" text="Perform Fid Cal" type="secondary" />
+      <div class="flex gap-2">
+        <Button @click="handlePerformFidCal" text="Perform Fid Cal" type="secondary" />
+        <Button
+          v-if="hasFidCal"
+          @click="handleClearFidCal"
+          text="Clear"
+          type="tertiary"
+          class="!px-3"
+        />
+      </div>
       <div class="status-container">
         <span class="status-indicator" :class="{ completed: hasFidCal }">
           {{ hasFidCal ? '✓' : '' }}
@@ -151,6 +160,15 @@ async function handlePerformFidCal() {
   } catch (error) {
     console.error('Error during fiducial calibration:', error)
     alert('Fiducial calibration failed: ' + error.message)
+  }
+}
+
+function handleClearFidCal() {
+  if (confirm('Are you sure you want to clear the fiducial calibration? This will revert to using rough calibration.')) {
+    jobStore.clearFiducialCalibration()
+    console.log('Fiducial calibration cleared')
+    console.log('hasFidCal after clear:', hasFidCal.value)
+    console.log('fidCalMatrix after clear:', jobStore.fidCalMatrix)
   }
 }
 </script>

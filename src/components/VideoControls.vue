@@ -19,6 +19,28 @@
       Error: {{ videoStore.videoError }}
     </div>
 
+    <!-- Debug Controls -->
+    <div v-if="videoStore.isVideoStarted && videoStore.videoComposable" class="mt-4 p-3 bg-gray-800 rounded border border-gray-600">
+      <div class="flex items-center justify-between mb-2">
+        <label class="text-sm font-semibold text-gray-300">Circle Detection Debug Mode</label>
+        <input
+          type="checkbox"
+          v-model="videoStore.videoComposable.debugMode.value"
+          class="w-5 h-5 rounded"
+        />
+      </div>
+      <div v-if="videoStore.videoComposable.debugMode.value" class="text-xs text-gray-400 mb-2">
+        Shows circle info and pauses after each detection. Press Space or click Continue.
+      </div>
+      <Button
+        v-if="videoStore.videoComposable.debugMode.value"
+        type="primary"
+        text="Continue (Space)"
+        @click="videoStore.videoComposable.continueDebug()"
+        class="w-full"
+      />
+    </div>
+
     <!-- Jog Controls (only visible when connected and video started) -->
     <div v-if="serial.isConnected && videoStore.isVideoStarted" class="flex gap-3 flex-wrap mt-4">
       <Button type="tertiary" text="Jog to Fid in View" @click="controls.jogToFid()" />

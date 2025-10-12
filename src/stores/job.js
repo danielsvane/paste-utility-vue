@@ -567,6 +567,13 @@ export const useJobStore = defineStore('job', () => {
     console.log('Fid cal matrix:', fidCalMatrix.value)
   }
 
+  function clearFiducialCalibration() {
+    fidCalMatrix.value = null
+    console.log('Fiducial calibration cleared')
+    console.log('fidCalMatrix is now:', fidCalMatrix.value)
+    console.log('hasFidCalibration is now:', hasFidCalibration.value)
+  }
+
   return {
     // Original immutable state
     originalPlacements,
@@ -634,7 +641,8 @@ export const useJobStore = defineStore('job', () => {
     startFiducialSelection,
     selectFiducials,
     findBoardRoughPosition,
-    performFiducialCalibration
+    performFiducialCalibration,
+    clearFiducialCalibration
   }
 }, {
   persist: {
