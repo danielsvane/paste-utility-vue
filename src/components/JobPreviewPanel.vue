@@ -42,6 +42,27 @@
           />
           Back
         </label>
+        <div class="border-l border-gray-600 pl-4 flex items-center gap-2">
+          <span class="text-sm text-gray-300">Click to Move:</span>
+          <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+            <input
+              type="radio"
+              v-model="movementMode"
+              value="nozzle"
+              class="cursor-pointer"
+            />
+            Nozzle
+          </label>
+          <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+            <input
+              type="radio"
+              v-model="movementMode"
+              value="camera"
+              class="cursor-pointer"
+            />
+            Camera
+          </label>
+        </div>
       </div>
     </template>
 
@@ -68,6 +89,7 @@ import JobPreview from './JobPreview.vue'
 
 const jobStore = useJobStore()
 const jobPreviewRef = ref(null)
+const movementMode = ref('nozzle') // Default to nozzle
 
 // Use original positions for preview (not calibrated, since we want to show gerber data)
 const displayPlacements = computed(() => jobStore.originalPlacements)
@@ -96,7 +118,7 @@ function handleFiducialClicked(event) {
 }
 
 function handlePlacementClicked(event) {
-  // Move nozzle to the clicked placement
+  // Move camera or nozzle to the clicked placement based on movementMode
   // Use calibrated position if available, otherwise use original
   const placement = jobStore.isCalibrated && jobStore.calibratedPlacements.length > event.index
     ? jobStore.calibratedPlacements[event.index]
@@ -107,7 +129,11 @@ function handlePlacementClicked(event) {
     return
   }
 
-  jobStore.moveNozzleToPosition(placement, event.index)
+  if (movementMode.value === 'camera') {
+    jobStore.moveCameraToPosition(placement, event.index)
+  } else {
+    jobStore.moveNozzleToPosition(placement, event.index)
+  }
 }
 
 function handleZoomIn() {
