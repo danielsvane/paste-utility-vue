@@ -26,7 +26,8 @@
           <template v-if="jobStore.fiducials.length > 0">
             <div class="section-header">Fiducials:</div>
 
-            <div v-for="(fiducial, index) in jobStore.fiducials" :key="`fiducial-${index}`" class="grid-row fiducial-row">
+            <div v-for="(fiducial, index) in jobStore.fiducials" :key="`fiducial-${index}`"
+              class="grid-row fiducial-row">
               <div class="grid-cell text-gray-400">{{ index + 1 }}</div>
               <div class="grid-cell">{{ fiducial.x.toFixed(3) }}</div>
               <div class="grid-cell">{{ fiducial.y.toFixed(3) }}</div>
@@ -142,32 +143,22 @@ function handleDeleteFiducial(index) {
 }
 
 .grid-row {
-  @apply col-span-6 grid;
+  @apply col-span-6 grid items-center bg-gray-800 border-b border-gray-700 transition-colors rounded;
   display: grid;
   grid-column: 1 / -1;
   grid-template-columns: subgrid;
 }
 
 .grid-cell {
-  @apply text-right px-3 py-2 bg-gray-800 border-b border-gray-700 transition-colors;
+  @apply text-right text-sm px-2 py-1;
 }
 
 .grid-cell:first-child {
   @apply text-left;
 }
 
-/* Hover effect for placement rows */
-.grid-row:hover .grid-cell {
+.grid-row:hover {
   @apply bg-gray-700;
-}
-
-/* Fiducial row styling */
-.grid-row.fiducial-row .grid-cell {
-  @apply bg-blue-900/30;
-}
-
-.grid-row.fiducial-row:hover .grid-cell {
-  @apply bg-blue-800/40;
 }
 
 .action-buttons {
