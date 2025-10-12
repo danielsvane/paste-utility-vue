@@ -8,10 +8,6 @@
     </template>
 
     <div class="positions-list text-gray-300">
-      <p class="text-sm font-semibold mb-3">
-        {{ jobStore.placements.length }} placements, {{ jobStore.fiducials.length }} fiducials
-      </p>
-
       <div class="max-h-96 overflow-y-auto pr-2">
         <div v-if="jobStore.placements.length > 0 || jobStore.fiducials.length > 0" class="positions-grid-container">
           <!-- Header -->
@@ -24,7 +20,9 @@
 
           <!-- Fiducials Section -->
           <template v-if="jobStore.fiducials.length > 0">
-            <div class="section-header">Fiducials:</div>
+            <div class="section-header">
+              Fiducials <span class="text-gray-400">{{ jobStore.fiducials.length }}</span>
+            </div>
 
             <div v-for="(fiducial, index) in jobStore.fiducials" :key="`fiducial-${index}`"
               class="grid-row fiducial-row">
@@ -48,7 +46,9 @@
 
           <!-- Placements Section -->
           <template v-if="jobStore.placements.length > 0">
-            <div class="section-header">Placements:</div>
+            <div class="section-header">
+              Placements <span class="text-gray-400">{{ jobStore.placements.length }}</span>
+            </div>
 
             <div v-for="(placement, index) in jobStore.placements" :key="`placement-${index}`" class="grid-row">
               <div class="grid-cell text-gray-400">{{ index + 1 }}</div>
@@ -143,18 +143,18 @@ function handleDeleteFiducial(index) {
 }
 
 .grid-row {
-  @apply col-span-6 grid items-center bg-gray-800 border-b border-gray-700 transition-colors rounded;
+  @apply col-span-6 grid items-center border-b border-gray-700 transition-colors rounded;
   display: grid;
   grid-column: 1 / -1;
   grid-template-columns: subgrid;
 }
 
 .grid-cell {
-  @apply text-right text-sm px-2 py-1;
+  @apply text-right text-sm px-2 py-1 text-gray-100;
 }
 
 .grid-cell:first-child {
-  @apply text-left;
+  @apply text-left text-gray-400;
 }
 
 .grid-row:hover {
