@@ -1,11 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useSerialStore } from './serial'
+import { useVideoStore } from './video'
 
 export const useControlsStore = defineStore(
   'controls',
   () => {
     const serialStore = useSerialStore()
+    const videoStore = useVideoStore()
 
     // State
     const jogDistance = ref(2) // Default to 1mm (value 2)
@@ -65,6 +67,58 @@ export const useControlsStore = defineStore(
     serialStore.send(['G91', 'G0 B2', 'G90'])
   }
 
+  // Visual homing operations
+  async function jogToFid() {
+    const videoComposable = videoStore.videoComposable
+
+    if (!videoComposable) {
+      console.error('Video composable not available')
+      return
+    }
+
+    const circle = videoComposable.CVdetectCircle()
+
+    // Set a 1 second timer to show whatever's in video.cvFrame
+    videoComposable.displayCvFrame(1000)
+
+    // If we got a circle
+    if (circle) {
+      const [x_px, y_px] = circle
+
+      const centerX = videoComposable.canvas.value.width / 2
+      const centerY = videoComposable.canvas.value.height / 2
+      const offsetX = x_px - centerX
+      const offsetY = -(y_px - centerY) // Invert Y coordinate
+
+      const scalingFactor = 0.02
+      const scaledOffsetX = offsetX * scalingFactor
+      const scaledOffsetY = offsetY * scalingFactor
+
+      // Send jog commands using relative positioning
+      await serialStore.goToRelative(scaledOffsetX.toFixed(1), scaledOffsetY.toFixed(1))
+    }
+  }
+
+  async function visualHome() {
+    if (!videoStore.videoComposable) {
+      console.error('Video composable not available')
+      return
+    }
+
+    // Move to datum board position (hardcoded for now)
+    await serialStore.goTo(218, 196)
+    await serialStore.delay(1000)
+
+    // Fine-tune position using OpenCV (twice for precision)
+    await jogToFid()
+    await serialStore.delay(1500)
+    await jogToFid()
+    await serialStore.delay(1500)
+
+    // Reset machine coordinates to datum position
+    await serialStore.send(['G92 X218 Y196'])
+  }
+
     return {
       // State
       jogDistance,
@@ -80,7 +134,9 @@ export const useControlsStore = defineStore(
       jogZPlus,
       jogZMinus,
       extrude,
-      retract
+      retract,
+      jogToFid,
+      visualHome
     }
   },
   {

@@ -2,95 +2,62 @@
   <Card title="Video Feed">
     <template #actions>
       <select
-        v-model="selectedCamera"
+        v-model="videoStore.selectedCamera"
+        @change="handleCameraChange"
         class="bg-gray-700 text-white px-4 py-2 rounded border border-gray-600"
-        :disabled="cameras.length === 0"
+        :disabled="!videoStore.hasCameras"
       >
-        <option v-if="cameras.length === 0" value="">No cameras found</option>
-        <option v-for="camera in cameras" :key="camera.deviceId" :value="camera.deviceId">
+        <option v-if="!videoStore.hasCameras" value="">No cameras found</option>
+        <option v-for="camera in videoStore.cameras" :key="camera.deviceId" :value="camera.deviceId">
           {{ camera.label }}
         </option>
       </select>
     </template>
 
     <canvas id="opencv-canvas" class="w-full bg-black rounded"></canvas>
-    <div v-if="videoError" class="mt-2 text-red-400 text-sm">
-      Error: {{ videoError }}
+    <div v-if="videoStore.videoError" class="mt-2 text-red-400 text-sm">
+      Error: {{ videoStore.videoError }}
     </div>
 
-    <!-- Jog Controls (only visible when connected) -->
-    <div v-if="serial.isConnected" class="flex gap-3 flex-wrap mt-4">
-      <Button type="tertiary" text="Jog to Fid in View" />
-      <Button type="tertiary" text="Visual Home" />
+    <!-- Jog Controls (only visible when connected and video started) -->
+    <div v-if="serial.isConnected && videoStore.isVideoStarted" class="flex gap-3 flex-wrap mt-4">
+      <Button type="tertiary" text="Jog to Fid in View" @click="controls.jogToFid()" />
+      <Button type="tertiary" text="Visual Home" @click="controls.visualHome()" />
     </div>
   </Card>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { onMounted } from 'vue'
 import { onOpenCVReady, logOpenCVVersion } from '../composables/useOpenCV'
-import { useVideo } from '../composables/useVideo'
 import { useSerialStore } from '../stores/serial'
+import { useControlsStore } from '../stores/controls'
+import { useVideoStore } from '../stores/video'
 import Card from './Card.vue'
 import Button from './Button.vue'
 
 const serial = useSerialStore()
-
-const cameras = ref([])
-const selectedCamera = ref(null)
-const isVideoStarted = ref(false)
-const videoError = ref(null)
-
-let cv = null
-let videoComposable = null
+const controls = useControlsStore()
+const videoStore = useVideoStore()
 
 onMounted(() => {
-  onOpenCVReady(async resolvedCv => {
-    cv = resolvedCv
+  onOpenCVReady(async (cv) => {
     console.log('OpenCV loaded')
-
-    // Log OpenCV version and build information
     logOpenCVVersion(cv)
 
-    // Initialize video manager
-    videoComposable = useVideo(cv)
-    const cameraList = await videoComposable.populateCameraList()
-    cameras.value = cameraList
+    // Initialize video in the store
+    await videoStore.initializeVideo(cv)
 
-    // Auto-select top camera
-    const topCam = cameraList.find(c => c.isTop)
-    if (topCam) {
-      selectedCamera.value = topCam.deviceId
-    } else if (cameraList.length > 0) {
-      selectedCamera.value = cameraList[0].deviceId
+    // Auto-start video with selected camera
+    const canvas = document.getElementById('opencv-canvas')
+    if (videoStore.selectedCamera && canvas) {
+      await videoStore.startVideo(canvas)
     }
   })
 })
 
-// Watch for camera selection changes and auto-start video
-watch(selectedCamera, async (newCamera) => {
-  if (newCamera && videoComposable) {
-    // Stop existing video if running
-    if (isVideoStarted.value) {
-      videoComposable.stopVideo()
-      isVideoStarted.value = false
-    }
-    // Start video with new camera
-    await handleStartVideo()
-  }
-})
-
-async function handleStartVideo() {
-  if (isVideoStarted.value) return
-
-  try {
-    videoError.value = null
-    const canvas = document.getElementById('opencv-canvas')
-    await videoComposable.startVideo(selectedCamera.value, canvas)
-    isVideoStarted.value = true
-  } catch (err) {
-    videoError.value = err.message
-    console.error('Error starting video:', err)
-  }
+async function handleCameraChange() {
+  const canvas = document.getElementById('opencv-canvas')
+  await videoStore.selectCamera(videoStore.selectedCamera, canvas)
 }
 </script>
