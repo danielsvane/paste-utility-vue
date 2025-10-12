@@ -293,6 +293,60 @@ export const useJobStore = defineStore('job', () => {
     }
   }
 
+  async function performFiducialCalibration() {
+    const serialStore = useSerialStore()
+    const { jogToFid } = await import('./controls')
+    const controlsStore = jogToFid ? null : (await import('./controls')).useControlsStore()
+    const controls = controlsStore ? controlsStore() : null
+
+    // Validate 3 fiducials exist
+    if (fiducials.value.length !== 3) {
+      console.error('No fids in this job, cannot perform fiducial calibration.')
+      return
+    }
+
+    let fidActual = []
+    // Go through and capture the actual positions of the fids
+    // Then we can perform the transformation
+
+    for (let i = 0; i < fiducials.value.length; i++) {
+      const fid = fiducials.value[i]
+      console.log(`Processing fiducial ${i + 1}:`, fid)
+      console.log('jogging to fid:', fid.searchX, fid.searchY)
+
+      try {
+        await serialStore.goTo(fid.searchX, fid.searchY)
+        await new Promise(resolve => setTimeout(resolve, 1500))
+
+        // Import and use controls store for jogToFid
+        const { useControlsStore } = await import('./controls')
+        const controlsStore = useControlsStore()
+
+        await controlsStore.jogToFid()
+        await new Promise(resolve => setTimeout(resolve, 1500))
+
+        await controlsStore.jogToFid()
+        await new Promise(resolve => setTimeout(resolve, 1500))
+
+        const fidReal = await serialStore.grabBoardPosition()
+
+        console.log(`Fiducial ${i + 1} final position:`, fidReal)
+        fidActual.push([parseFloat(fidReal[0]), parseFloat(fidReal[1])])
+
+        fid.calX = parseFloat(fidReal[0])
+        fid.calY = parseFloat(fidReal[1])
+      } catch (error) {
+        console.error(`Error processing fiducial ${i + 1}:`, error)
+        throw error
+      }
+    }
+
+    console.log('All fiducials processed, transforming placements...')
+    transformPlacements(fidActual)
+
+    console.log('fid cal complete:', fiducials.value)
+  }
+
   return {
     // State
     placements,
@@ -327,7 +381,8 @@ export const useJobStore = defineStore('job', () => {
     deletePlacement,
     deleteFiducial,
     transformPlacements,
-    findBoardRoughPosition
+    findBoardRoughPosition,
+    performFiducialCalibration
   }
 }, {
   persist: {

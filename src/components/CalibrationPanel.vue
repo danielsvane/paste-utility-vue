@@ -160,9 +160,15 @@ function handleGetDisplacementPlane() {
   }
 }
 
-function handlePerformFidCal() {
+async function handlePerformFidCal() {
   console.log('Perform Fid Cal clicked')
-  // TODO: Implement fiducial calibration logic
+  try {
+    await jobStore.performFiducialCalibration()
+    console.log('Fiducial calibration completed successfully')
+  } catch (error) {
+    console.error('Error during fiducial calibration:', error)
+    alert('Fiducial calibration failed: ' + error.message)
+  }
 }
 </script>
 
