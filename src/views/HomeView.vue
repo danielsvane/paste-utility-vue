@@ -3,6 +3,8 @@
     <!-- Header -->
     <div class="bg-gray-800 px-8 py-5 flex justify-between items-center gap-6">
       <h1 class="text-2xl font-light text-white">LumenPnP Pasting Utility</h1>
+      <Button text="Load" type="secondary" icon="folder-open" />
+      <Button text="Save" type="secondary" icon="save" />
       <div class="flex-1 flex items-center gap-4">
         <SerialConnection />
       </div>
@@ -13,7 +15,6 @@
     <div class="grid grid-cols-2 flex-1 overflow-hidden">
       <!-- Left Column -->
       <div class="p-6 overflow-y-auto bg-gray-900 space-y-6">
-        <CalibrationPanel v-if="serialStore.isConnected" />
         <JobImport />
         <JobPositionsList />
         <JobPreviewPanel />
@@ -25,6 +26,7 @@
       <div class="p-6 overflow-y-auto bg-gray-900 space-y-6">
         <VideoControls />
         <MachineControls v-if="serialStore.isConnected" />
+        <CalibrationPanel v-if="serialStore.isConnected" />
         <ConsoleRepl v-if="serialStore.isConnected" />
       </div>
     </div>

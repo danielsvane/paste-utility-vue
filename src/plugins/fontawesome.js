@@ -18,7 +18,9 @@ import {
   faArrowLeft,
   faArrowRight,
   faArrowUp,
-  faArrowDown
+  faArrowDown,
+  faFolderOpen,
+  faFloppyDisk
 } from '@fortawesome/free-solid-svg-icons'
 
 // Add icons to the library
@@ -37,7 +39,9 @@ library.add(
   faArrowLeft,
   faArrowRight,
   faArrowUp,
-  faArrowDown
+  faArrowDown,
+  faFolderOpen,
+  faFloppyDisk
 )
 
 // Export plugin function
