@@ -17,6 +17,12 @@
     <div v-if="videoError" class="mt-2 text-red-400 text-sm">
       Error: {{ videoError }}
     </div>
+
+    <!-- Jog Controls (only visible when connected) -->
+    <div v-if="serial.isConnected" class="flex gap-3 flex-wrap mt-4">
+      <Button type="tertiary" text="Jog to Fid in View" />
+      <Button type="tertiary" text="Visual Home" />
+    </div>
   </Card>
 </template>
 
@@ -24,7 +30,11 @@
 import { ref, onMounted, watch } from 'vue'
 import { onOpenCVReady, logOpenCVVersion } from '../composables/useOpenCV'
 import { useVideo } from '../composables/useVideo'
+import { useSerialStore } from '../stores/serial'
 import Card from './Card.vue'
+import Button from './Button.vue'
+
+const serial = useSerialStore()
 
 const cameras = ref([])
 const selectedCamera = ref(null)

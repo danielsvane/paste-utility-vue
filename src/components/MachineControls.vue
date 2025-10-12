@@ -3,11 +3,6 @@
     <div class="space-y-6">
       <!-- Control Buttons -->
       <div class="flex gap-3 flex-wrap">
-        <Button text="Jog to Fid in View" />
-        <Button text="Visual Home" />
-      </div>
-
-      <div class="flex gap-3 flex-wrap">
         <Button text="Pressurize" />
         <Button text="Depressurize" />
       </div>
