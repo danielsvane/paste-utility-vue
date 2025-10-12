@@ -7,3 +7,6 @@ export const SAFE_Z_HEIGHT = 31.5
 
 // Default Z height for new positions (mm)
 export const DEFAULT_Z_HEIGHT = 31.5
+
+// Extrusion height above board surface (mm)
+export const EXTRUSION_HEIGHT = 0.2

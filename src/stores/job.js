@@ -6,7 +6,7 @@ import { calculatePlaneCoefficients, getZForPlane, calculateBestFitPlane } from 
 import { parseJobFile, exportJobToFile } from '../utils/jobFileService'
 import { useSerialStore } from './serial'
 import { fromTriangles, applyToPoint } from 'transformation-matrix'
-import { SAFE_Z_HEIGHT, DEFAULT_Z_HEIGHT } from '../constants'
+import { SAFE_Z_HEIGHT, DEFAULT_Z_HEIGHT, EXTRUSION_HEIGHT } from '../constants'
 
 export const useJobStore = defineStore('job', () => {
   // IMMUTABLE ORIGINALS - Never mutated after load
@@ -335,13 +335,14 @@ export const useJobStore = defineStore('job', () => {
     // Position should be from calibratedPlacements or calibratedFiducials
     const x = position.x + tipXoffset.value
     const y = position.y + tipYoffset.value
+    const z = position.z - EXTRUSION_HEIGHT  // Add extrusion height above board surface
 
-    // Safety: lift to safe Z, move XY, then descend to target Z
+    // Safety: lift to safe Z, move XY, then descend to extrusion height
     send([
       'G90',
       `G0 Z${SAFE_Z_HEIGHT}`,  // Lift to safe height first
       `G0 X${x.toFixed(3)} Y${y.toFixed(3)}`,  // Move XY at safe height
-      `G0 Z${position.z.toFixed(3)}`  // Descend to target Z
+      `G0 Z${z.toFixed(3)}`  // Descend to extrusion height
     ])
 
     // Track which placement was navigated to for UI highlighting
