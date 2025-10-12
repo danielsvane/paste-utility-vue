@@ -14,6 +14,11 @@ export const useVideoStore = defineStore('video', () => {
   const hasCameras = computed(() => cameras.value.length > 0)
 
   async function initializeVideo(cv) {
+    // Clean up existing video before reinitializing (important for hot reload)
+    if (videoComposable.value && isVideoStarted.value) {
+      stopVideo()
+    }
+
     videoComposable.value = useVideo(cv)
 
     try {
