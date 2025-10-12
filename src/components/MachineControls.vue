@@ -8,10 +8,10 @@
       </div>
 
       <div class="flex gap-3 flex-wrap">
-        <Button text="Extrude" />
-        <Button text="Start Slow Extrude" />
-        <Button text="Stop Extrude" />
-        <Button text="Retract & Raise" />
+        <Button text="Extrude" @click="job.extrude()" />
+        <Button text="Start Slow Extrude" @click="job.startSlowExtrude()" />
+        <Button text="Stop Extrude" @click="job.stopExtrude()" />
+        <Button text="Retract & Raise" @click="job.retractAndRaise()" />
       </div>
 
       <div class="flex gap-3 flex-wrap">

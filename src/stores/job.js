@@ -601,14 +601,36 @@ export const useJobStore = defineStore('job', () => {
     console.log('hasFidCalibration is now:', hasFidCalibration.value)
   }
 
-  function pressurize() {
+  async function pressurize() {
     const { send } = useSerialStore()
-    send(['G91', 'G0 B-200', 'G90'])
+    await send(['G91', 'G0 B-200', 'G90'])
   }
 
-  function depressurize() {
+  async function depressurize() {
     const { send } = useSerialStore()
-    send(['G91', 'G0 B200', 'G90'])
+    await send(['G91', 'G0 B200', 'G90'])
+  }
+
+  async function extrude() {
+    const EXTRUDE_AMOUNT = 10
+    const { send } = useSerialStore()
+    await send(['G91', `G0 B-${EXTRUDE_AMOUNT}`, 'G90'])
+  }
+
+  async function startSlowExtrude() {
+    const { send } = useSerialStore()
+    await send(['G91', 'G1 B-20000 F400', 'G90'])
+  }
+
+  async function stopExtrude() {
+    const { send } = useSerialStore()
+    await send(['M410', 'G90', 'G0 F35000'])
+  }
+
+  async function retractAndRaise() {
+    const RETRACTION_AMOUNT = 10
+    const { send } = useSerialStore()
+    await send(['G91', `G0 B${RETRACTION_AMOUNT}`, 'G90', `G0 Z${SAFE_Z_HEIGHT}`])
   }
 
   async function performTipCalibration(toast) {
@@ -791,6 +813,10 @@ export const useJobStore = defineStore('job', () => {
     performTipCalibration,
     pressurize,
     depressurize,
+    extrude,
+    startSlowExtrude,
+    stopExtrude,
+    retractAndRaise,
     saveCalibrationPointForPlacement,
     deleteCalibrationPoint,
     clearCalibrationPoints,
