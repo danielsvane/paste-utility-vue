@@ -47,7 +47,7 @@
             <div></div>
             <Button @click="controls.jogXMinus" class="w-16 h-16" text="X-" icon="arrow-left" />
             <div></div>
-            <Button @click="controls.jogXPlus" class="w-16 h-16" text="X+" icon="arrow-up" />
+            <Button @click="controls.jogXPlus" class="w-16 h-16" text="X+" icon="arrow-right" />
             <div></div>
             <Button @click="controls.jogYMinus" class="w-16 h-16" text="Y-" icon="arrow-down" />
             <div></div>
