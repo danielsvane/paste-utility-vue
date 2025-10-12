@@ -8,8 +8,8 @@
     </template>
 
     <div class="positions-list text-gray-300">
-      <div class="max-h-96 overflow-y-auto pr-2">
-        <div v-if="jobStore.placements.length > 0 || jobStore.fiducials.length > 0" class="positions-grid-container">
+      <div v-if="jobStore.placements.length > 0 || jobStore.fiducials.length > 0" class="positions-wrapper">
+        <div class="positions-grid-container">
           <!-- Header -->
           <div class="grid-header">#</div>
           <div class="grid-header">X</div>
@@ -69,11 +69,11 @@
             </div>
           </template>
         </div>
-
-        <p v-else class="text-gray-500 text-sm italic">
-          No positions loaded. Import a job or load gerber files.
-        </p>
       </div>
+
+      <p v-else class="text-gray-500 text-sm italic">
+        No positions loaded. Import a job or load gerber files.
+      </p>
     </div>
   </Card>
 </template>
@@ -125,13 +125,20 @@ function handleDeleteFiducial(index) {
 <style scoped>
 @reference "../assets/main.css";
 
+.positions-wrapper {
+  @apply max-h-96 overflow-y-auto pr-2;
+}
+
 .positions-grid-container {
   @apply w-full grid gap-0;
   grid-template-columns: 50px 80px 80px 80px minmax(0, 1fr) 140px;
 }
 
 .grid-header {
-  @apply text-right px-3 py-2 font-semibold text-gray-400 border-b border-gray-700;
+  @apply text-right px-3 py-2 font-semibold text-gray-400 bg-gray-900/80;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .grid-header:first-child {
