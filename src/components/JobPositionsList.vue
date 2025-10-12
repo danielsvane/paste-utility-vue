@@ -5,24 +5,27 @@
       <FilePicker text="Select Mask Gerber" accept=".gbr,.gbs,.gts" v-model="maskGerberFile" type="secondary" />
       <Button @click="handleLoadGerbers" :disabled="!pasteGerberFile || !maskGerberFile" text="Load Gerbers"
         type="tertiary" icon="circle-down" />
-      <Button @click="handleSelectFiducials" :disabled="!canSelectFiducials" text="Select Fiducials"
-        type="tertiary" icon="crosshairs" />
+      <Button @click="handleSelectFiducials" :disabled="!canSelectFiducials" text="Select Fiducials" type="tertiary"
+        icon="crosshairs" />
     </template>
 
     <div class="positions-list text-gray-300">
       <!-- Fiducial selection message -->
       <div v-if="jobStore.isFiducialSelectionMode"
-           class="calibration-warning text-blue-400 text-sm mb-3 p-2 bg-blue-900/20 rounded">
+        class="calibration-warning text-blue-400 text-sm mb-3 p-2 bg-blue-900/20 rounded">
         👉 Click on 3 fiducials in the preview to select them.
       </div>
 
       <!-- Calibration status message -->
-      <div v-else-if="!jobStore.isCalibrated && (jobStore.originalFiducials.length > 0 || jobStore.originalPlacements.length > 0)"
-           class="calibration-warning text-yellow-500 text-sm mb-3 p-2 bg-yellow-900/20 rounded">
+      <div
+        v-else-if="!jobStore.isCalibrated && (jobStore.originalFiducials.length > 0 || jobStore.originalPlacements.length > 0)"
+        class="calibration-warning text-yellow-500 text-sm mb-3 p-2 bg-yellow-900/20 rounded">
         ⚠ Calibration required. Run "Get Rough Board Position" to enable movement.
       </div>
 
-      <div v-if="jobStore.originalPlacements.length > 0 || jobStore.originalFiducials.length > 0 || jobStore.potentialFiducials.length > 0" class="positions-wrapper">
+      <div
+        v-if="jobStore.originalPlacements.length > 0 || jobStore.originalFiducials.length > 0 || jobStore.potentialFiducials.length > 0"
+        class="positions-wrapper">
         <div class="positions-grid-container">
           <!-- Header -->
           <div class="grid-header">#</div>
@@ -38,8 +41,7 @@
               {{ jobStore.originalFiducials.length }} <span class="text-gray-300">fiducials</span>
             </div>
 
-            <div v-for="(fiducial, index) in displayFiducials" :key="`fiducial-${index}`"
-              class="grid-row fiducial-row">
+            <div v-for="(fiducial, index) in displayFiducials" :key="`fiducial-${index}`" class="grid-row fiducial-row">
               <div class="grid-cell text-gray-400">{{ index + 1 }}</div>
               <div class="grid-cell">{{ fiducial.x !== null ? fiducial.x.toFixed(3) : 'N/A' }}</div>
               <div class="grid-cell">{{ fiducial.y !== null ? fiducial.y.toFixed(3) : 'N/A' }}</div>
@@ -47,16 +49,11 @@
               <div class="grid-cell"></div>
               <div class="grid-cell">
                 <div class="action-buttons">
-                  <Button icon="eye" size="small" type="tertiary"
-                    @click="handleMoveCameraToPosition(fiducial)"
-                    :disabled="!jobStore.isCalibrated"
-                    title="Move camera to position" />
-                  <Button icon="syringe" size="small" type="tertiary"
-                    @click="handleMoveNozzleToPosition(fiducial)"
-                    :disabled="!jobStore.isCalibrated"
-                    title="Move nozzle to position" />
-                  <Button icon="trash" size="small" type="tertiary"
-                    @click="handleDeleteFiducial(index)"
+                  <Button icon="eye" size="small" type="tertiary" @click="handleMoveCameraToPosition(fiducial)"
+                    :disabled="!jobStore.isCalibrated" title="Move camera to position" />
+                  <Button icon="syringe" size="small" type="tertiary" @click="handleMoveNozzleToPosition(fiducial)"
+                    :disabled="!jobStore.isCalibrated" title="Move nozzle to position" />
+                  <Button icon="trash" size="small" type="tertiary" @click="handleDeleteFiducial(index)"
                     title="Delete fiducial" />
                 </div>
               </div>
@@ -69,9 +66,8 @@
               {{ jobStore.originalPlacements.length }} <span class="text-gray-300">placements</span>
             </div>
 
-            <div v-for="(placement, index) in displayPlacements" :key="`placement-${index}`"
-                 class="grid-row"
-                 :class="{ 'active-placement': jobStore.lastNavigatedPlacementIndex === index }">
+            <div v-for="(placement, index) in displayPlacements" :key="`placement-${index}`" class="grid-row"
+              :class="{ 'active-placement': jobStore.lastNavigatedPlacementIndex === index }">
               <div class="grid-cell text-gray-400">{{ index + 1 }}</div>
               <div class="grid-cell">{{ placement.x !== null ? placement.x.toFixed(3) : 'N/A' }}</div>
               <div class="grid-cell">{{ placement.y !== null ? placement.y.toFixed(3) : 'N/A' }}</div>
@@ -81,20 +77,15 @@
               <div class="grid-cell"></div>
               <div class="grid-cell">
                 <div class="action-buttons">
-                  <Button icon="eye" size="small" type="tertiary"
-                    @click="handleMoveCameraToPosition(placement, index)"
-                    :disabled="!jobStore.isCalibrated"
-                    title="Move camera to position" />
+                  <Button icon="eye" size="small" type="tertiary" @click="handleMoveCameraToPosition(placement, index)"
+                    :disabled="!jobStore.isCalibrated" title="Move camera to position" />
                   <Button icon="syringe" size="small" type="tertiary"
-                    @click="handleMoveNozzleToPosition(placement, index)"
-                    :disabled="!jobStore.isCalibrated"
+                    @click="handleMoveNozzleToPosition(placement, index)" :disabled="!jobStore.isCalibrated"
                     title="Move nozzle to position" />
-                  <Button icon="save" size="small" type="tertiary"
-                    @click="handleSaveCalibrationPoint(index)"
+                  <Button icon="save" size="small" type="tertiary" @click="handleSaveCalibrationPoint(index)"
                     :disabled="!jobStore.isCalibrated"
                     :title="jobStore.hasCalibrationPoint(index) ? 'Update calibration Z height' : 'Save current Z height for plane calibration'" />
-                  <Button icon="trash" size="small" type="tertiary"
-                    @click="handleDeletePlacement(index)"
+                  <Button icon="trash" size="small" type="tertiary" @click="handleDeletePlacement(index)"
                     title="Delete position" />
                 </div>
               </div>
@@ -111,7 +102,7 @@
 </template>
 
 <script setup>
-import { ref, computed, inject } from 'vue'
+import { ref, computed, inject, watch, nextTick } from 'vue'
 import Button from './Button.vue'
 import Card from './Card.vue'
 import FilePicker from './FilePicker.vue'
@@ -119,6 +110,20 @@ import { useJobStore } from '../stores/job'
 
 const jobStore = useJobStore()
 const toast = inject('toast')
+
+// Watch for placement selection changes and scroll to selected row
+watch(() => jobStore.lastNavigatedPlacementIndex, async (newIndex) => {
+  if (newIndex >= 0) {
+    // Wait for DOM to update with the active-placement class
+    await nextTick()
+
+    // Find the active placement row and scroll it into view
+    const activeRow = document.querySelector('.grid-row.active-placement')
+    if (activeRow) {
+      activeRow.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }
+})
 
 const pasteGerberFile = ref(null)
 const maskGerberFile = ref(null)
@@ -276,7 +281,7 @@ async function handleSaveCalibrationPoint(index) {
 }
 
 .grid-row.active-placement {
-  @apply bg-blue-900/30 border-l-4 border-blue-500;
+  @apply bg-blue-900/30;
 }
 
 .action-buttons {
