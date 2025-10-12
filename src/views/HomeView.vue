@@ -5,6 +5,7 @@
       <h1 class="text-2xl font-light text-white">LumenPnP Pasting Utility</h1>
       <FilePicker text="Load Project" type="secondary" icon="folder-open" accept=".json" @change="handleLoadJob" />
       <Button text="Save Project" type="secondary" icon="save" />
+      <Button @click="handleRunJob" text="Run Job" type="secondary" icon="play" />
       <div class="flex-1 flex items-center gap-4">
         <SerialConnection />
       </div>
@@ -18,7 +19,6 @@
         <JobPositionsList />
         <JobPreviewPanel />
         <JobSettings />
-        <JobActions />
       </div>
 
       <!-- Right Column -->
@@ -48,7 +48,6 @@ import CalibrationPanel from '../components/CalibrationPanel.vue'
 import JobPositionsList from '../components/JobPositionsList.vue'
 import JobPreviewPanel from '../components/JobPreviewPanel.vue'
 import JobSettings from '../components/JobSettings.vue'
-import JobActions from '../components/JobActions.vue'
 import VideoControls from '../components/VideoControls.vue'
 import MachineControls from '../components/MachineControls.vue'
 import ConsoleRepl from '../components/ConsoleRepl.vue'
@@ -63,5 +62,10 @@ async function handleLoadJob(file) {
       alert('Failed to import job: ' + result.error)
     }
   }
+}
+
+function handleRunJob() {
+  console.log('Run job clicked')
+  // Job running logic will be implemented
 }
 </script>
