@@ -128,9 +128,15 @@ const fidCalStatusText = computed(() => {
 })
 
 // Event handlers
-function handleNozzleOffsetCal() {
+async function handleNozzleOffsetCal() {
   console.log('Nozzle Offset Cal clicked')
-  // TODO: Implement nozzle offset calibration logic
+  try {
+    await jobStore.performTipCalibration(toast.value)
+    console.log('Nozzle offset calibration completed successfully')
+  } catch (error) {
+    console.error('Error during nozzle offset calibration:', error)
+    alert('Nozzle offset calibration failed: ' + error.message)
+  }
 }
 
 async function handleGetRoughPosition() {

@@ -3,8 +3,8 @@
     <div class="space-y-6">
       <!-- Control Buttons -->
       <div class="flex gap-3 flex-wrap">
-        <Button text="Pressurize" />
-        <Button text="Depressurize" />
+        <Button text="Pressurize" @click="job.pressurize()" />
+        <Button text="Depressurize" @click="job.depressurize()" />
       </div>
 
       <div class="flex gap-3 flex-wrap">
@@ -56,9 +56,11 @@ import Button from './Button.vue'
 import Card from './Card.vue'
 import { useSerialStore } from '../stores/serial'
 import { useControlsStore } from '../stores/controls'
+import { useJobStore } from '../stores/job'
 
 const serial = useSerialStore()
 const controls = useControlsStore()
+const job = useJobStore()
 </script>
 
 <style scoped>

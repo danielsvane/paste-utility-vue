@@ -574,6 +574,42 @@ export const useJobStore = defineStore('job', () => {
     console.log('hasFidCalibration is now:', hasFidCalibration.value)
   }
 
+  function pressurize() {
+    const { send } = useSerialStore()
+    send(['G91', 'G0 B-200', 'G90'])
+  }
+
+  function depressurize() {
+    const { send } = useSerialStore()
+    send(['G91', 'G0 B200', 'G90'])
+  }
+
+  async function performTipCalibration(toast) {
+    const serialStore = useSerialStore()
+
+    await toast.show('Please jog the camera to be centered on any fiducial.')
+
+    // Grab current camera position
+    const camPos = await serialStore.grabBoardPosition()
+
+    await serialStore.send(['G0 Z31.5'])
+
+    await serialStore.goToRelative(-45, 63)
+
+    await serialStore.send(['G0 Z46.5'])
+
+    await toast.show('Please jog the nozzle tip to be perfectly centered on and touching the fiducial.')
+
+    const nozPos = await serialStore.grabBoardPosition()
+
+    await serialStore.send(['G0 Z31.5'])
+
+    tipXoffset.value = nozPos[0] - camPos[0]
+    tipYoffset.value = nozPos[1] - camPos[1]
+
+    console.log(`Tip offset calibrated: X=${tipXoffset.value.toFixed(3)}, Y=${tipYoffset.value.toFixed(3)}`)
+  }
+
   return {
     // Original immutable state
     originalPlacements,
@@ -642,7 +678,10 @@ export const useJobStore = defineStore('job', () => {
     selectFiducials,
     findBoardRoughPosition,
     performFiducialCalibration,
-    clearFiducialCalibration
+    clearFiducialCalibration,
+    performTipCalibration,
+    pressurize,
+    depressurize
   }
 }, {
   persist: {
