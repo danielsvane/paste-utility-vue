@@ -21,7 +21,7 @@
           <!-- Fiducials Section -->
           <template v-if="jobStore.fiducials.length > 0">
             <div class="section-header">
-              Fiducials <span class="text-gray-400">{{ jobStore.fiducials.length }}</span>
+              {{ jobStore.fiducials.length }} <span class="text-gray-300">fiducials</span>
             </div>
 
             <div v-for="(fiducial, index) in jobStore.fiducials" :key="`fiducial-${index}`"
@@ -47,7 +47,7 @@
           <!-- Placements Section -->
           <template v-if="jobStore.placements.length > 0">
             <div class="section-header">
-              Placements <span class="text-gray-400">{{ jobStore.placements.length }}</span>
+              {{ jobStore.placements.length }} <span class="text-gray-300">placements</span>
             </div>
 
             <div v-for="(placement, index) in jobStore.placements" :key="`placement-${index}`" class="grid-row">
@@ -146,7 +146,7 @@ function handleDeleteFiducial(index) {
 }
 
 .section-header {
-  @apply col-span-6 text-sm font-semibold text-white mt-3 mb-2 px-3;
+  @apply col-span-6 text-sm font-semibold text-gray-100 mt-3 mb-2 px-3;
 }
 
 .grid-row {
