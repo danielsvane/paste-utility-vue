@@ -21,7 +21,13 @@ import {
   faArrowDown,
   faFolderOpen,
   faFloppyDisk,
-  faCircleDown
+  faCircleDown,
+  faCamera,
+  faLocationArrow,
+  faTrash,
+  faSyringe,
+  faPlus,
+  faEye
 } from '@fortawesome/free-solid-svg-icons'
 
 // Add icons to the library
@@ -43,7 +49,13 @@ library.add(
   faArrowDown,
   faFolderOpen,
   faFloppyDisk,
-  faCircleDown
+  faCircleDown,
+  faCamera,
+  faLocationArrow,
+  faTrash,
+  faSyringe,
+  faPlus,
+  faEye
 )
 
 // Export plugin function

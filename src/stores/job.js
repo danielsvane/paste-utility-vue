@@ -4,6 +4,7 @@ import { loadGerberFiles } from '../utils/gerberParser'
 import { createPoint, createFiducial } from '../utils/factories'
 import { calculatePlaneCoefficients, getZForPlane } from '../utils/geometry'
 import { parseJobFile, exportJobToFile } from '../utils/jobFileService'
+import { useSerialStore } from './serial'
 
 export const useJobStore = defineStore('job', () => {
   // State
@@ -189,6 +190,32 @@ export const useJobStore = defineStore('job', () => {
     console.log('Extrusion timing data has been reset')
   }
 
+  function moveCameraToPosition(x, y) {
+    const { send } = useSerialStore()
+    // Move to XY position at safe height without changing Z
+    send(['G90', `G0 X${x.toFixed(3)} Y${y.toFixed(3)}`])
+  }
+
+  function moveNozzleToPosition(x, y, z) {
+    const { send } = useSerialStore()
+    // Move to XYZ position
+    send(['G90', `G0 X${x.toFixed(3)} Y${y.toFixed(3)} Z${z.toFixed(3)}`])
+  }
+
+  function deletePlacement(index) {
+    if (index >= 0 && index < placements.value.length) {
+      placements.value.splice(index, 1)
+      console.log(`Deleted placement at index ${index}`)
+    }
+  }
+
+  function deleteFiducial(index) {
+    if (index >= 0 && index < fiducials.value.length) {
+      fiducials.value.splice(index, 1)
+      console.log(`Deleted fiducial at index ${index}`)
+    }
+  }
+
   return {
     // State
     placements,
@@ -217,7 +244,11 @@ export const useJobStore = defineStore('job', () => {
     importFromFile,
     saveToFile,
     loadJobFromGerbers,
-    resetExtrusionTiming
+    resetExtrusionTiming,
+    moveCameraToPosition,
+    moveNozzleToPosition,
+    deletePlacement,
+    deleteFiducial
   }
 }, {
   persist: {
