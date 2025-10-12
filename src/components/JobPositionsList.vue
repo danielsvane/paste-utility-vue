@@ -1,7 +1,21 @@
 <template>
   <Card title="Job Positions">
     <template #actions>
-      <Button text="Capture New Position" />
+      <FilePicker
+        text="Select Paste Gerber"
+        accept=".gbr,.gbp,.gtp"
+        v-model="pasteGerberFile"
+      />
+      <FilePicker
+        text="Select Mask Gerber"
+        accept=".gbr,.gbs,.gts"
+        v-model="maskGerberFile"
+      />
+      <Button
+        @click="handleLoadGerbers"
+        :disabled="!pasteGerberFile || !maskGerberFile"
+        text="Load Gerbers"
+      />
     </template>
 
     <div class="positions-list text-gray-300">
@@ -49,10 +63,26 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import Button from './Button.vue'
 import Card from './Card.vue'
+import FilePicker from './FilePicker.vue'
 import { useJobStore } from '../stores/job'
 
 const jobStore = useJobStore()
+
+const pasteGerberFile = ref(null)
+const maskGerberFile = ref(null)
+
+async function handleLoadGerbers() {
+  if (!pasteGerberFile.value || !maskGerberFile.value) {
+    alert('Please select both paste and mask gerber files first')
+    return
+  }
+  const result = await jobStore.loadJobFromGerbers(pasteGerberFile.value, maskGerberFile.value)
+  if (!result.success) {
+    alert('Error loading gerbers: ' + result.error)
+  }
+}
 </script>
 
