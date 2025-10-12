@@ -67,42 +67,22 @@ const hasNozzleOffset = computed(() => {
 const tipXoffset = computed(() => jobStore.tipXoffset)
 const tipYoffset = computed(() => jobStore.tipYoffset)
 
-const hasRoughPosition = computed(() => {
-  return jobStore.roughBoardPosition !== null
-})
+// Use new calibration status flags
+const hasRoughPosition = computed(() => jobStore.hasRoughCalibration)
 
-const roughPosition = computed(() => {
-  return jobStore.roughBoardPosition || { x: 0, y: 0, z: 0 }
-})
+const hasDisplacementPlane = computed(() => jobStore.hasPlaneCalibration)
 
-const hasDisplacementPlane = computed(() => {
-  return jobStore.planeA !== null &&
-         jobStore.planeB !== null &&
-         jobStore.planeC !== null &&
-         jobStore.planeD !== null
-})
+const hasFidCal = computed(() => jobStore.hasFidCalibration)
 
 const planeFormula = computed(() => {
-  if (!hasDisplacementPlane.value) return ''
+  if (!hasDisplacementPlane.value || !jobStore.planeCoefficients) return ''
 
-  const A = jobStore.planeA.toFixed(4)
-  const B = jobStore.planeB.toFixed(4)
-  const C = jobStore.planeC.toFixed(4)
-  const D = jobStore.planeD.toFixed(4)
+  const A = jobStore.planeCoefficients.A.toFixed(4)
+  const B = jobStore.planeCoefficients.B.toFixed(4)
+  const C = jobStore.planeCoefficients.C.toFixed(4)
+  const D = jobStore.planeCoefficients.D.toFixed(4)
 
   return `${A}x + ${B}y + ${C}z + ${D} = 0`
-})
-
-const hasFidCal = computed(() => {
-  return jobStore.fiducials.length > 0 &&
-         jobStore.fiducials.every(fid => fid.calX !== null && fid.calY !== null && fid.calZ !== null)
-})
-
-const fidCalStatus = computed(() => {
-  const calibratedCount = jobStore.fiducials.filter(
-    fid => fid.calX !== null && fid.calY !== null && fid.calZ !== null
-  ).length
-  return `${calibratedCount} of ${jobStore.fiducials.length} fiducials calibrated`
 })
 
 // Status text for each calibration item
@@ -117,8 +97,11 @@ const roughPositionStatusText = computed(() => {
   if (!hasRoughPosition.value) {
     return 'Board position not calibrated'
   }
-  const pos = roughPosition.value
-  return `X: ${pos.x.toFixed(3)}, Y: ${pos.y.toFixed(3)}, Z: ${pos.z.toFixed(3)}`
+  // Show x, y, z position
+  if (jobStore.roughBoardPosition !== null) {
+    return `X: ${jobStore.roughBoardPosition.x.toFixed(3)}mm, Y: ${jobStore.roughBoardPosition.y.toFixed(3)}mm, Z: ${jobStore.roughBoardPosition.z.toFixed(3)}mm`
+  }
+  return 'Rough calibration complete'
 })
 
 const displacementPlaneStatusText = computed(() => {
@@ -132,7 +115,7 @@ const fidCalStatusText = computed(() => {
   if (!hasFidCal.value) {
     return 'Fiducials not calibrated'
   }
-  return fidCalStatus.value
+  return `${jobStore.originalFiducials.length} fiducials calibrated (CV refined)`
 })
 
 // Event handlers

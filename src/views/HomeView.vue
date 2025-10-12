@@ -4,7 +4,8 @@
     <div class="bg-gray-800 px-8 py-5 flex justify-between items-center gap-6">
       <h1 class="text-2xl font-light text-white">LumenPnP Pasting Utility</h1>
       <FilePicker text="Load Project" type="secondary" icon="folder-open" accept=".json" @change="handleLoadJob" />
-      <Button text="Save Project" type="secondary" icon="save" />
+      <Button @click="handleSaveProject" text="Save Project" type="secondary" icon="save" />
+      <Button @click="handleResetProject" text="Reset" type="secondary" icon="trash" />
       <Button @click="handleRunJob" text="Run Job" type="secondary" icon="play" />
       <div class="flex-1 flex items-center gap-4">
         <SerialConnection />
@@ -60,7 +61,35 @@ async function handleLoadJob(file) {
     const result = await jobStore.importFromFile(file)
     if (!result.success) {
       alert('Failed to import job: ' + result.error)
+    } else {
+      console.log('Job loaded successfully')
     }
+  }
+}
+
+function handleSaveProject() {
+  try {
+    jobStore.saveToFile()
+    console.log('Project saved successfully')
+  } catch (error) {
+    console.error('Failed to save project:', error)
+    alert('Failed to save project: ' + error.message)
+  }
+}
+
+function handleResetProject() {
+  if (confirm('Are you sure you want to reset the project? This will clear all job data and calibrations from localStorage.')) {
+    // Clear the persisted store data from localStorage
+    localStorage.removeItem('job')
+
+    // Reset store to initial state
+    jobStore.$reset()
+
+    console.log('Project reset - localStorage cleared')
+    alert('Project reset successfully. The page will reload.')
+
+    // Reload page to ensure clean state
+    window.location.reload()
   }
 }
 

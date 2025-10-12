@@ -3,40 +3,31 @@
  */
 
 /**
- * Create a point object with calibration fields
+ * Create a point object
  * @param {number} x - X coordinate
  * @param {number} y - Y coordinate
  * @param {number} z - Z coordinate
- * @returns {Object} Point object with x, y, z and calibration fields
+ * @returns {Object} Point object with x, y, z coordinates
  */
 export function createPoint(x, y, z) {
   return {
     x,
     y,
-    z,
-    calX: null,
-    calY: null
+    z
   }
 }
 
 /**
- * Create a fiducial object with calibration and search fields
+ * Create a fiducial object
  * @param {number} x - X coordinate
  * @param {number} y - Y coordinate
  * @param {number} z - Z coordinate
- * @param {number|null} searchX - Search region X coordinate
- * @param {number|null} searchY - Search region Y coordinate
- * @returns {Object} Fiducial object with coordinates and calibration fields
+ * @returns {Object} Fiducial object with x, y, z coordinates
  */
-export function createFiducial(x, y, z, searchX = null, searchY = null) {
+export function createFiducial(x, y, z) {
   return {
     x,
     y,
-    z,
-    calX: null,
-    calY: null,
-    calZ: null,
-    searchX,
-    searchY
+    z
   }
 }

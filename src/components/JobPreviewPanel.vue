@@ -47,16 +47,17 @@
 
     <JobPreview
       ref="jobPreviewRef"
-      :placements="jobStore.placements"
-      :fiducials="jobStore.fiducials"
+      :placements="displayPlacements"
+      :fiducials="displayFiducials"
       :side="jobStore.boardSide"
-      :click-mode="null"
+      :click-mode="clickMode"
+      @fiducial-clicked="handleFiducialClicked"
     />
   </Card>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import Button from './Button.vue'
 import Card from './Card.vue'
 import { useJobStore } from '../stores/job'
@@ -64,6 +65,27 @@ import JobPreview from './JobPreview.vue'
 
 const jobStore = useJobStore()
 const jobPreviewRef = ref(null)
+
+// Use original positions for preview (not calibrated, since we want to show gerber data)
+const displayPlacements = computed(() => jobStore.originalPlacements)
+
+// Show potential fiducials during selection mode, otherwise show original
+const displayFiducials = computed(() => {
+  if (jobStore.isFiducialSelectionMode) {
+    return jobStore.potentialFiducials
+  }
+  return jobStore.originalFiducials
+})
+
+// Enable click mode when in fiducial selection
+const clickMode = computed(() => {
+  return jobStore.isFiducialSelectionMode ? 'fiducial-selection' : null
+})
+
+function handleFiducialClicked(event) {
+  // Forward the click event to the store
+  jobStore.handleFiducialClick(event.index)
+}
 
 function handleZoomIn() {
   if (jobPreviewRef.value) {

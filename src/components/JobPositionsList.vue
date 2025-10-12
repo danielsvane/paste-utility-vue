@@ -5,10 +5,24 @@
       <FilePicker text="Select Mask Gerber" accept=".gbr,.gbs,.gts" v-model="maskGerberFile" type="secondary" />
       <Button @click="handleLoadGerbers" :disabled="!pasteGerberFile || !maskGerberFile" text="Load Gerbers"
         type="tertiary" icon="circle-down" />
+      <Button @click="handleSelectFiducials" :disabled="!canSelectFiducials" text="Select Fiducials"
+        type="tertiary" icon="crosshairs" />
     </template>
 
     <div class="positions-list text-gray-300">
-      <div v-if="jobStore.placements.length > 0 || jobStore.fiducials.length > 0" class="positions-wrapper">
+      <!-- Fiducial selection message -->
+      <div v-if="jobStore.isFiducialSelectionMode"
+           class="calibration-warning text-blue-400 text-sm mb-3 p-2 bg-blue-900/20 rounded">
+        👉 Click on 3 fiducials in the preview to select them.
+      </div>
+
+      <!-- Calibration status message -->
+      <div v-else-if="!jobStore.isCalibrated && (jobStore.originalFiducials.length > 0 || jobStore.originalPlacements.length > 0)"
+           class="calibration-warning text-yellow-500 text-sm mb-3 p-2 bg-yellow-900/20 rounded">
+        ⚠ Calibration required. Run "Get Rough Board Position" to enable movement.
+      </div>
+
+      <div v-if="jobStore.originalPlacements.length > 0 || jobStore.originalFiducials.length > 0 || jobStore.potentialFiducials.length > 0" class="positions-wrapper">
         <div class="positions-grid-container">
           <!-- Header -->
           <div class="grid-header">#</div>
@@ -19,25 +33,30 @@
           <div class="grid-header">Actions</div>
 
           <!-- Fiducials Section -->
-          <template v-if="jobStore.fiducials.length > 0">
+          <template v-if="jobStore.originalFiducials.length > 0">
             <div class="section-header">
-              {{ jobStore.fiducials.length }} <span class="text-gray-300">fiducials</span>
+              {{ jobStore.originalFiducials.length }} <span class="text-gray-300">fiducials</span>
             </div>
 
-            <div v-for="(fiducial, index) in jobStore.fiducials" :key="`fiducial-${index}`"
+            <div v-for="(fiducial, index) in displayFiducials" :key="`fiducial-${index}`"
               class="grid-row fiducial-row">
               <div class="grid-cell text-gray-400">{{ index + 1 }}</div>
-              <div class="grid-cell">{{ fiducial.x.toFixed(3) }}</div>
-              <div class="grid-cell">{{ fiducial.y.toFixed(3) }}</div>
-              <div class="grid-cell">{{ fiducial.z.toFixed(3) }}</div>
+              <div class="grid-cell">{{ fiducial.x !== null ? fiducial.x.toFixed(3) : 'N/A' }}</div>
+              <div class="grid-cell">{{ fiducial.y !== null ? fiducial.y.toFixed(3) : 'N/A' }}</div>
+              <div class="grid-cell">{{ fiducial.z !== null ? fiducial.z.toFixed(3) : 'N/A' }}</div>
               <div class="grid-cell"></div>
               <div class="grid-cell">
                 <div class="action-buttons">
-                  <Button icon="eye" size="small" type="tertiary" @click="handleMoveCameraToPosition(fiducial)"
+                  <Button icon="eye" size="small" type="tertiary"
+                    @click="handleMoveCameraToPosition(fiducial)"
+                    :disabled="!jobStore.isCalibrated"
                     title="Move camera to position" />
-                  <Button icon="syringe" size="small" type="tertiary" @click="handleMoveNozzleToPosition(fiducial)"
+                  <Button icon="syringe" size="small" type="tertiary"
+                    @click="handleMoveNozzleToPosition(fiducial)"
+                    :disabled="!jobStore.isCalibrated"
                     title="Move nozzle to position" />
-                  <Button icon="trash" size="small" type="tertiary" @click="handleDeleteFiducial(index)"
+                  <Button icon="trash" size="small" type="tertiary"
+                    @click="handleDeleteFiducial(index)"
                     title="Delete fiducial" />
                 </div>
               </div>
@@ -45,24 +64,29 @@
           </template>
 
           <!-- Placements Section -->
-          <template v-if="jobStore.placements.length > 0">
+          <template v-if="jobStore.originalPlacements.length > 0">
             <div class="section-header">
-              {{ jobStore.placements.length }} <span class="text-gray-300">placements</span>
+              {{ jobStore.originalPlacements.length }} <span class="text-gray-300">placements</span>
             </div>
 
-            <div v-for="(placement, index) in jobStore.placements" :key="`placement-${index}`" class="grid-row">
+            <div v-for="(placement, index) in displayPlacements" :key="`placement-${index}`" class="grid-row">
               <div class="grid-cell text-gray-400">{{ index + 1 }}</div>
-              <div class="grid-cell">{{ placement.x.toFixed(3) }}</div>
-              <div class="grid-cell">{{ placement.y.toFixed(3) }}</div>
-              <div class="grid-cell">{{ placement.z.toFixed(3) }}</div>
+              <div class="grid-cell">{{ placement.x !== null ? placement.x.toFixed(3) : 'N/A' }}</div>
+              <div class="grid-cell">{{ placement.y !== null ? placement.y.toFixed(3) : 'N/A' }}</div>
+              <div class="grid-cell">{{ placement.z !== null ? placement.z.toFixed(3) : 'N/A' }}</div>
               <div class="grid-cell"></div>
               <div class="grid-cell">
                 <div class="action-buttons">
-                  <Button icon="eye" size="small" type="tertiary" @click="handleMoveCameraToPosition(placement)"
+                  <Button icon="eye" size="small" type="tertiary"
+                    @click="handleMoveCameraToPosition(placement)"
+                    :disabled="!jobStore.isCalibrated"
                     title="Move camera to position" />
-                  <Button icon="syringe" size="small" type="tertiary" @click="handleMoveNozzleToPosition(placement)"
+                  <Button icon="syringe" size="small" type="tertiary"
+                    @click="handleMoveNozzleToPosition(placement)"
+                    :disabled="!jobStore.isCalibrated"
                     title="Move nozzle to position" />
-                  <Button icon="trash" size="small" type="tertiary" @click="handleDeletePlacement(index)"
+                  <Button icon="trash" size="small" type="tertiary"
+                    @click="handleDeletePlacement(index)"
                     title="Delete position" />
                 </div>
               </div>
@@ -79,16 +103,42 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, inject } from 'vue'
 import Button from './Button.vue'
 import Card from './Card.vue'
 import FilePicker from './FilePicker.vue'
 import { useJobStore } from '../stores/job'
 
 const jobStore = useJobStore()
+const toast = inject('toast')
 
 const pasteGerberFile = ref(null)
 const maskGerberFile = ref(null)
+
+// Check if fiducial selection is possible
+const canSelectFiducials = computed(() => {
+  return jobStore.potentialFiducials.length >= 3 || jobStore.originalFiducials.length >= 3
+})
+
+// Use calibrated positions if available, otherwise show original positions
+const displayFiducials = computed(() => {
+  // Hide during selection mode - user selects on preview
+  if (jobStore.isFiducialSelectionMode) {
+    return []
+  }
+
+  if (jobStore.isCalibrated && jobStore.calibratedFiducials.length > 0) {
+    return jobStore.calibratedFiducials
+  }
+  return jobStore.originalFiducials
+})
+
+const displayPlacements = computed(() => {
+  if (jobStore.isCalibrated && jobStore.calibratedPlacements.length > 0) {
+    return jobStore.calibratedPlacements
+  }
+  return jobStore.originalPlacements
+})
 
 async function handleLoadGerbers() {
   if (!pasteGerberFile.value || !maskGerberFile.value) {
@@ -98,15 +148,54 @@ async function handleLoadGerbers() {
   const result = await jobStore.loadJobFromGerbers(pasteGerberFile.value, maskGerberFile.value)
   if (!result.success) {
     alert('Error loading gerbers: ' + result.error)
+    return
+  }
+
+  // Automatically start fiducial selection workflow if needed
+  if (result.needsFiducialSelection) {
+    console.log('Gerbers loaded. Starting fiducial selection workflow.')
+    try {
+      await jobStore.selectFiducials(toast.value)
+      console.log('Fiducial selection completed')
+    } catch (error) {
+      console.error('Fiducial selection failed:', error)
+      alert('Fiducial selection failed: ' + error.message)
+    }
   }
 }
 
-function handleMoveCameraToPosition(placement) {
-  jobStore.moveCameraToPosition(placement.x, placement.y)
+async function handleSelectFiducials() {
+  // Start selection mode
+  if (!jobStore.startFiducialSelection()) {
+    alert('Need at least 3 fiducial candidates to select from')
+    return
+  }
+
+  try {
+    // Run the selection workflow
+    await jobStore.selectFiducials({
+      show: (message) => {
+        return new Promise((resolve) => {
+          // Simple alert-based approach for now
+          // TODO: Replace with proper toast component
+          alert(message)
+          resolve()
+        })
+      }
+    })
+    console.log('Fiducial selection completed')
+  } catch (error) {
+    console.error('Fiducial selection failed:', error)
+    alert('Fiducial selection failed: ' + error.message)
+  }
 }
 
-function handleMoveNozzleToPosition(placement) {
-  jobStore.moveNozzleToPosition(placement.x, placement.y, placement.z)
+function handleMoveCameraToPosition(position) {
+  jobStore.moveCameraToPosition(position)
+}
+
+function handleMoveNozzleToPosition(position) {
+  jobStore.moveNozzleToPosition(position)
 }
 
 function handleDeletePlacement(index) {
