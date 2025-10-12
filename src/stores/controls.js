@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useSerialStore } from './serial'
 import { useVideoStore } from './video'
+import * as macros from '../utils/macros'
 
 export const useControlsStore = defineStore(
   'controls',
@@ -31,40 +32,40 @@ export const useControlsStore = defineStore(
   // Jog Actions
   function jogYPlus() {
     const dist = getJogDistance()
-    serialStore.send(['G91', `G0 Y${dist}`, 'G90'])
+    macros.jogYPlus(dist)
   }
 
   function jogYMinus() {
     const dist = getJogDistance()
-    serialStore.send(['G91', `G0 Y-${dist}`, 'G90'])
+    macros.jogYMinus(dist)
   }
 
   function jogXPlus() {
     const dist = getJogDistance()
-    serialStore.send(['G91', `G0 X${dist}`, 'G90'])
+    macros.jogXPlus(dist)
   }
 
   function jogXMinus() {
     const dist = getJogDistance()
-    serialStore.send(['G91', `G0 X-${dist}`, 'G90'])
+    macros.jogXMinus(dist)
   }
 
   function jogZPlus() {
     const dist = getJogDistance()
-    serialStore.send(['G91', `G0 Z${dist}`, 'G90'])
+    macros.jogZPlus(dist)
   }
 
   function jogZMinus() {
     const dist = getJogDistance()
-    serialStore.send(['G91', `G0 Z-${dist}`, 'G90'])
+    macros.jogZMinus(dist)
   }
 
   function extrude() {
-    serialStore.send(['G91', 'G0 B-2', 'G90'])
+    macros.extrude()
   }
 
   function retract() {
-    serialStore.send(['G91', 'G0 B2', 'G90'])
+    macros.retract()
   }
 
   // Visual homing operations
@@ -95,7 +96,7 @@ export const useControlsStore = defineStore(
       const scaledOffsetY = offsetY * scalingFactor
 
       // Send jog commands using relative positioning
-      await serialStore.goToRelative(scaledOffsetX.toFixed(1), scaledOffsetY.toFixed(1))
+      await macros.goToRelative(scaledOffsetX.toFixed(1), scaledOffsetY.toFixed(1))
     }
   }
 
@@ -106,7 +107,7 @@ export const useControlsStore = defineStore(
     }
 
     // Move to datum board position (hardcoded for now)
-    await serialStore.goTo(218, 196)
+    await macros.goTo(218, 196)
     await serialStore.delay(1000)
 
     // Fine-tune position using OpenCV (twice for precision)

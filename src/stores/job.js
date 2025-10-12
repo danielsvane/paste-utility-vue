@@ -7,6 +7,7 @@ import { parseJobFile, exportJobToFile } from '../utils/jobFileService'
 import { useSerialStore } from './serial'
 import { fromTriangles, applyToPoint } from 'transformation-matrix'
 import { SAFE_Z_HEIGHT, DEFAULT_Z_HEIGHT, EXTRUSION_HEIGHT } from '../constants'
+import * as macros from '../utils/macros'
 
 export const useJobStore = defineStore('job', () => {
   // Store references
@@ -574,7 +575,7 @@ export const useJobStore = defineStore('job', () => {
       console.log('Jogging to rough position:', roughPos.x, roughPos.y)
 
       try {
-        await serialStore.goTo(roughPos.x, roughPos.y)
+        await macros.goTo(roughPos.x, roughPos.y)
         await new Promise(resolve => setTimeout(resolve, 1500))
 
         // Import and use controls store for jogToFid (CV refinement)
@@ -619,29 +620,27 @@ export const useJobStore = defineStore('job', () => {
   }
 
   async function pressurize() {
-    await serialStore.send(['G91', 'G0 B-200', 'G90'])
+    await macros.pressurize()
   }
 
   async function depressurize() {
-    await serialStore.send(['G91', 'G0 B200', 'G90'])
+    await macros.depressurize()
   }
 
   async function extrude() {
-    const EXTRUDE_AMOUNT = 10
-    await serialStore.send(['G91', `G0 B-${EXTRUDE_AMOUNT}`, 'G90'])
+    await macros.extrudePaste()
   }
 
   async function startSlowExtrude() {
-    await serialStore.send(['G91', 'G1 B-20000 F400', 'G90'])
+    await macros.startSlowExtrude()
   }
 
   async function stopExtrude() {
-    await serialStore.send(['M410', 'G90', 'G0 F35000'])
+    await macros.stopExtrude()
   }
 
   async function retractAndRaise() {
-    const RETRACTION_AMOUNT = 10
-    await serialStore.send(['G91', `G0 B${RETRACTION_AMOUNT}`, 'G90', `G0 Z${SAFE_Z_HEIGHT}`])
+    await macros.retractAndRaise()
   }
 
   // Sequential extrusion workflow: stop extrude, retract, raise, move to next position, pressurize, start slow extrude
@@ -798,7 +797,7 @@ export const useJobStore = defineStore('job', () => {
 
     await serialStore.send([`G0 Z${SAFE_Z_HEIGHT}`])
 
-    await serialStore.goToRelative(-45, 63)
+    await macros.goToRelative(-45, 63)
 
     await serialStore.send(['G0 Z46.5'])
 

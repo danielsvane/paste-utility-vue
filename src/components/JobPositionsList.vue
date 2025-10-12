@@ -117,10 +117,21 @@ watch(() => jobStore.lastNavigatedPlacementIndex, async (newIndex) => {
     // Wait for DOM to update with the active-placement class
     await nextTick()
 
-    // Find the active placement row and scroll it into view
+    // Find the active placement row and scroll it into view within the table only
     const activeRow = document.querySelector('.grid-row.active-placement')
-    if (activeRow) {
-      activeRow.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const scrollContainer = document.querySelector('.positions-wrapper')
+
+    if (activeRow && scrollContainer) {
+      // Calculate position to center the row in the scrollable container
+      const containerRect = scrollContainer.getBoundingClientRect()
+      const rowRect = activeRow.getBoundingClientRect()
+      const scrollOffset = rowRect.top - containerRect.top - (containerRect.height / 2) + (rowRect.height / 2)
+
+      // Smooth scroll only the container, not the page
+      scrollContainer.scrollTo({
+        top: scrollContainer.scrollTop + scrollOffset,
+        behavior: 'smooth'
+      })
     }
   }
 })

@@ -424,13 +424,6 @@ export const useSerialStore = defineStore('serial', () => {
     clearInspectBuffer()
   }
 
-  async function goToRelative(x, y) {
-    await send(['G91', `G0 X${x} Y${y}`, 'G90'])
-  }
-
-  async function goTo(x, y) {
-    await send([`G0 X${x} Y${y}`])
-  }
 
   function download(filename, text) {
     const element = document.createElement('a')
@@ -499,8 +492,6 @@ export const useSerialStore = defineStore('serial', () => {
     clearBuffer,
     clearInspectBuffer,
     readLeftVac,
-    goToRelative,
-    goTo,
     delay,
     download,
     grabBoardPosition
