@@ -5,6 +5,7 @@ import { createPoint, createFiducial } from '../utils/factories'
 import { calculatePlaneCoefficients, getZForPlane } from '../utils/geometry'
 import { parseJobFile, exportJobToFile } from '../utils/jobFileService'
 import { useSerialStore } from './serial'
+import { fromTriangles, applyToPoint } from 'transformation-matrix'
 
 export const useJobStore = defineStore('job', () => {
   // State
@@ -216,6 +217,82 @@ export const useJobStore = defineStore('job', () => {
     }
   }
 
+  function transformPlacements(realFids) {
+    // Get the original fiducial positions from our job
+    const origFids = [
+      [fiducials.value[0].x, fiducials.value[0].y],
+      [fiducials.value[1].x, fiducials.value[1].y],
+      [fiducials.value[2].x, fiducials.value[2].y]
+    ]
+
+    const matrix = fromTriangles(origFids, realFids)
+
+    for (let point of placements.value) {
+      let transformedPoint = applyToPoint(matrix, [point.x, point.y])
+
+      point.calX = transformedPoint[0]
+      point.calY = transformedPoint[1]
+    }
+  }
+
+  async function findBoardRoughPosition(toast) {
+    const serialStore = useSerialStore()
+
+    // Request user to jog to fid1
+    await toast.show('Please jog the camera to be centered on FID1.')
+
+    // Upon hitting continue, grab current position, save to fid1 searchXY
+    const fid1Rough = await serialStore.grabBoardPosition()
+
+    console.log('fid1Rough:', fid1Rough)
+
+    fiducials.value[0].searchX = parseFloat(fid1Rough[0])
+    fiducials.value[0].searchY = parseFloat(fid1Rough[1])
+
+    // Repeat for fid2 and fid3
+    await toast.show('Please jog the camera to be centered on FID2.')
+    const fid2Rough = await serialStore.grabBoardPosition()
+    fiducials.value[1].searchX = parseFloat(fid2Rough[0])
+    fiducials.value[1].searchY = parseFloat(fid2Rough[1])
+
+    await toast.show('Please jog the camera to be centered on FID3.')
+    const fid3Rough = await serialStore.grabBoardPosition()
+    fiducials.value[2].searchX = parseFloat(fid3Rough[0])
+    fiducials.value[2].searchY = parseFloat(fid3Rough[1])
+
+    // Ask to jog tip to desired extrusion height
+    await toast.show('Please jog the paste extruder tip to your desired extrusion height.')
+
+    // Grab z pos directly - no offset
+    let zPos = await serialStore.grabBoardPosition()
+
+    await serialStore.send(['G0 Z31.5'])
+
+    zPos = parseFloat(zPos[2])
+
+    // Save that position to every placement
+    for (const placement of placements.value) {
+      placement.z = zPos
+    }
+
+    console.log('Fiducials:', fiducials.value)
+
+    transformPlacements([
+      [fiducials.value[0].searchX, fiducials.value[0].searchY],
+      [fiducials.value[1].searchX, fiducials.value[1].searchY],
+      [fiducials.value[2].searchX, fiducials.value[2].searchY]
+    ])
+
+    console.log(placements.value)
+
+    // Update rough board position state
+    roughBoardPosition.value = {
+      x: parseFloat(fid1Rough[0]),
+      y: parseFloat(fid1Rough[1]),
+      z: zPos
+    }
+  }
+
   return {
     // State
     placements,
@@ -248,7 +325,9 @@ export const useJobStore = defineStore('job', () => {
     moveCameraToPosition,
     moveNozzleToPosition,
     deletePlacement,
-    deleteFiducial
+    deleteFiducial,
+    transformPlacements,
+    findBoardRoughPosition
   }
 }, {
   persist: {

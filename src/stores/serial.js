@@ -442,6 +442,39 @@ export const useSerialStore = defineStore('serial', () => {
     document.body.removeChild(element)
   }
 
+  async function grabBoardPosition() {
+    console.log('Grabbing board position')
+    clearInspectBuffer()
+
+    await send(['G92'])
+
+    console.log('Sent G92')
+
+    const pattern = /X:(.*?) Y:(.*?) Z:(.*?) A:(.*?) B:(.*?) /
+    const re = new RegExp(pattern, 'i')
+
+    console.log('Serial inspect buffer:', inspectBuffer.value)
+
+    let positionArray = []
+
+    for (let i = 0; i < inspectBuffer.value.length; i++) {
+      let currLine = inspectBuffer.value[i]
+      console.log(currLine)
+
+      let result = re.test(currLine)
+
+      if (result) {
+        const matches = re.exec(currLine)
+        positionArray = [matches[1], matches[2], matches[3]]
+        break
+      }
+    }
+
+    console.log('Position array:', positionArray)
+
+    return positionArray
+  }
+
   return {
     // State
     port,
@@ -469,7 +502,8 @@ export const useSerialStore = defineStore('serial', () => {
     goToRelative,
     goTo,
     delay,
-    download
+    download,
+    grabBoardPosition
   }
 }, {
   persist: {

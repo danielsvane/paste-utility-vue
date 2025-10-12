@@ -49,7 +49,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import Button from './Button.vue'
 import Card from './Card.vue'
 import { useJobStore } from '../stores/job'
@@ -57,6 +57,7 @@ import { useSerialStore } from '../stores/serial'
 
 const jobStore = useJobStore()
 const serialStore = useSerialStore()
+const toast = inject('toast')
 
 // Computed properties for calibration status
 const hasNozzleOffset = computed(() => {
@@ -140,9 +141,14 @@ function handleNozzleOffsetCal() {
   // TODO: Implement nozzle offset calibration logic
 }
 
-function handleGetRoughPosition() {
+async function handleGetRoughPosition() {
   console.log('Get Rough Board Position clicked')
-  // TODO: Implement rough board position capture logic
+  try {
+    await jobStore.findBoardRoughPosition(toast.value)
+    console.log('Rough board position captured successfully')
+  } catch (error) {
+    console.error('Error during rough board position capture:', error)
+  }
 }
 
 function handleGetDisplacementPlane() {
