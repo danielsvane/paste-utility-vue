@@ -20,7 +20,8 @@ import {
   faArrowUp,
   faArrowDown,
   faFolderOpen,
-  faFloppyDisk
+  faFloppyDisk,
+  faCircleDown
 } from '@fortawesome/free-solid-svg-icons'
 
 // Add icons to the library
@@ -41,7 +42,8 @@ library.add(
   faArrowUp,
   faArrowDown,
   faFolderOpen,
-  faFloppyDisk
+  faFloppyDisk,
+  faCircleDown
 )
 
 // Export plugin function

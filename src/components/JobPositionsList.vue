@@ -4,7 +4,7 @@
       <FilePicker text="Select Paste Gerber" accept=".gbr,.gbp,.gtp" v-model="pasteGerberFile" type="secondary" />
       <FilePicker text="Select Mask Gerber" accept=".gbr,.gbs,.gts" v-model="maskGerberFile" type="secondary" />
       <Button @click="handleLoadGerbers" :disabled="!pasteGerberFile || !maskGerberFile" text="Load Gerbers"
-        type="secondary" />
+        type="tertiary" icon="circle-down" />
     </template>
 
     <div class="positions-list text-gray-300">
