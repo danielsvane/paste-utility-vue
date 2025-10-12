@@ -43,20 +43,20 @@
           <!-- Jog Buttons -->
           <div class="grid grid-cols-3 gap-2">
             <div></div>
-            <Button @click="controls.jogYPlus" class="w-16 h-16" text="Y+" icon="arrow-up" />
+            <Button @click="controls.jogYPlus" text="Y+" icon="arrow-up" size="large" />
             <div></div>
-            <Button @click="controls.jogXMinus" class="w-16 h-16" text="X-" icon="arrow-left" />
+            <Button @click="controls.jogXMinus" text="X-" icon="arrow-left" size="large" />
             <div></div>
-            <Button @click="controls.jogXPlus" class="w-16 h-16" text="X+" icon="arrow-right" />
+            <Button @click="controls.jogXPlus" text="X+" icon="arrow-right" size="large" />
             <div></div>
-            <Button @click="controls.jogYMinus" class="w-16 h-16" text="Y-" icon="arrow-down" />
+            <Button @click="controls.jogYMinus" text="Y-" icon="arrow-down" size="large" />
             <div></div>
           </div>
 
           <!-- Z Controls -->
           <div class="flex gap-2">
-            <Button @click="controls.jogZPlus" text="Z+" icon="arrow-up" />
-            <Button @click="controls.jogZMinus" text="Z-" icon="arrow-down" />
+            <Button @click="controls.jogZPlus" text="Z+" icon="arrow-up" size="large" />
+            <Button @click="controls.jogZMinus" text="Z-" icon="arrow-down" size="large" />
           </div>
 
           <!-- Extrude/Retract -->

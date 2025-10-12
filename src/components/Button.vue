@@ -132,7 +132,7 @@ const buttonClasses = computed(() => {
 }
 
 .btn-large {
-  @apply px-6 h-14 text-lg;
+  @apply px-6 h-16 text-xl;
 }
 
 /* Full width */
