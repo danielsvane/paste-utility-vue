@@ -2,7 +2,7 @@
   <div class="file-picker">
     <input type="file" ref="fileInput" @change="handleFileSelect" :accept="accept" class="hidden" />
     <Button @click="$refs.fileInput.click()" :text="text" :sub-label="selectedFile?.name" :type="type" :size="size"
-      :disabled="disabled" />
+      :icon="icon" :disabled="disabled" />
   </div>
 </template>
 
@@ -30,6 +30,10 @@ const props = defineProps({
   size: {
     type: String,
     default: 'medium'
+  },
+  icon: {
+    type: String,
+    default: null
   },
   disabled: {
     type: Boolean,
