@@ -71,7 +71,7 @@ export async function jogXMinus(distance) {
  * @param {number} distance - Distance to jog in mm
  */
 export async function jogZPlus(distance) {
-  await serialStore.send(['G91', `G0 Z${distance}`, 'G90'])
+  await serialStore.send(['G91', `G0 Z-${distance}`, 'G90'])
 }
 
 /**
@@ -79,7 +79,7 @@ export async function jogZPlus(distance) {
  * @param {number} distance - Distance to jog in mm
  */
 export async function jogZMinus(distance) {
-  await serialStore.send(['G91', `G0 Z-${distance}`, 'G90'])
+  await serialStore.send(['G91', `G0 Z${distance}`, 'G90'])
 }
 
 // ============================================================================
