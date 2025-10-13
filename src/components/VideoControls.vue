@@ -28,7 +28,9 @@
           <!-- Vertical line -->
           <div class="absolute left-1/2 top-0 h-full w-0.5 bg-yellow-400 opacity-80 -translate-x-1/2"></div>
           <!-- Center dot -->
-          <div class="absolute top-1/2 left-1/2 w-1 h-1 bg-yellow-400 opacity-80 -translate-x-1/2 -translate-y-1/2 rounded-full"></div>
+          <div
+            class="absolute top-1/2 left-1/2 w-1 h-1 bg-yellow-400 opacity-80 -translate-x-1/2 -translate-y-1/2 rounded-full">
+          </div>
         </div>
       </div>
     </div>
@@ -37,7 +39,7 @@
     </div>
 
     <!-- Debug Controls -->
-    <div v-if="videoStore.isVideoStarted && videoStore.videoComposable"
+    <div v-if="videoStore.isVideoStarted && videoStore.videoComposable && false"
       class="mt-4 p-3 bg-gray-800 rounded border border-gray-600">
       <div class="flex items-center justify-between mb-2">
         <label class="text-sm font-semibold text-gray-300">Circle Detection Debug Mode</label>
@@ -51,7 +53,7 @@
     </div>
 
     <!-- Jog Controls (only visible when connected and video started) -->
-    <div v-if="serial.isConnected && videoStore.isVideoStarted" class="flex gap-3 flex-wrap mt-4">
+    <div v-if="serial.isConnected && videoStore.isVideoStarted && false" class="flex gap-3 flex-wrap mt-4">
       <Button type="tertiary" text="Jog to Fid in View" @click="controls.jogToFid()" />
       <Button type="tertiary" text="Visual Home" @click="controls.visualHome()" />
     </div>
