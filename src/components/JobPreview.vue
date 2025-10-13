@@ -1,40 +1,21 @@
 <template>
   <div class="job-preview-container">
-    <svg
-      ref="svgRef"
-      class="job-preview-svg"
-      :class="{ 'cursor-crosshair': clickMode === 'fiducial-selection' }"
-      :viewBox="viewBox"
-      @click="handleClick"
-    >
+    <svg ref="svgRef" class="job-preview-svg" :class="{ 'cursor-crosshair': clickMode === 'fiducial-selection' }"
+      :viewBox="viewBox" @click="handleClick">
       <!-- Fiducials (blue circles) -->
       <g class="fiducials">
-        <circle
-          v-for="(fid, index) in transformedFiducials"
-          :key="`fid-${index}`"
-          :cx="fid.x"
-          :cy="fid.y"
-          :r="fid.selected ? 6 : 4"
-          class="fiducial-point"
-          :class="{ selected: fid.selected }"
-        />
+        <circle v-for="(fid, index) in transformedFiducials" :key="`fid-${index}`" :cx="fid.x" :cy="fid.y"
+          :r="fid.selected ? 6 : 4" class="fiducial-point" :class="{ selected: fid.selected }" />
       </g>
 
       <!-- Placements (red circles) -->
       <g class="placements">
-        <circle
-          v-for="(placement, index) in transformedPlacements"
-          :key="`placement-${index}`"
-          :cx="placement.x"
-          :cy="placement.y"
-          :r="placement.index === activePlacementIndex ? 6 : 3"
-          class="placement-point"
-          :class="{
+        <circle v-for="(placement, index) in transformedPlacements" :key="`placement-${index}`" :cx="placement.x"
+          :cy="placement.y" :r="placement.index === activePlacementIndex ? 6 : 3" class="placement-point" :class="{
             'active-placement': placement.index === activePlacementIndex,
             'calibrated-placement': calibratedPlacementIndices.includes(placement.index) && placement.index !== activePlacementIndex,
             'clickable': clickMode !== 'fiducial-selection'
-          }"
-        />
+          }" />
       </g>
     </svg>
   </div>
@@ -289,7 +270,8 @@ defineExpose({
   width: 100%;
   height: 100%;
   min-height: 400px;
-  background-color: #1f2937; /* gray-800 */
+  background-color: #1f2937;
+  /* gray-800 */
   border-radius: 8px;
   overflow: hidden;
 }
@@ -305,25 +287,31 @@ defineExpose({
 }
 
 .fiducial-point {
-  fill: #3b82f6; /* blue-500 */
-  stroke: #1d4ed8; /* blue-700 */
+  fill: #3b82f6;
+  /* blue-500 */
+  stroke: #1d4ed8;
+  /* blue-700 */
   stroke-width: 1;
   transition: all 0.2s ease;
 }
 
 .fiducial-point:hover {
-  fill: #60a5fa; /* blue-400 */
+  fill: #60a5fa;
+  /* blue-400 */
   stroke-width: 2;
 }
 
 .fiducial-point.selected {
-  fill: #10b981; /* green-500 */
-  stroke: #059669; /* green-600 */
+  fill: #10b981;
+  /* green-500 */
+  stroke: #059669;
+  /* green-600 */
   stroke-width: 2;
 }
 
 .placement-point {
-  fill: #ef4444; /* red-500 */
+  fill: #ef4444;
+  /* red-500 */
   transition: all 0.2s ease;
 }
 
@@ -332,32 +320,41 @@ defineExpose({
 }
 
 .placement-point:hover {
-  fill: #f87171; /* red-400 */
+  fill: #f87171;
+  /* red-400 */
   stroke-width: 1;
 }
 
 .placement-point.active-placement {
-  fill: #3b82f6; /* blue-500 */
-  stroke: #60a5fa; /* blue-400 */
+  fill: #3b82f6;
+  /* blue-500 */
+  stroke: #60a5fa;
+  /* blue-400 */
   stroke-width: 2;
   animation: pulse 1.5s ease-in-out infinite;
 }
 
 .placement-point.calibrated-placement {
-  fill: #10b981; /* green-500 */
-  stroke: #059669; /* green-600 */
+  fill: #10b981;
+  /* green-500 */
+  stroke: #059669;
+  /* green-600 */
   stroke-width: 1.5;
 }
 
 .placement-point.calibrated-placement:hover {
-  fill: #34d399; /* green-400 */
+  fill: #34d399;
+  /* green-400 */
   stroke-width: 2;
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.6;
   }

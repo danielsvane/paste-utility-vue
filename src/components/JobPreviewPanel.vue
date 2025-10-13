@@ -2,66 +2,21 @@
   <Card title="Job Preview">
     <template #actions>
       <div class="flex items-center gap-4">
-        <!-- Zoom Controls -->
-        <div class="flex items-center gap-2 border-r border-gray-600 pr-4">
-          <Button
-            @click="handleZoomIn"
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-300">Board Side:</span>
+          <ButtonGroup
+            v-model="jobStore.boardSide"
+            :options="boardSideOptions"
             size="small"
-            title="Zoom In"
-            text="+"
-          />
-          <Button
-            @click="handleZoomOut"
-            size="small"
-            title="Zoom Out"
-            text="−"
-          />
-          <Button
-            @click="handleResetZoom"
-            size="small"
-            title="Reset Zoom & Pan"
-            text="Reset"
           />
         </div>
-        <span class="text-sm text-gray-300">Board Side:</span>
-        <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-          <input
-            type="radio"
-            v-model="jobStore.boardSide"
-            value="front"
-            class="cursor-pointer"
-          />
-          Front
-        </label>
-        <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-          <input
-            type="radio"
-            v-model="jobStore.boardSide"
-            value="back"
-            class="cursor-pointer"
-          />
-          Back
-        </label>
         <div class="border-l border-gray-600 pl-4 flex items-center gap-2">
           <span class="text-sm text-gray-300">Click to Move:</span>
-          <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-            <input
-              type="radio"
-              v-model="movementMode"
-              value="nozzle"
-              class="cursor-pointer"
-            />
-            Nozzle
-          </label>
-          <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-            <input
-              type="radio"
-              v-model="movementMode"
-              value="camera"
-              class="cursor-pointer"
-            />
-            Camera
-          </label>
+          <ButtonGroup
+            v-model="movementMode"
+            :options="movementModeOptions"
+            size="small"
+          />
         </div>
       </div>
     </template>
@@ -82,7 +37,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import Button from './Button.vue'
+import ButtonGroup from './ButtonGroup.vue'
 import Card from './Card.vue'
 import { useJobStore } from '../stores/job'
 import JobPreview from './JobPreview.vue'
@@ -90,6 +45,17 @@ import JobPreview from './JobPreview.vue'
 const jobStore = useJobStore()
 const jobPreviewRef = ref(null)
 const movementMode = ref('nozzle') // Default to nozzle
+
+// Button group options
+const boardSideOptions = [
+  { label: 'Front', value: 'front' },
+  { label: 'Back', value: 'back' }
+]
+
+const movementModeOptions = [
+  { label: 'Nozzle', value: 'nozzle' },
+  { label: 'Camera', value: 'camera' }
+]
 
 // Use original positions for preview (not calibrated, since we want to show gerber data)
 const displayPlacements = computed(() => jobStore.originalPlacements)
@@ -133,24 +99,6 @@ function handlePlacementClicked(event) {
     jobStore.moveCameraToPosition(placement, event.index)
   } else {
     jobStore.moveNozzleToPosition(placement, event.index)
-  }
-}
-
-function handleZoomIn() {
-  if (jobPreviewRef.value) {
-    jobPreviewRef.value.zoomIn()
-  }
-}
-
-function handleZoomOut() {
-  if (jobPreviewRef.value) {
-    jobPreviewRef.value.zoomOut()
-  }
-}
-
-function handleResetZoom() {
-  if (jobPreviewRef.value) {
-    jobPreviewRef.value.resetZoom()
   }
 }
 </script>

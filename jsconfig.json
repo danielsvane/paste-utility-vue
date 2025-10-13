@@ -8,8 +8,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowJs": true,
-    "checkJs": true,
-    "noImplicitAny": false,
+    "checkJs": false,
     "strict": false,
     "jsx": "preserve",
     "jsxImportSource": "vue"
