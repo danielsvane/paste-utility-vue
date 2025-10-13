@@ -16,10 +16,6 @@
     <Button v-if="serialStore.isConnected" type="tertiary" @click="handleDisconnect" icon="link-slash"
       text="Disconnect" />
 
-    <!-- Change Device button (only when connected) -->
-    <Button v-if="serialStore.isConnected" type="tertiary" @click="handlePickNewDevice" text="Change Device"
-      icon="left-right" />
-
     <!-- Auto-connect checkbox (only when connected) -->
     <label v-if="serialStore.isConnected">
       <input type="checkbox" v-model="serialStore.autoConnect" />

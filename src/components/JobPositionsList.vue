@@ -1,13 +1,5 @@
 <template>
   <Card title="Job Positions">
-    <template #actions>
-      <FilePicker text="Select Paste Gerber" accept=".gbr,.gbp,.gtp" v-model="pasteGerberFile" type="secondary" />
-      <FilePicker text="Select Mask Gerber" accept=".gbr,.gbs,.gts" v-model="maskGerberFile" type="secondary" />
-      <Button @click="handleLoadGerbers" :disabled="!pasteGerberFile || !maskGerberFile" text="Load Gerbers"
-        type="tertiary" icon="circle-down" />
-      <Button @click="handleSelectFiducials" :disabled="!canSelectFiducials" text="Select Fiducials" type="tertiary"
-        icon="crosshairs" />
-    </template>
 
     <div class="positions-list text-gray-300">
       <!-- Fiducial selection message -->
@@ -102,14 +94,12 @@
 </template>
 
 <script setup>
-import { ref, computed, inject, watch, nextTick } from 'vue'
+import { computed, watch, nextTick } from 'vue'
 import Button from './Button.vue'
 import Card from './Card.vue'
-import FilePicker from './FilePicker.vue'
 import { useJobStore } from '../stores/job'
 
 const jobStore = useJobStore()
-const toast = inject('toast')
 
 // Watch for placement selection changes and scroll to selected row
 watch(() => jobStore.lastNavigatedPlacementIndex, async (newIndex) => {
@@ -136,13 +126,6 @@ watch(() => jobStore.lastNavigatedPlacementIndex, async (newIndex) => {
   }
 })
 
-const pasteGerberFile = ref(null)
-const maskGerberFile = ref(null)
-
-// Check if fiducial selection is possible
-const canSelectFiducials = computed(() => {
-  return jobStore.potentialFiducials.length >= 3 || jobStore.originalFiducials.length >= 3
-})
 
 // Use calibrated positions if available, otherwise show original positions
 const displayFiducials = computed(() => {
@@ -163,56 +146,6 @@ const displayPlacements = computed(() => {
   }
   return jobStore.originalPlacements
 })
-
-async function handleLoadGerbers() {
-  if (!pasteGerberFile.value || !maskGerberFile.value) {
-    alert('Please select both paste and mask gerber files first')
-    return
-  }
-  const result = await jobStore.loadJobFromGerbers(pasteGerberFile.value, maskGerberFile.value)
-  if (!result.success) {
-    alert('Error loading gerbers: ' + result.error)
-    return
-  }
-
-  // Automatically start fiducial selection workflow if needed
-  if (result.needsFiducialSelection) {
-    console.log('Gerbers loaded. Starting fiducial selection workflow.')
-    try {
-      await jobStore.selectFiducials(toast.value)
-      console.log('Fiducial selection completed')
-    } catch (error) {
-      console.error('Fiducial selection failed:', error)
-      alert('Fiducial selection failed: ' + error.message)
-    }
-  }
-}
-
-async function handleSelectFiducials() {
-  // Start selection mode
-  if (!jobStore.startFiducialSelection()) {
-    alert('Need at least 3 fiducial candidates to select from')
-    return
-  }
-
-  try {
-    // Run the selection workflow
-    await jobStore.selectFiducials({
-      show: (message) => {
-        return new Promise((resolve) => {
-          // Simple alert-based approach for now
-          // TODO: Replace with proper toast component
-          alert(message)
-          resolve()
-        })
-      }
-    })
-    console.log('Fiducial selection completed')
-  } catch (error) {
-    console.error('Fiducial selection failed:', error)
-    alert('Fiducial selection failed: ' + error.message)
-  }
-}
 
 function handleMoveCameraToPosition(position, index) {
   jobStore.moveCameraToPosition(position, index)
