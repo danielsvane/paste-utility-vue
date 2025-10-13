@@ -282,6 +282,10 @@ export function useVideo(cv) {
 
   function loadNewFrame() {
     // Get the current frame for processing
+    if (!canvas.value || !video.value || !frame) {
+      return
+    }
+
     const context = canvas.value.getContext('2d')
     // Clear canvas first to ensure no reticle/overlay contamination
     context.clearRect(0, 0, canvas.value.width, canvas.value.height)
@@ -294,13 +298,22 @@ export function useVideo(cv) {
   }
 
   function videoTick() {
+    // Guard against hot reload or stopped video
+    if (!canvas.value || !video.value || !frame) {
+      return
+    }
+
     if (displayCv.value) {
-      showFrame(cvFrame)
+      if (cvFrame) {
+        showFrame(cvFrame)
+      }
     } else {
       loadNewFrame()
       const frameWithReticle = addReticle(frame)
-      showFrame(frameWithReticle)
-      frameWithReticle.delete()
+      if (frameWithReticle) {
+        showFrame(frameWithReticle)
+        frameWithReticle.delete()
+      }
     }
 
     // Set next frame to fire
