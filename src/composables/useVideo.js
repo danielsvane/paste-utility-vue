@@ -70,35 +70,6 @@ export function useVideo(cv) {
     videoTick()
   }
 
-  function addReticle(frameToModify) {
-    const centerX = frameToModify.cols / 2
-    const centerY = frameToModify.rows / 2
-    const reticleSize = 20
-    const reticleColor = new cv.Scalar(255, 200, 0, 255)
-    const reticleThickness = 3
-
-    let frameWithReticle = frameToModify.clone()
-
-    // Horizontal line
-    cv.line(
-      frameWithReticle,
-      new cv.Point(centerX - reticleSize, centerY),
-      new cv.Point(centerX + reticleSize, centerY),
-      reticleColor,
-      reticleThickness
-    )
-
-    // Vertical line
-    cv.line(
-      frameWithReticle,
-      new cv.Point(centerX, centerY - reticleSize),
-      new cv.Point(centerX, centerY + reticleSize),
-      reticleColor,
-      reticleThickness
-    )
-
-    return frameWithReticle
-  }
 
   function showFrame(frameToShow) {
     cv.imshow(canvas.value, frameToShow)
@@ -241,10 +212,6 @@ export function useVideo(cv) {
       gray.delete()
       circles.delete()
 
-      const frameWithReticle = addReticle(cvFrame)
-      cvFrame.delete()
-      cvFrame = frameWithReticle
-
       // In debug mode, pause and wait for user to continue
       if (debugMode.value) {
         console.log('⏸️  Debug mode: Paused. Call continueDebug() or press Space to continue.')
@@ -309,11 +276,7 @@ export function useVideo(cv) {
       }
     } else {
       loadNewFrame()
-      const frameWithReticle = addReticle(frame)
-      if (frameWithReticle) {
-        showFrame(frameWithReticle)
-        frameWithReticle.delete()
-      }
+      showFrame(frame)
     }
 
     // Set next frame to fire
