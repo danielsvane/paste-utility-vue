@@ -9,9 +9,6 @@ export function getOpenCV() {
 export function logOpenCVVersion(cv) {
   try {
     const buildInfo = cv.getBuildInformation()
-    console.log('=== OpenCV.js Build Information ===')
-    console.log(buildInfo)
-    console.log('===================================')
 
     // Try to extract just the version number for easy reference
     const versionMatch = buildInfo.match(/General configuration for OpenCV ([\d.]+)/)
