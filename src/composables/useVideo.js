@@ -77,9 +77,6 @@ export function useVideo(cv) {
 
   async function CVdetectCircle() {
     try {
-      // Load a fresh frame to ensure no contamination from overlays
-      loadNewFrame()
-
       // Clone frame to cvFrame
       cvFrame = frame.clone()
 
@@ -253,9 +250,7 @@ export function useVideo(cv) {
       return
     }
 
-    const context = canvas.value.getContext('2d')
-    // Clear canvas first to ensure no reticle/overlay contamination
-    context.clearRect(0, 0, canvas.value.width, canvas.value.height)
+    const context = canvas.value.getContext('2d', { willReadFrequently: true })
     context.drawImage(video.value, 0, 0, video.value.videoWidth, video.value.videoHeight)
     const imageData = context.getImageData(0, 0, video.value.videoWidth, video.value.videoHeight)
     const tempMat = cv.matFromImageData(imageData)
