@@ -3,6 +3,7 @@ import { ref } from 'vue'
 export function useVideo(cv) {
   const video = ref(null)
   const canvas = ref(null)
+  const overlayCanvas = ref(null)
   // Don't use refs for Mat objects - OpenCV can't work with Vue's reactive wrappers
   let frame = null
   let cvFrame = null
@@ -32,23 +33,26 @@ export function useVideo(cv) {
     }
   }
 
-  async function startVideo(cameraId, canvasElement) {
+  async function startVideo(cameraId, videoElement, canvasElement, overlayCanvasElement) {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: {
         deviceId: cameraId ? { exact: cameraId } : undefined
       }
     })
 
-    video.value = document.createElement('video')
+    video.value = videoElement
     video.value.srcObject = stream
     video.value.setAttribute('playsinline', true)
     canvas.value = canvasElement
+    overlayCanvas.value = overlayCanvasElement
 
     await new Promise(resolve => {
       video.value.onloadedmetadata = () => {
         // Set canvas dimensions to match video
         canvas.value.width = video.value.videoWidth
         canvas.value.height = video.value.videoHeight
+        overlayCanvas.value.width = video.value.videoWidth
+        overlayCanvas.value.height = video.value.videoHeight
         resolve()
       }
     })
@@ -72,11 +76,22 @@ export function useVideo(cv) {
 
 
   function showFrame(frameToShow) {
-    cv.imshow(canvas.value, frameToShow)
+    // Show frame on the overlay canvas
+    cv.imshow(overlayCanvas.value, frameToShow)
+  }
+
+  function clearOverlay() {
+    if (overlayCanvas.value) {
+      const ctx = overlayCanvas.value.getContext('2d')
+      ctx.clearRect(0, 0, overlayCanvas.value.width, overlayCanvas.value.height)
+    }
   }
 
   async function CVdetectCircle() {
     try {
+      // Capture the current video frame first
+      loadNewFrame()
+
       // Clone frame to cvFrame
       cvFrame = frame.clone()
 
@@ -245,11 +260,12 @@ export function useVideo(cv) {
   }
 
   function loadNewFrame() {
-    // Get the current frame for processing
+    // Capture current video frame to canvas for OpenCV processing
     if (!canvas.value || !video.value || !frame) {
       return
     }
 
+    // Use the hidden canvas to capture the frame
     const context = canvas.value.getContext('2d', { willReadFrequently: true })
     context.drawImage(video.value, 0, 0, video.value.videoWidth, video.value.videoHeight)
     const imageData = context.getImageData(0, 0, video.value.videoWidth, video.value.videoHeight)
@@ -261,20 +277,19 @@ export function useVideo(cv) {
 
   function videoTick() {
     // Guard against hot reload or stopped video
-    if (!canvas.value || !video.value || !frame) {
+    if (!video.value) {
       return
     }
 
-    if (displayCv.value) {
-      if (cvFrame) {
-        showFrame(cvFrame)
-      }
+    // Only update overlay when we need to show processed frames
+    if (displayCv.value && cvFrame) {
+      showFrame(cvFrame)
     } else {
-      loadNewFrame()
-      showFrame(frame)
+      // Clear overlay so video element shows through
+      clearOverlay()
     }
 
-    // Set next frame to fire
+    // Continue the loop
     requestAnimationFrame(() => videoTick())
   }
 
@@ -309,7 +324,7 @@ export function useVideo(cv) {
 
     if (video.value && video.value.srcObject) {
       video.value.srcObject.getTracks().forEach(track => track.stop())
-      video.value.remove()
+      video.value.srcObject = null
       video.value = null
     }
 
@@ -323,11 +338,16 @@ export function useVideo(cv) {
       ctx.clearRect(0, 0, canvas.value.width, canvas.value.height)
     }
 
+    if (overlayCanvas.value) {
+      clearOverlay()
+    }
+
     console.log('Video stopped and cleaned up')
   }
 
   return {
     canvas,
+    overlayCanvas,
     video,
     populateCameraList,
     startVideo,

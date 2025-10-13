@@ -11,7 +11,16 @@
     </template>
 
     <div class="relative">
-      <canvas id="opencv-canvas" class="w-full bg-black rounded"></canvas>
+      <!-- Video element for display -->
+      <video ref="opencv-video" class="w-full bg-black rounded rotate-180" playsinline></video>
+
+      <!-- Hidden canvas for OpenCV processing -->
+      <canvas ref="opencv-canvas" class="hidden"></canvas>
+
+      <!-- Overlay canvas for detection results -->
+      <canvas ref="overlay-canvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+
+      <!-- Crosshair overlay -->
       <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div class="relative w-12 h-12">
           <!-- Horizontal line -->
@@ -55,7 +64,7 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, useTemplateRef } from 'vue'
 import { onOpenCVReady, logOpenCVVersion } from '../composables/useOpenCV'
 import { useSerialStore } from '../stores/serial'
 import { useControlsStore } from '../stores/controls'
@@ -68,6 +77,11 @@ const serial = useSerialStore()
 const controls = useControlsStore()
 const videoStore = useVideoStore()
 
+// Template refs for DOM elements
+const videoRef = useTemplateRef('opencv-video')
+const canvasRef = useTemplateRef('opencv-canvas')
+const overlayCanvasRef = useTemplateRef('overlay-canvas')
+
 onMounted(() => {
   onOpenCVReady(async (cv) => {
     console.log('OpenCV loaded')
@@ -77,15 +91,18 @@ onMounted(() => {
     await videoStore.initializeVideo(cv)
 
     // Auto-start video with selected camera
-    const canvas = document.getElementById('opencv-canvas')
-    if (videoStore.selectedCamera && canvas) {
-      await videoStore.startVideo(canvas)
+    if (videoStore.selectedCamera && videoRef.value && canvasRef.value && overlayCanvasRef.value) {
+      await videoStore.startVideo(videoRef.value, canvasRef.value, overlayCanvasRef.value)
     }
   })
 })
 
 async function handleCameraChange() {
-  const canvas = document.getElementById('opencv-canvas')
-  await videoStore.selectCamera(videoStore.selectedCamera, canvas)
+  await videoStore.selectCamera(
+    videoStore.selectedCamera,
+    videoRef.value,
+    canvasRef.value,
+    overlayCanvasRef.value
+  )
 }
 </script>

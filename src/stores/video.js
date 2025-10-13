@@ -38,14 +38,14 @@ export const useVideoStore = defineStore('video', () => {
     }
   }
 
-  async function startVideo(canvas) {
+  async function startVideo(video, canvas, overlayCanvas) {
     if (isVideoStarted.value || !videoComposable.value || !selectedCamera.value) {
       return
     }
 
     try {
       videoError.value = null
-      await videoComposable.value.startVideo(selectedCamera.value, canvas)
+      await videoComposable.value.startVideo(selectedCamera.value, video, canvas, overlayCanvas)
       isVideoStarted.value = true
     } catch (err) {
       videoError.value = err.message
@@ -60,7 +60,7 @@ export const useVideoStore = defineStore('video', () => {
     }
   }
 
-  async function selectCamera(cameraId, canvas) {
+  async function selectCamera(cameraId, video, canvas, overlayCanvas) {
     // Stop existing video if running
     if (isVideoStarted.value) {
       stopVideo()
@@ -69,8 +69,8 @@ export const useVideoStore = defineStore('video', () => {
     selectedCamera.value = cameraId
 
     // Start video with new camera
-    if (canvas && videoComposable.value) {
-      await startVideo(canvas)
+    if (video && canvas && overlayCanvas && videoComposable.value) {
+      await startVideo(video, canvas, overlayCanvas)
     }
   }
 
