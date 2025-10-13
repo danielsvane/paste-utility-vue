@@ -23,12 +23,6 @@
 
     <JobPreview
       ref="jobPreviewRef"
-      :placements="displayPlacements"
-      :fiducials="displayFiducials"
-      :side="jobStore.boardSide"
-      :click-mode="clickMode"
-      :active-placement-index="jobStore.lastNavigatedPlacementIndex"
-      :calibrated-placement-indices="calibratedPlacementIndices"
       @fiducial-clicked="handleFiducialClicked"
       @placement-clicked="handlePlacementClicked"
     />
@@ -36,7 +30,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import ButtonGroup from './ButtonGroup.vue'
 import Card from './Card.vue'
 import { useJobStore } from '../stores/job'
@@ -56,27 +50,6 @@ const movementModeOptions = [
   { label: 'Nozzle', value: 'nozzle' },
   { label: 'Camera', value: 'camera' }
 ]
-
-// Use original positions for preview (not calibrated, since we want to show gerber data)
-const displayPlacements = computed(() => jobStore.originalPlacements)
-
-// Show potential fiducials during selection mode, otherwise show original
-const displayFiducials = computed(() => {
-  if (jobStore.isFiducialSelectionMode) {
-    return jobStore.potentialFiducials
-  }
-  return jobStore.originalFiducials
-})
-
-// Enable click mode when in fiducial selection
-const clickMode = computed(() => {
-  return jobStore.isFiducialSelectionMode ? 'fiducial-selection' : null
-})
-
-// Get indices of placements with calibration points
-const calibratedPlacementIndices = computed(() => {
-  return jobStore.planeCalibrationPoints.map(p => p.placementIndex)
-})
 
 function handleFiducialClicked(event) {
   // Forward the click event to the store

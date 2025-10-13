@@ -1,21 +1,31 @@
 <template>
-  <div class="job-preview-container">
-    <svg ref="svgRef" class="job-preview-svg" :class="{ 'cursor-crosshair': clickMode === 'fiducial-selection' }"
-      :viewBox="viewBox" @click="handleClick">
+  <div class="w-full h-[600px] bg-gray-900/50 rounded-lg overflow-hidden">
+    <svg ref="svgRef" class="w-full h-full cursor-default" :viewBox="previewStore.viewBox" preserveAspectRatio="xMidYMid meet">
       <!-- Fiducials (blue circles) -->
-      <g class="fiducials">
+      <g>
         <circle v-for="(fid, index) in transformedFiducials" :key="`fid-${index}`" :cx="fid.x" :cy="fid.y"
-          :r="fid.selected ? 6 : 4" class="fiducial-point" :class="{ selected: fid.selected }" />
+          :r="previewStore.pointRadius * (fid.selected ? 1.5 : 1)" 
+          :class="{ 
+            'fill-blue-500 transition-all duration-200 cursor-pointer': !fid.selected,
+            'fill-blue-400': !fid.selected && previewStore.clickMode === 'fiducial-selection',
+            'fill-green-500 transition-all duration-200 cursor-pointer': fid.selected
+          }"
+          @click.stop="handleFiducialClick(index)" />
       </g>
 
-      <!-- Placements (red circles) -->
-      <g class="placements">
-        <circle v-for="(placement, index) in transformedPlacements" :key="`placement-${index}`" :cx="placement.x"
-          :cy="placement.y" :r="placement.index === activePlacementIndex ? 6 : 3" class="placement-point" :class="{
-            'active-placement': placement.index === activePlacementIndex,
-            'calibrated-placement': calibratedPlacementIndices.includes(placement.index) && placement.index !== activePlacementIndex,
-            'clickable': clickMode !== 'fiducial-selection'
-          }" />
+      <!-- Placements (goldenrod circles) -->
+      <g>
+        <circle v-for="(placement, index) in previewStore.transformedPlacements" :key="`placement-${index}`" :cx="placement.x"
+          :cy="placement.y" 
+          :r="previewStore.pointRadius * (placement.index === previewStore.activePlacementIndex ? 2 : 1)" 
+          :class="{
+            'fill-goldenrod-dark transition-all duration-200 cursor-pointer': placement.index !== previewStore.activePlacementIndex && !previewStore.calibratedPlacementIndices.includes(placement.index),
+            'fill-goldenrod': placement.index !== previewStore.activePlacementIndex && !previewStore.calibratedPlacementIndices.includes(placement.index) && previewStore.clickMode !== 'fiducial-selection',
+            'fill-blue-500 animate-pulse': placement.index === previewStore.activePlacementIndex,
+            'fill-green-500 transition-all duration-200 cursor-pointer': previewStore.calibratedPlacementIndices.includes(placement.index) && placement.index !== previewStore.activePlacementIndex,
+            'fill-green-400': previewStore.calibratedPlacementIndices.includes(placement.index) && placement.index !== previewStore.activePlacementIndex && previewStore.clickMode !== 'fiducial-selection'
+          }"
+          @click.stop="handlePlacementClick(placement.index)" />
       </g>
     </svg>
   </div>
@@ -24,193 +34,46 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import Panzoom from '@panzoom/panzoom'
+import { usePreviewStore } from '../stores/preview'
 
-const props = defineProps({
-  placements: {
-    type: Array,
-    default: () => []
-  },
-  fiducials: {
-    type: Array,
-    default: () => []
-  },
-  clickMode: {
-    type: String,
-    default: null, // 'fiducial-selection' or null
-    validator: value => [null, 'fiducial-selection'].includes(value)
-  },
-  side: {
-    type: String,
-    default: 'front', // 'front' or 'back'
-    validator: value => ['front', 'back'].includes(value)
-  },
-  activePlacementIndex: {
-    type: Number,
-    default: -1
-  },
-  calibratedPlacementIndices: {
-    type: Array,
-    default: () => []
-  }
-})
+const previewStore = usePreviewStore()
 
 const emit = defineEmits(['fiducial-clicked', 'placement-clicked'])
 
 const svgRef = ref(null)
 const selectedFiducials = ref(new Set())
 const panzoomInstance = ref(null)
-const SVG_WIDTH = 800
-const SVG_HEIGHT = 600
-const MARGIN_PERCENT = 0.1 // 10% margin
 
-// Calculate bounds and transform points for display
-const bounds = computed(() => {
-  const allPoints = [...props.placements, ...props.fiducials]
-
-  if (allPoints.length === 0) {
-    return {
-      minX: 0,
-      minY: 0,
-      maxX: 100,
-      maxY: 100,
-      width: 100,
-      height: 100
-    }
-  }
-
-  let minX = Infinity
-  let minY = Infinity
-  let maxX = -Infinity
-  let maxY = -Infinity
-
-  for (const point of allPoints) {
-    minX = Math.min(minX, point.x)
-    minY = Math.min(minY, point.y)
-    maxX = Math.max(maxX, point.x)
-    maxY = Math.max(maxY, point.y)
-  }
-
-  const width = maxX - minX
-  const height = maxY - minY
-  const margin = Math.max(width, height) * MARGIN_PERCENT
-
-  return {
-    minX: minX - margin,
-    minY: minY - margin,
-    maxX: maxX + margin,
-    maxY: maxY + margin,
-    width: width + 2 * margin,
-    height: height + 2 * margin
-  }
-})
-
-const viewBox = computed(() => {
-  return `0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`
-})
-
-// Calculate scale factor to fit points in SVG viewport
-const scale = computed(() => {
-  const scaleX = SVG_WIDTH / bounds.value.width
-  const scaleY = SVG_HEIGHT / bounds.value.height
-  return Math.min(scaleX, scaleY)
-})
-
-// Transform a point from world coordinates to SVG coordinates
-function transformPoint(point, index, isSelected = false) {
-  // For backside, flip X-axis (board is viewed from bottom, so left/right are reversed)
-  const x = props.side === 'back'
-    ? SVG_WIDTH - (point.x - bounds.value.minX) * scale.value
-    : (point.x - bounds.value.minX) * scale.value
-
-  // Flip Y axis (SVG Y increases downward, but we want it to increase upward)
-  const y = SVG_HEIGHT - (point.y - bounds.value.minY) * scale.value
-
-  return { x, y, index, original: point, selected: isSelected }
-}
-
-const transformedPlacements = computed(() => {
-  return props.placements.map((p, i) => transformPoint(p, i, false))
-})
-
+// Compute transformed fiducials with local selection state
 const transformedFiducials = computed(() => {
-  return props.fiducials.map((f, i) => transformPoint(f, i, selectedFiducials.value.has(i)))
+  return previewStore.getTransformedFiducials(selectedFiducials.value)
 })
 
-// Find closest fiducial to click coordinates
-function findClosestFiducial(clickX, clickY) {
-  const THRESHOLD = 15 // pixels
-  let closestIndex = -1
-  let minDistance = Infinity
-
-  transformedFiducials.value.forEach((fid, index) => {
-    const dx = fid.x - clickX
-    const dy = fid.y - clickY
-    const distance = Math.sqrt(dx * dx + dy * dy)
-
-    if (distance < THRESHOLD && distance < minDistance) {
-      minDistance = distance
-      closestIndex = index
-    }
-  })
-
-  return closestIndex
-}
-
-// Find closest placement to click coordinates
-function findClosestPlacement(clickX, clickY) {
-  const THRESHOLD = 15 // pixels
-  let closestIndex = -1
-  let minDistance = Infinity
-
-  transformedPlacements.value.forEach((placement, index) => {
-    const dx = placement.x - clickX
-    const dy = placement.y - clickY
-    const distance = Math.sqrt(dx * dx + dy * dy)
-
-    if (distance < THRESHOLD && distance < minDistance) {
-      minDistance = distance
-      closestIndex = index
-    }
-  })
-
-  return closestIndex
-}
-
-function handleClick(event) {
-  const svg = svgRef.value
-  const rect = svg.getBoundingClientRect()
-
-  // Convert click coordinates to SVG coordinates
-  const clickX = ((event.clientX - rect.left) / rect.width) * SVG_WIDTH
-  const clickY = ((event.clientY - rect.top) / rect.height) * SVG_HEIGHT
-
-  // Handle fiducial selection mode
-  if (props.clickMode === 'fiducial-selection') {
-    const closestIndex = findClosestFiducial(clickX, clickY)
-
-    if (closestIndex !== -1) {
-      selectedFiducials.value.add(closestIndex)
-      emit('fiducial-clicked', {
-        index: closestIndex,
-        fiducial: props.fiducials[closestIndex]
-      })
-    }
-    return
+// Handle clicks on fiducials
+function handleFiducialClick(index) {
+  // Only handle fiducial clicks when in fiducial selection mode
+  if (previewStore.clickMode === 'fiducial-selection') {
+    selectedFiducials.value.add(index)
+    emit('fiducial-clicked', {
+      index,
+      fiducial: previewStore.displayFiducials[index]
+    })
   }
+}
 
-  // Handle normal placement clicks
-  const closestPlacementIndex = findClosestPlacement(clickX, clickY)
-
-  if (closestPlacementIndex !== -1) {
+// Handle clicks on placements
+function handlePlacementClick(index) {
+  // Only handle placement clicks when NOT in fiducial selection mode
+  if (previewStore.clickMode !== 'fiducial-selection') {
     emit('placement-clicked', {
-      index: closestPlacementIndex,
-      placement: props.placements[closestPlacementIndex]
+      index,
+      placement: previewStore.displayPlacements[index]
     })
   }
 }
 
 // Watch for click mode changes to reset selection
-watch(() => props.clickMode, (newMode) => {
+watch(() => previewStore.clickMode, (newMode) => {
   if (newMode !== 'fiducial-selection') {
     selectedFiducials.value.clear()
   }
@@ -264,99 +127,3 @@ defineExpose({
   }
 })
 </script>
-
-<style scoped>
-.job-preview-container {
-  width: 100%;
-  height: 100%;
-  min-height: 400px;
-  background-color: #1f2937;
-  /* gray-800 */
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.job-preview-svg {
-  width: 100%;
-  height: 100%;
-  cursor: default;
-}
-
-.cursor-crosshair {
-  cursor: crosshair;
-}
-
-.fiducial-point {
-  fill: #3b82f6;
-  /* blue-500 */
-  stroke: #1d4ed8;
-  /* blue-700 */
-  stroke-width: 1;
-  transition: all 0.2s ease;
-}
-
-.fiducial-point:hover {
-  fill: #60a5fa;
-  /* blue-400 */
-  stroke-width: 2;
-}
-
-.fiducial-point.selected {
-  fill: #10b981;
-  /* green-500 */
-  stroke: #059669;
-  /* green-600 */
-  stroke-width: 2;
-}
-
-.placement-point {
-  fill: #ef4444;
-  /* red-500 */
-  transition: all 0.2s ease;
-}
-
-.placement-point.clickable {
-  cursor: pointer;
-}
-
-.placement-point:hover {
-  fill: #f87171;
-  /* red-400 */
-  stroke-width: 1;
-}
-
-.placement-point.active-placement {
-  fill: #3b82f6;
-  /* blue-500 */
-  stroke: #60a5fa;
-  /* blue-400 */
-  stroke-width: 2;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-.placement-point.calibrated-placement {
-  fill: #10b981;
-  /* green-500 */
-  stroke: #059669;
-  /* green-600 */
-  stroke-width: 1.5;
-}
-
-.placement-point.calibrated-placement:hover {
-  fill: #34d399;
-  /* green-400 */
-  stroke-width: 2;
-}
-
-@keyframes pulse {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.6;
-  }
-}
-</style>
