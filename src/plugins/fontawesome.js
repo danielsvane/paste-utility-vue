@@ -27,7 +27,8 @@ import {
   faTrash,
   faSyringe,
   faPlus,
-  faEye
+  faEye,
+  faCrosshairs
 } from '@fortawesome/free-solid-svg-icons'
 
 // Add icons to the library
@@ -55,7 +56,8 @@ library.add(
   faTrash,
   faSyringe,
   faPlus,
-  faEye
+  faEye,
+  faCrosshairs
 )
 
 // Export plugin function
