@@ -15,6 +15,10 @@
       </div>
 
       <div class="flex gap-3 flex-wrap">
+        <Button text="Start Semi-Automatic Job" @click="handleStartSemiAutoJob" type="primary" />
+      </div>
+
+      <div class="flex gap-3 flex-wrap">
         <Button text="Extrude Next Position" @click="handleExtrudeNextPosition" />
         <Button
           :disabled="!canContinueAutomatically"
@@ -118,6 +122,23 @@ function handleResetTimer() {
     console.log('Extrusion timing has been reset')
   } catch (error) {
     console.error('Error resetting timer:', error)
+  }
+}
+
+async function handleStartSemiAutoJob() {
+  try {
+    // Reset timer and position to ensure clean start (resets currentPlacementIndex to -1)
+    job.resetExtrusionTiming()
+
+    // Clear UI selection state
+    job.lastNavigatedPlacementIndex = -1
+
+    console.log('Starting semi-automatic job from first position')
+
+    // Start at first position
+    await job.extrudeNextPosition()
+  } catch (error) {
+    console.error('Error starting semi-automatic job:', error)
   }
 }
 </script>
