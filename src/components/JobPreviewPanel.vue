@@ -2,38 +2,22 @@
   <Card title="Job Preview">
     <template #actions>
       <div class="flex items-center gap-4">
-        <div class="flex items-center gap-2">
-          <span class="text-sm text-gray-300">Board Side:</span>
-          <ButtonGroup
-            v-model="jobStore.boardSide"
-            :options="boardSideOptions"
-            size="small"
-          />
-        </div>
-        <div class="border-l border-gray-600 pl-4 flex items-center gap-2">
-          <span class="text-sm text-gray-300">Click to Move:</span>
-          <ButtonGroup
-            v-model="movementMode"
-            :options="movementModeOptions"
-            size="small"
-          />
-        </div>
+        <ButtonGroup v-model="jobStore.boardSide" :options="boardSideOptions" size="small" />
+        <div class="border-l border-gray-600 h-6"></div>
+        <ButtonGroup v-model="movementMode" :options="movementModeOptions" size="small" />
       </div>
     </template>
 
-    <JobPreview
-      ref="jobPreviewRef"
-      @fiducial-clicked="handleFiducialClicked"
-      @placement-clicked="handlePlacementClicked"
-    />
+    <JobPreview ref="jobPreviewRef" @fiducial-clicked="handleFiducialClicked"
+      @placement-clicked="handlePlacementClicked" />
   </Card>
 </template>
 
 <script setup>
 import { ref } from 'vue'
+import { useJobStore } from '../stores/job'
 import ButtonGroup from './ButtonGroup.vue'
 import Card from './Card.vue'
-import { useJobStore } from '../stores/job'
 import JobPreview from './JobPreview.vue'
 
 const jobStore = useJobStore()
@@ -47,8 +31,8 @@ const boardSideOptions = [
 ]
 
 const movementModeOptions = [
-  { label: 'Nozzle', value: 'nozzle' },
-  { label: 'Camera', value: 'camera' }
+  { value: 'nozzle', icon: 'syringe' },
+  { value: 'camera', icon: 'eye' }
 ]
 
 function handleFiducialClicked(event) {
@@ -75,4 +59,3 @@ function handlePlacementClicked(event) {
   }
 }
 </script>
-

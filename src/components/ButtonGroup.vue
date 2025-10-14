@@ -3,7 +3,7 @@
     <button v-for="(option, index) in options" :key="option.value" :class="getButtonClasses(option, index)"
       @click="selectOption(option.value)">
       <font-awesome-icon v-if="option.icon" :icon="option.icon" class="text-sm" />
-      <span>{{ option.label }}</span>
+      <span v-if="option.label">{{ option.label }}</span>
     </button>
   </div>
 </template>
@@ -19,7 +19,7 @@ const props = defineProps({
     required: true,
     validator: (options) => {
       return options.every(opt =>
-        opt.hasOwnProperty('label') && opt.hasOwnProperty('value')
+        opt.hasOwnProperty('value') && (opt.hasOwnProperty('label') || opt.hasOwnProperty('icon'))
       )
     }
   },
@@ -101,14 +101,14 @@ function getButtonClasses(option, index) {
 
 /* Size styles */
 .button-group-item.size-small {
-  @apply px-3 py-2 text-xs;
+  @apply px-3 h-8 text-xs;
 }
 
 .button-group-item.size-medium {
-  @apply px-4 py-2.5 text-sm;
+  @apply px-4 h-11 text-sm;
 }
 
 .button-group-item.size-large {
-  @apply px-6 py-3 text-base;
+  @apply px-6 h-16 text-base;
 }
 </style>
