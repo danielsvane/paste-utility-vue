@@ -1,26 +1,27 @@
 <template>
+
     <Card title="Semi-Automatic Job">
-        <div class="space-y-6">
-            <!-- Extrude Controls -->
-            <div class="flex gap-3 flex-wrap">
-                <Button text="Start Slow Extrude" @click="job.startSlowExtrude()" />
-                <Button text="Stop Extrude" @click="job.stopExtrude()" />
-                <Button text="Retract & Raise" @click="job.retractAndRaise()" />
-            </div>
-
-            <div class="flex gap-3 flex-wrap">
-                <Button text="Start Semi-Automatic Job" @click="handleStartSemiAutoJob" type="primary" />
-            </div>
-
-            <div class="flex gap-3 flex-wrap">
-                <Button text="Extrude Next Position" @click="handleExtrudeNextPosition" />
-                <Button :disabled="!canContinueAutomatically" :text="continueButtonText"
-                    @click="handleContinueAutomatically" />
-                <Button text="Reset Timer" @click="handleResetTimer" />
-            </div>
-
-            <div class="text-center text-goldenrod text-sm p-2 bg-gray-700 rounded">
+        <template #actions>
+            <div class="text-goldenrod">
                 {{ timingStatusText }}
+            </div>
+        </template>
+        <div class="space-y-6">
+            <div class="flex gap-3 flex-wrap">
+                <Button text="Start Semi-Automatic Job" @click="handleStartSemiAutoJob" type="primary" icon="play" />
+            </div>
+
+            <div class="flex gap-3 flex-wrap">
+                <Button text="Extrude Next Position" @click="handleExtrudeNextPosition" type="secondary" />
+                <Button :disabled="!canContinueAutomatically" :text="continueButtonText"
+                    @click="handleContinueAutomatically" type="secondary" />
+                <Button text="Reset Timer" @click="handleResetTimer" type="secondary" />
+            </div>
+
+            <div class="flex gap-3 flex-wrap">
+                <Button text="Start Slow Extrude" @click="job.startSlowExtrude()" type="secondary" />
+                <Button text="Stop Extrude" @click="job.stopExtrude()" type="secondary" />
+                <Button text="Retract & Raise" @click="job.retractAndRaise()" type="secondary" />
             </div>
         </div>
     </Card>
