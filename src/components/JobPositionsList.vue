@@ -69,14 +69,14 @@
               <div class="grid-cell"></div>
               <div class="grid-cell">
                 <div class="action-buttons">
+                  <Button icon="save" size="small" type="tertiary" @click="handleSaveCalibrationPoint(index)"
+                    :disabled="!jobStore.isCalibrated"
+                    :title="jobStore.hasCalibrationPoint(index) ? 'Update calibration Z height' : 'Save current Z height for plane calibration'" />
                   <Button icon="eye" size="small" type="tertiary" @click="handleMoveCameraToPosition(placement, index)"
                     :disabled="!jobStore.isCalibrated" title="Move camera to position" />
                   <Button icon="syringe" size="small" type="tertiary"
                     @click="handleMoveNozzleToPosition(placement, index)" :disabled="!jobStore.isCalibrated"
                     title="Move nozzle to position" />
-                  <Button icon="save" size="small" type="tertiary" @click="handleSaveCalibrationPoint(index)"
-                    :disabled="!jobStore.isCalibrated"
-                    :title="jobStore.hasCalibrationPoint(index) ? 'Update calibration Z height' : 'Save current Z height for plane calibration'" />
                   <Button icon="trash" size="small" type="tertiary" @click="handleDeletePlacement(index)"
                     title="Delete position" />
                 </div>
@@ -94,10 +94,10 @@
 </template>
 
 <script setup>
-import { computed, watch, nextTick } from 'vue'
+import { computed, nextTick, watch } from 'vue'
+import { useJobStore } from '../stores/job'
 import Button from './Button.vue'
 import Card from './Card.vue'
-import { useJobStore } from '../stores/job'
 
 const jobStore = useJobStore()
 

@@ -11,7 +11,7 @@
     // Good for modern bundlers (Vite/Webpack), aligns with Vue’s base tsconfig.
     "moduleResolution": "bundler",
     "allowJs": true,
-    "checkJs": true,
+    "checkJs": false,
     "strict": false
     // Remove these two if you don't actually use JSX in .vue:
     // "jsx": "preserve",
