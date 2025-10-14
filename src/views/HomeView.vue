@@ -26,6 +26,7 @@
       <div class="max-w-2xl flex flex-col gap-6">
         <VideoControls />
         <MachineControls v-if="serialStore.isConnected" />
+        <SemiAutomaticJob v-if="serialStore.isConnected" />
         <CalibrationPanel v-if="serialStore.isConnected" />
         <ConsoleRepl v-if="serialStore.isConnected" />
       </div>
@@ -34,19 +35,20 @@
 </template>
 
 <script setup>
-import { useSerialStore } from '../stores/serial'
-import { useJobStore } from '../stores/job'
 import Button from '../components/Button.vue'
-import FilePicker from '../components/FilePicker.vue'
-import SerialConnection from '../components/SerialConnection.vue'
 import CalibrationPanel from '../components/CalibrationPanel.vue'
+import ConsoleRepl from '../components/ConsoleRepl.vue'
+import FilePicker from '../components/FilePicker.vue'
+import GerberPicker from '../components/GerberPicker.vue'
 import JobPositionsList from '../components/JobPositionsList.vue'
 import JobPreviewPanel from '../components/JobPreviewPanel.vue'
 import JobSettings from '../components/JobSettings.vue'
-import VideoControls from '../components/VideoControls.vue'
 import MachineControls from '../components/MachineControls.vue'
-import ConsoleRepl from '../components/ConsoleRepl.vue'
-import GerberPicker from '../components/GerberPicker.vue'
+import SemiAutomaticJob from '../components/SemiAutomaticJob.vue'
+import SerialConnection from '../components/SerialConnection.vue'
+import VideoControls from '../components/VideoControls.vue'
+import { useJobStore } from '../stores/job'
+import { useSerialStore } from '../stores/serial'
 
 const serialStore = useSerialStore()
 const jobStore = useJobStore()

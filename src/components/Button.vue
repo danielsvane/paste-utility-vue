@@ -38,6 +38,10 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
+  fill: {
+    type: Boolean,
+    default: false
+  },
   disabled: {
     type: Boolean,
     default: false
@@ -72,6 +76,11 @@ const buttonClasses = computed(() => {
   // Full width
   if (props.fullWidth) {
     classes.push('btn-full-width')
+  }
+
+  // Fill container
+  if (props.fill) {
+    classes.push('btn-fill')
   }
 
   return classes.join(' ')
@@ -138,6 +147,11 @@ const buttonClasses = computed(() => {
 /* Full width */
 .btn-full-width {
   @apply w-full;
+}
+
+/* Fill container */
+.btn-fill {
+  @apply w-full h-full;
 }
 
 /* Sub label styling */
