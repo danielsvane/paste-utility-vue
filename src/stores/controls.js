@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
+import * as macros from '../utils/macros'
 import { useSerialStore } from './serial'
 import { useVideoStore } from './video'
-import * as macros from '../utils/macros'
 
 export const useControlsStore = defineStore(
   'controls',
@@ -15,14 +15,15 @@ export const useControlsStore = defineStore(
 
   // Computed
   const jogDistanceLabel = computed(() => {
-    const labels = { 1: '0.1mm', 2: '1mm', 3: '10mm', 4: '100mm' }
+    const labels = { 0: '0.01mm', 1: '0.1mm', 2: '1mm', 3: '10mm', 4: '100mm' }
     return labels[jogDistance.value] || '1mm'
   })
 
   // Helper function to convert slider value to actual distance
   function getJogDistance() {
     const distLUT = jogDistance.value
-    if (distLUT == 1) return 0.1
+    if (distLUT == 0) return 0.01
+    else if (distLUT == 1) return 0.1
     else if (distLUT == 2) return 1
     else if (distLUT == 3) return 10
     else if (distLUT == 4) return 100

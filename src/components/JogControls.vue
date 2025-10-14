@@ -22,16 +22,9 @@
       <Button @click="controls.extrude" text="Extrude" size="large" icon="arrow-down" type="secondary" fill />
     </div>
 
-    <!-- Jog Distance Slider -->
+    <!-- Jog Distance Selector -->
     <div class="w-full">
-      <input type="range" v-model="controls.jogDistance" min="1" max="4" step="1" class="w-full" list="jog-distances" />
-      <datalist id="jog-distances">
-        <option value="1">0.1mm</option>
-        <option value="2">1mm</option>
-        <option value="3">10mm</option>
-        <option value="4">100mm</option>
-      </datalist>
-      <div class="text-center text-sm text-gray-400 mt-2">{{ controls.jogDistanceLabel }}</div>
+      <ButtonGroup v-model="controls.jogDistance" :options="jogDistanceOptions" size="medium" full-width />
     </div>
 
     <!-- <Button :full-width="true" class="mt-2" text="Update Z Offset" /> -->
@@ -42,7 +35,17 @@
 import { useControlsStore } from '../stores/controls';
 import { useJobStore } from '../stores/job';
 import Button from './Button.vue';
+import ButtonGroup from './ButtonGroup.vue';
 
 const controls = useControlsStore()
 const job = useJobStore()
+
+// Jog distance options
+const jogDistanceOptions = [
+  { label: '0.01mm', value: 0 },
+  { label: '0.1mm', value: 1 },
+  { label: '1mm', value: 2 },
+  { label: '10mm', value: 3 },
+  { label: '100mm', value: 4 }
+]
 </script>

@@ -1,5 +1,5 @@
 <template>
-  <div class="button-group">
+  <div class="button-group" :class="{ 'full-width': fullWidth }">
     <button v-for="(option, index) in options" :key="option.value" :class="getButtonClasses(option, index)"
       @click="selectOption(option.value)">
       <font-awesome-icon v-if="option.icon" :icon="option.icon" class="text-sm" />
@@ -27,6 +27,10 @@ const props = defineProps({
     type: String,
     default: 'medium',
     validator: (value) => ['small', 'medium', 'large'].includes(value)
+  },
+  fullWidth: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -39,8 +43,8 @@ function selectOption(value) {
 function getButtonClasses(option, index) {
   const classes = ['button-group-item']
 
-  // Active state
-  if (option.value === props.modelValue) {
+  // Active state (use loose equality to handle string/number type coercion)
+  if (option.value == props.modelValue) {
     classes.push('active')
   }
 
@@ -66,6 +70,14 @@ function getButtonClasses(option, index) {
   @apply inline-flex items-stretch bg-gray-800 rounded overflow-hidden;
   border: 1px solid #374151;
   /* gray-700 */
+}
+
+.button-group.full-width {
+  @apply w-full flex;
+}
+
+.button-group.full-width .button-group-item {
+  @apply flex-1;
 }
 
 .button-group-item {
