@@ -25,10 +25,11 @@
       <!-- Right Column -->
       <div class="max-w-2xl flex flex-col gap-6">
         <VideoControls />
-        <MachineControls v-if="serialStore.isConnected" />
+        <HomingControls v-if="serialStore.isConnected" />
         <SemiAutomaticJob v-if="serialStore.isConnected" />
         <CalibrationPanel v-if="serialStore.isConnected" />
         <ConsoleRepl v-if="serialStore.isConnected" />
+        <MachineControls v-if="serialStore.isConnected" />
       </div>
     </div>
   </div>
@@ -40,6 +41,7 @@ import CalibrationPanel from '../components/CalibrationPanel.vue'
 import ConsoleRepl from '../components/ConsoleRepl.vue'
 import FilePicker from '../components/FilePicker.vue'
 import GerberPicker from '../components/GerberPicker.vue'
+import HomingControls from '../components/HomingControls.vue'
 import JobPositionsList from '../components/JobPositionsList.vue'
 import JobPreviewPanel from '../components/JobPreviewPanel.vue'
 import JobSettings from '../components/JobSettings.vue'
