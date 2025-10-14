@@ -42,8 +42,8 @@
 </template>
 
 <script setup>
-import Button from './Button.vue'
-import { useControlsStore } from '../stores/controls'
+import { useControlsStore } from '../stores/controls';
+import Button from './Button.vue';
 
 const controls = useControlsStore()
 </script>

@@ -2,16 +2,20 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     },
     "target": "ES2020",
     "module": "ESNext",
+    // Good for modern bundlers (Vite/Webpack), aligns with Vue’s base tsconfig.
     "moduleResolution": "bundler",
     "allowJs": true,
-    "checkJs": false,
-    "strict": false,
-    "jsx": "preserve",
-    "jsxImportSource": "vue"
+    "checkJs": true,
+    "strict": false
+    // Remove these two if you don't actually use JSX in .vue:
+    // "jsx": "preserve",
+    // "jsxImportSource": "vue"
   },
   "include": [
     "src/**/*",
