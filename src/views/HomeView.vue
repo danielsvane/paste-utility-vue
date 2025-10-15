@@ -49,9 +49,11 @@ import SerialConnection from '../components/SerialConnection.vue'
 import VideoControls from '../components/VideoControls.vue'
 import { useJobStore } from '../stores/job'
 import { useSerialStore } from '../stores/serial'
+import { useControlsStore } from '../stores/controls'
 
 const serialStore = useSerialStore()
 const jobStore = useJobStore()
+const controlsStore = useControlsStore()
 
 async function handleLoadJob(file) {
   if (file) {
@@ -75,14 +77,18 @@ function handleSaveProject() {
 }
 
 function handleResetProject() {
-  if (confirm('Are you sure you want to reset the project? This will clear all job data and calibrations from localStorage.')) {
-    // Clear the persisted store data from localStorage
+  if (confirm('Are you sure you want to reset the project? This will clear all job data, calibrations, and settings from localStorage.')) {
+    // Clear all persisted store data from localStorage
     localStorage.removeItem('job')
+    localStorage.removeItem('serial')
+    localStorage.removeItem('controls')
 
-    // Reset store to initial state
+    // Reset all stores to initial state
     jobStore.$reset()
+    serialStore.$reset()
+    controlsStore.$reset()
 
-    console.log('Project reset - localStorage cleared')
+    console.log('Project reset - all localStorage cleared')
     alert('Project reset successfully. The page will reload.')
 
     // Reload page to ensure clean state

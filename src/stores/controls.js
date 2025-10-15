@@ -143,7 +143,7 @@ export const useControlsStore = defineStore(
   },
   {
     persist: {
-      paths: ['jogDistance']
+      pick: ['jogDistance']
     }
   }
 )

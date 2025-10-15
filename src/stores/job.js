@@ -979,7 +979,7 @@ export const useJobStore = defineStore('job', () => {
   }
 }, {
   persist: {
-    paths: [
+    pick: [
       'originalPlacements',
       'originalFiducials',
       'dispenseDegrees',

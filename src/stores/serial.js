@@ -498,6 +498,6 @@ export const useSerialStore = defineStore('serial', () => {
   }
 }, {
   persist: {
-    paths: ['autoConnect']
+    pick: ['autoConnect']
   }
 })
