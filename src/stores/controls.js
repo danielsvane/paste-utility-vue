@@ -130,6 +130,24 @@ export const useControlsStore = defineStore(
     macros.ringLightsOff()
   }
 
+  // Air Control Actions
+  function leftAirOn() {
+    macros.leftAirOn()
+  }
+
+  function leftAirOff() {
+    macros.leftAirOff()
+  }
+
+  function leftVac() {
+    macros.leftVac()
+  }
+
+  // Stepper Control Actions
+  function disableSteppers() {
+    macros.disableSteppers()
+  }
+
     return {
       // State
       jogDistance,
@@ -149,7 +167,11 @@ export const useControlsStore = defineStore(
       jogToFid,
       visualHome,
       ringLightsOn,
-      ringLightsOff
+      ringLightsOff,
+      leftAirOn,
+      leftAirOff,
+      leftVac,
+      disableSteppers
     }
   },
   {

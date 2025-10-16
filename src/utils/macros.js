@@ -167,3 +167,41 @@ export async function ringLightsOn() {
 export async function ringLightsOff() {
   await serialStore.send(['M150 P0'])
 }
+
+// ============================================================================
+// AIR CONTROL MACROS
+// ============================================================================
+
+/**
+ * Turn left air on
+ */
+export async function leftAirOn() {
+  await serialStore.send(['M106', 'M106 P1 S255'])
+}
+
+/**
+ * Turn left air off
+ */
+export async function leftAirOff() {
+  await serialStore.send(['M107', 'M107 P1'])
+}
+
+/**
+ * Read left vacuum sensor
+ */
+export async function leftVac() {
+  await serialStore.send(['M260 A112 B1 S1'])
+  await serialStore.send(['M260 A109 B6 S1'])
+  await serialStore.send(['M261 A109 B1 S1'])
+}
+
+// ============================================================================
+// STEPPER CONTROL MACROS
+// ============================================================================
+
+/**
+ * Disable all steppers
+ */
+export async function disableSteppers() {
+  await serialStore.send(['M18'])
+}

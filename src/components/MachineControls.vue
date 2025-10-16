@@ -8,13 +8,13 @@
       </div>
 
       <div class="flex gap-3 flex-wrap">
-        <Button type="secondary" text="Left Air On" />
-        <Button type="secondary" text="Left Air Off" />
-        <Button type="secondary" text="Left Vac" />
+        <Button type="secondary" text="Left Air On" @click="controls.leftAirOn" />
+        <Button type="secondary" text="Left Air Off" @click="controls.leftAirOff" />
+        <Button type="secondary" text="Left Vac" @click="controls.leftVac" />
       </div>
 
       <div>
-        <Button type="secondary" text="Disable Steppers" />
+        <Button type="secondary" text="Disable Steppers" @click="controls.disableSteppers" />
       </div>
     </div>
   </Card>
