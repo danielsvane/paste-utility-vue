@@ -77,19 +77,13 @@ function handleSaveProject() {
 }
 
 function handleResetProject() {
-  if (confirm('Are you sure you want to reset the project? This will clear all job data, calibrations, and settings from localStorage.')) {
+  if (confirm('Are you sure you want to reset the project? This will clear all job data, calibrations, and settings.')) {
     // Clear all persisted store data from localStorage
     localStorage.removeItem('job')
     localStorage.removeItem('serial')
     localStorage.removeItem('controls')
 
-    // Reset all stores to initial state
-    jobStore.$reset()
-    serialStore.$reset()
-    controlsStore.$reset()
-
     console.log('Project reset - all localStorage cleared')
-    alert('Project reset successfully. The page will reload.')
 
     // Reload page to ensure clean state
     window.location.reload()
