@@ -3,17 +3,16 @@
 
     <div class="positions-list text-gray-300">
       <!-- Fiducial selection message -->
-      <div v-if="jobStore.isFiducialSelectionMode"
-        class="calibration-warning text-blue-400 text-sm mb-3 p-2 bg-blue-900/20 rounded">
+      <InfoBox v-if="jobStore.isFiducialSelectionMode" variant="info">
         👉 Click on 3 fiducials in the preview to select them.
-      </div>
+      </InfoBox>
 
       <!-- Calibration status message -->
-      <div
+      <InfoBox
         v-else-if="!jobStore.isCalibrated && (jobStore.originalFiducials.length > 0 || jobStore.originalPlacements.length > 0)"
-        class="calibration-warning text-yellow-500 text-sm mb-3 p-2 bg-yellow-900/20 rounded">
+        variant="warning">
         ⚠ Calibration required. Run "Get Rough Board Position" to enable movement.
-      </div>
+      </InfoBox>
 
       <div
         v-if="jobStore.originalPlacements.length > 0 || jobStore.originalFiducials.length > 0 || jobStore.potentialFiducials.length > 0"
@@ -98,6 +97,7 @@ import { computed, nextTick, watch } from 'vue'
 import { useJobStore } from '../stores/job'
 import Button from './Button.vue'
 import Card from './Card.vue'
+import InfoBox from './InfoBox.vue'
 
 const jobStore = useJobStore()
 
