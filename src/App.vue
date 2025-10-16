@@ -1,6 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-900">
     <ModalDialog ref="modalRef" />
+    <Modal />
     <ToastNotification ref="toastRef" />
     <RouterView />
   </div>
@@ -9,6 +10,7 @@
 <script setup>
 import { ref, provide } from 'vue'
 import { RouterView } from 'vue-router'
+import Modal from './components/Modal.vue'
 import ModalDialog from './components/ModalDialog.vue'
 import ToastNotification from './components/ToastNotification.vue'
 

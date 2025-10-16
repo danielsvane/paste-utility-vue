@@ -50,10 +50,12 @@ import VideoControls from '../components/VideoControls.vue'
 import { useJobStore } from '../stores/job'
 import { useSerialStore } from '../stores/serial'
 import { useControlsStore } from '../stores/controls'
+import { useModalStore } from '../stores/modal'
 
 const serialStore = useSerialStore()
 const jobStore = useJobStore()
 const controlsStore = useControlsStore()
+const modalStore = useModalStore()
 
 async function handleLoadJob(file) {
   if (file) {
@@ -76,8 +78,13 @@ function handleSaveProject() {
   }
 }
 
-function handleResetProject() {
-  if (confirm('Are you sure you want to reset the project? This will clear all job data, calibrations, and settings.')) {
+async function handleResetProject() {
+  const confirmed = await modalStore.showConfirm(
+    'Are you sure you want to reset the project? This will clear all job data, calibrations, and settings.',
+    'Confirm Reset'
+  )
+
+  if (confirmed) {
     // Clear all persisted store data from localStorage
     localStorage.removeItem('job')
     localStorage.removeItem('serial')
