@@ -121,6 +121,15 @@ export const useControlsStore = defineStore(
     await serialStore.send(['G92 X218 Y196'])
   }
 
+  // Ring Light Actions
+  function ringLightsOn() {
+    macros.ringLightsOn()
+  }
+
+  function ringLightsOff() {
+    macros.ringLightsOff()
+  }
+
     return {
       // State
       jogDistance,
@@ -138,7 +147,9 @@ export const useControlsStore = defineStore(
       extrude,
       retract,
       jogToFid,
-      visualHome
+      visualHome,
+      ringLightsOn,
+      ringLightsOff
     }
   },
   {

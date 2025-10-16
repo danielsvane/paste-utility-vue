@@ -1,5 +1,5 @@
-import { useSerialStore } from '../stores/serial'
 import { SAFE_Z_HEIGHT } from '../constants'
+import { useSerialStore } from '../stores/serial'
 
 /**
  * G-code macro functions for machine control
@@ -90,7 +90,7 @@ export async function jogZMinus(distance) {
  * Quick extrude movement (controls version)
  * @param {number} amount - Amount to extrude (default 2mm)
  */
-export async function extrude(amount = 2) {
+export async function extrude(amount = 50) {
   await serialStore.send(['G91', `G0 B-${amount}`, 'G90'])
 }
 
@@ -98,7 +98,7 @@ export async function extrude(amount = 2) {
  * Quick retract movement (controls version)
  * @param {number} amount - Amount to retract (default 2mm)
  */
-export async function retract(amount = 2) {
+export async function retract(amount = 50) {
   await serialStore.send(['G91', `G0 B${amount}`, 'G90'])
 }
 
@@ -148,4 +148,22 @@ export async function stopExtrude() {
  */
 export async function retractAndRaise(retractionAmount = 10) {
   await serialStore.send(['G91', `G0 B${retractionAmount}`, 'G90', `G0 Z${SAFE_Z_HEIGHT}`])
+}
+
+// ============================================================================
+// RING LIGHT MACROS
+// ============================================================================
+
+/**
+ * Turn ring lights on to full brightness (white)
+ */
+export async function ringLightsOn() {
+  await serialStore.send(['M150 P255 R255 U255 B255'])
+}
+
+/**
+ * Turn ring lights off
+ */
+export async function ringLightsOff() {
+  await serialStore.send(['M150 P0'])
 }

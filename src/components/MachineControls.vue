@@ -3,8 +3,8 @@
     <div class="space-y-6">
       <!-- Light and Air Controls -->
       <div class="flex gap-3 flex-wrap">
-        <Button type="secondary" text="Ring Lights On" />
-        <Button type="secondary" text="Ring Lights Off" />
+        <Button type="secondary" text="Ring Lights On" @click="controls.ringLightsOn" />
+        <Button type="secondary" text="Ring Lights Off" @click="controls.ringLightsOff" />
       </div>
 
       <div class="flex gap-3 flex-wrap">
