@@ -1,31 +1,28 @@
 <template>
   <div class="w-full h-[600px] bg-gray-900/50 rounded-lg overflow-hidden">
-    <svg ref="svgRef" class="w-full h-full cursor-default" :viewBox="previewStore.viewBox" preserveAspectRatio="xMidYMid meet">
+    <svg ref="svgRef" class="w-full h-full cursor-default" :viewBox="previewStore.viewBox"
+      preserveAspectRatio="xMidYMid meet">
       <!-- Fiducials (blue circles) -->
       <g>
         <circle v-for="(fid, index) in transformedFiducials" :key="`fid-${index}`" :cx="fid.x" :cy="fid.y"
-          :r="previewStore.pointRadius * (fid.selected ? 1.5 : 1)" 
-          :class="{ 
+          :r="previewStore.pointRadius * (fid.selected ? 1.5 : 1)" :class="{
             'fill-blue-500 transition-all duration-200 cursor-pointer': !fid.selected,
             'fill-blue-400': !fid.selected && previewStore.clickMode === 'fiducial-selection',
             'fill-green-500 transition-all duration-200 cursor-pointer': fid.selected
-          }"
-          @click.stop="handleFiducialClick(index)" />
+          }" @click.stop="handleFiducialClick(index)" />
       </g>
 
       <!-- Placements (goldenrod circles) -->
       <g>
-        <circle v-for="(placement, index) in previewStore.transformedPlacements" :key="`placement-${index}`" :cx="placement.x"
-          :cy="placement.y" 
-          :r="previewStore.pointRadius * (placement.index === previewStore.activePlacementIndex ? 2 : 1)" 
-          :class="{
+        <circle v-for="(placement, index) in previewStore.transformedPlacements" :key="`placement-${index}`"
+          :cx="placement.x" :cy="placement.y"
+          :r="previewStore.pointRadius * (placement.index === previewStore.activePlacementIndex ? 2 : 1)" :class="{
             'fill-goldenrod-dark transition-all duration-200 cursor-pointer': placement.index !== previewStore.activePlacementIndex && !previewStore.calibratedPlacementIndices.includes(placement.index),
             'fill-goldenrod': placement.index !== previewStore.activePlacementIndex && !previewStore.calibratedPlacementIndices.includes(placement.index) && previewStore.clickMode !== 'fiducial-selection',
             'fill-blue-500 animate-pulse': placement.index === previewStore.activePlacementIndex,
             'fill-green-500 transition-all duration-200 cursor-pointer': previewStore.calibratedPlacementIndices.includes(placement.index) && placement.index !== previewStore.activePlacementIndex,
             'fill-green-400': previewStore.calibratedPlacementIndices.includes(placement.index) && placement.index !== previewStore.activePlacementIndex && previewStore.clickMode !== 'fiducial-selection'
-          }"
-          @click.stop="handlePlacementClick(placement.index)" />
+          }" @click.stop="handlePlacementClick(placement.index)" />
       </g>
     </svg>
   </div>
