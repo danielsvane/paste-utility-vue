@@ -4,13 +4,18 @@
       preserveAspectRatio="xMidYMid meet">
       <!-- Mesh visualization (Z height heat map) -->
       <g v-if="previewStore.showMesh" style="pointer-events: none;">
+        <!-- Debug: Show a test rectangle to verify rendering -->
+        <rect x="0" y="0" width="50" height="50" fill="lime" opacity="0.5" />
+
         <polygon
           v-for="(triangle, index) in previewStore.transformedTriangles"
           :key="`triangle-${index}`"
           :points="`${triangle.vertices[0].x},${triangle.vertices[0].y} ${triangle.vertices[1].x},${triangle.vertices[1].y} ${triangle.vertices[2].x},${triangle.vertices[2].y}`"
           :fill="triangle.color"
           fill-opacity="0.3"
-          stroke="none"
+          :stroke="triangle.color"
+          stroke-width="2"
+          stroke-opacity="0.8"
         />
       </g>
 
@@ -87,6 +92,16 @@ watch(() => previewStore.clickMode, (newMode) => {
     selectedFiducials.value.clear()
   }
 })
+
+// Debug: Watch for mesh changes
+watch(() => previewStore.showMesh, (newVal) => {
+  console.log('JobPreview: showMesh changed to', newVal)
+  console.log('JobPreview: transformedTriangles count', previewStore.transformedTriangles.length)
+})
+
+watch(() => previewStore.transformedTriangles, (newVal) => {
+  console.log('JobPreview: transformedTriangles updated, count:', newVal.length)
+}, { deep: true })
 
 // Initialize panzoom
 onMounted(() => {

@@ -115,22 +115,43 @@ export const usePreviewStore = defineStore('preview', () => {
         )
     }
 
-    // Transformed calibration points for mesh visualization
-    const transformedCalibrationPoints = computed(() => {
+    // Get calibration points in original gerber coordinate space for triangulation
+    const calibrationPointsInGerberSpace = computed(() => {
         if (!jobStore.planeCalibrationPoints || jobStore.planeCalibrationPoints.length === 0) {
             return []
         }
-        return jobStore.planeCalibrationPoints.map((p, i) => transformPoint(p, i, false))
+
+        // Map calibration points to use original placement XY positions
+        return jobStore.planeCalibrationPoints.map(calPoint => {
+            const originalPlacement = jobStore.originalPlacements[calPoint.placementIndex]
+            if (!originalPlacement) {
+                console.warn(`No original placement found for calibration point index ${calPoint.placementIndex}`)
+                return null
+            }
+
+            // Use original gerber XY, but calibrated Z
+            return {
+                x: originalPlacement.x,
+                y: originalPlacement.y,
+                z: calPoint.z
+            }
+        }).filter(p => p !== null)
     })
 
     // Transformed triangles with Z-based color mapping
     const transformedTriangles = computed(() => {
         if (!showMesh.value || !jobStore.triangulationData || !jobStore.planeCalibrationPoints.length) {
+            console.log('Mesh not shown:', { showMesh: showMesh.value, hasTriangulation: !!jobStore.triangulationData, pointsCount: jobStore.planeCalibrationPoints.length })
             return []
         }
 
-        const { delaunay, points } = jobStore.triangulationData
+        console.log('Computing mesh triangles...')
+        const { delaunay } = jobStore.triangulationData
         const { triangles } = delaunay
+
+        // Use points in gerber coordinate space (not machine coordinates)
+        const points = calibrationPointsInGerberSpace.value
+        console.log('Using points in gerber space:', points)
 
         // Calculate min/max Z for color mapping
         let minZ = Infinity
@@ -177,12 +198,18 @@ export const usePreviewStore = defineStore('preview', () => {
             })
         }
 
+        console.log(`Generated ${result.length} triangles for mesh visualization`)
+        if (result.length > 0) {
+            console.log('First triangle:', result[0])
+        }
+
         return result
     })
 
     // Toggle mesh visibility
     function toggleMesh() {
         showMesh.value = !showMesh.value
+        console.log('Mesh visibility toggled to:', showMesh.value)
     }
 
     return {
@@ -203,7 +230,7 @@ export const usePreviewStore = defineStore('preview', () => {
 
         // Mesh visualization
         showMesh,
-        transformedCalibrationPoints,
+        calibrationPointsInGerberSpace,
         transformedTriangles,
         toggleMesh,
 
