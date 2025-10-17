@@ -30,7 +30,9 @@
       <g>
         <circle v-for="(placement, index) in previewStore.transformedPlacements" :key="`placement-${index}`"
           :cx="placement.x" :cy="placement.y"
-          :r="previewStore.pointRadius * (placement.index === previewStore.activePlacementIndex ? 2 : 1)" :class="{
+          :r="previewStore.pointRadius * (placement.index === previewStore.activePlacementIndex ? 2 : 1)"
+          :opacity="placement.opacity"
+          :class="{
             'fill-goldenrod-dark transition-all duration-200 cursor-pointer': placement.index !== previewStore.activePlacementIndex && !previewStore.calibratedPlacementIndices.includes(placement.index),
             'fill-goldenrod': placement.index !== previewStore.activePlacementIndex && !previewStore.calibratedPlacementIndices.includes(placement.index) && previewStore.clickMode !== 'fiducial-selection',
             'fill-blue-500 animate-pulse': placement.index === previewStore.activePlacementIndex,
