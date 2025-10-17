@@ -16,11 +16,13 @@
 <script setup>
 import { ref } from 'vue'
 import { useJobStore } from '../stores/job'
+import { useModalStore } from '../stores/modal'
 import ButtonGroup from './ButtonGroup.vue'
 import Card from './Card.vue'
 import JobPreview from './JobPreview.vue'
 
 const jobStore = useJobStore()
+const modalStore = useModalStore()
 const jobPreviewRef = ref(null)
 const movementMode = ref('nozzle') // Default to nozzle
 
@@ -40,7 +42,7 @@ function handleFiducialClicked(event) {
   jobStore.handleFiducialClick(event.index)
 }
 
-function handlePlacementClicked(event) {
+async function handlePlacementClicked(event) {
   // Move camera or nozzle to the clicked placement based on movementMode
   // Use calibrated position if available, otherwise use original
   const placement = jobStore.isCalibrated && jobStore.calibratedPlacements.length > event.index
@@ -48,7 +50,7 @@ function handlePlacementClicked(event) {
     : event.placement
 
   if (!jobStore.isCalibrated) {
-    alert('Please complete "Get Rough Board Position" calibration first')
+    await modalStore.showAlert('Please complete "Get Rough Board Position" calibration first', 'Calibration Required')
     return
   }
 
