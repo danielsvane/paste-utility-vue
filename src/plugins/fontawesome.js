@@ -28,6 +28,7 @@ import {
   faSyringe,
   faPlus,
   faEye,
+  faEyeSlash,
   faCrosshairs
 } from '@fortawesome/free-solid-svg-icons'
 
@@ -57,6 +58,7 @@ library.add(
   faSyringe,
   faPlus,
   faEye,
+  faEyeSlash,
   faCrosshairs
 )
 
