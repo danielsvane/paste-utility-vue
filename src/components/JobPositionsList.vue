@@ -55,6 +55,14 @@
           <template v-if="jobStore.originalPlacements.length > 0">
             <div class="section-header">
               {{ jobStore.originalPlacements.length }} <span class="text-gray-300">placements</span>
+              <Button
+                v-if="jobStore.planeCalibrationPoints.length > 0"
+                icon="trash"
+                size="small"
+                type="tertiary"
+                @click="handleClearAllCalibrationPoints"
+                title="Clear all saved Z heights"
+                class="ml-2" />
             </div>
 
             <div v-for="(placement, index) in displayPlacements" :key="`placement-${index}`" class="grid-row"
@@ -174,6 +182,14 @@ async function handleSaveCalibrationPoint(index) {
   } catch (error) {
     console.error('Error saving calibration point:', error)
     alert('Failed to save calibration point: ' + error.message)
+  }
+}
+
+function handleClearAllCalibrationPoints() {
+  const count = jobStore.planeCalibrationPoints.length
+  if (confirm(`Clear all ${count} saved Z height${count > 1 ? 's' : ''}?`)) {
+    jobStore.clearCalibrationPoints()
+    console.log('Cleared all calibration points')
   }
 }
 </script>
