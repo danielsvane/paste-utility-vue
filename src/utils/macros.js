@@ -1,4 +1,4 @@
-import { SAFE_Z_HEIGHT } from '../constants'
+import { SAFE_Z_HEIGHT, PRESSURE_AMOUNT } from '../constants'
 import { useSerialStore } from '../stores/serial'
 
 /**
@@ -110,14 +110,14 @@ export async function retract(amount = 50) {
  * Pressurize the paste dispenser
  */
 export async function pressurize() {
-  await serialStore.send(['G91', 'G0 B-200', 'G90'])
+  await serialStore.send(['G91', `G0 B-${PRESSURE_AMOUNT}`, 'G90'])
 }
 
 /**
  * Depressurize the paste dispenser
  */
 export async function depressurize() {
-  await serialStore.send(['G91', 'G0 B200', 'G90'])
+  await serialStore.send(['G91', `G0 B${PRESSURE_AMOUNT}`, 'G90'])
 }
 
 /**
@@ -132,7 +132,7 @@ export async function extrudePaste(amount = 10) {
  * Start continuous slow extrusion
  */
 export async function startSlowExtrude() {
-  await serialStore.send(['G91', 'G1 B-20000 F400', 'G90'])
+  await serialStore.send(['G91', 'G1 B-20000 F2000', 'G90'])
 }
 
 /**
