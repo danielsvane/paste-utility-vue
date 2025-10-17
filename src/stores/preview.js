@@ -141,17 +141,14 @@ export const usePreviewStore = defineStore('preview', () => {
     // Transformed triangles with Z-based color mapping
     const transformedTriangles = computed(() => {
         if (!showMesh.value || !jobStore.triangulationData || !jobStore.planeCalibrationPoints.length) {
-            console.log('Mesh not shown:', { showMesh: showMesh.value, hasTriangulation: !!jobStore.triangulationData, pointsCount: jobStore.planeCalibrationPoints.length })
             return []
         }
 
-        console.log('Computing mesh triangles...')
         const { delaunay } = jobStore.triangulationData
         const { triangles } = delaunay
 
         // Use points in gerber coordinate space (not machine coordinates)
         const points = calibrationPointsInGerberSpace.value
-        console.log('Using points in gerber space:', points)
 
         // Calculate min/max Z for color mapping
         let minZ = Infinity
@@ -198,18 +195,12 @@ export const usePreviewStore = defineStore('preview', () => {
             })
         }
 
-        console.log(`Generated ${result.length} triangles for mesh visualization`)
-        if (result.length > 0) {
-            console.log('First triangle:', result[0])
-        }
-
         return result
     })
 
     // Toggle mesh visibility
     function toggleMesh() {
         showMesh.value = !showMesh.value
-        console.log('Mesh visibility toggled to:', showMesh.value)
     }
 
     return {

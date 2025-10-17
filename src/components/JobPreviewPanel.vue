@@ -7,9 +7,13 @@
         <ButtonGroup v-model="movementMode" :options="movementModeOptions" size="small" />
         <template v-if="jobStore.triangulationData">
           <div class="border-l border-gray-600 h-6"></div>
-          <Button :icon="previewStore.showMesh ? 'eye' : 'eye'" size="small"
-            :type="previewStore.showMesh ? 'secondary' : 'tertiary'" @click="previewStore.toggleMesh"
-            title="Toggle mesh visualization">
+          <Button
+            :icon="previewStore.showMesh ? 'eye-slash' : 'eye'"
+            size="small"
+            :type="previewStore.showMesh ? 'secondary' : 'tertiary'"
+            @click="previewStore.toggleMesh"
+            title="Toggle mesh visualization"
+          >
             Mesh
           </Button>
         </template>
