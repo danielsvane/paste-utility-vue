@@ -2,6 +2,18 @@
   <div class="w-full h-[600px] bg-gray-900/50 rounded-lg overflow-hidden">
     <svg ref="svgRef" class="w-full h-full cursor-default" :viewBox="previewStore.viewBox"
       preserveAspectRatio="xMidYMid meet">
+      <!-- Mesh visualization (Z height heat map) -->
+      <g v-if="previewStore.showMesh" style="pointer-events: none;">
+        <polygon
+          v-for="(triangle, index) in previewStore.transformedTriangles"
+          :key="`triangle-${index}`"
+          :points="`${triangle.vertices[0].x},${triangle.vertices[0].y} ${triangle.vertices[1].x},${triangle.vertices[1].y} ${triangle.vertices[2].x},${triangle.vertices[2].y}`"
+          :fill="triangle.color"
+          fill-opacity="0.3"
+          stroke="none"
+        />
+      </g>
+
       <!-- Fiducials (blue circles) -->
       <g>
         <circle v-for="(fid, index) in transformedFiducials" :key="`fid-${index}`" :cx="fid.x" :cy="fid.y"

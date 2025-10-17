@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia'
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useJobStore } from './job'
 
 export const usePreviewStore = defineStore('preview', () => {
     const jobStore = useJobStore()
 
     const MARGIN_PERCENT = 0.1 // 10% margin for bounds
+    const showMesh = ref(false) // Toggle for mesh visualization
 
     // Get the appropriate placements to display (always original for gerber preview)
     const displayPlacements = computed(() => jobStore.originalPlacements)
@@ -114,6 +115,76 @@ export const usePreviewStore = defineStore('preview', () => {
         )
     }
 
+    // Transformed calibration points for mesh visualization
+    const transformedCalibrationPoints = computed(() => {
+        if (!jobStore.planeCalibrationPoints || jobStore.planeCalibrationPoints.length === 0) {
+            return []
+        }
+        return jobStore.planeCalibrationPoints.map((p, i) => transformPoint(p, i, false))
+    })
+
+    // Transformed triangles with Z-based color mapping
+    const transformedTriangles = computed(() => {
+        if (!showMesh.value || !jobStore.triangulationData || !jobStore.planeCalibrationPoints.length) {
+            return []
+        }
+
+        const { delaunay, points } = jobStore.triangulationData
+        const { triangles } = delaunay
+
+        // Calculate min/max Z for color mapping
+        let minZ = Infinity
+        let maxZ = -Infinity
+        for (const p of points) {
+            minZ = Math.min(minZ, p.z)
+            maxZ = Math.max(maxZ, p.z)
+        }
+
+        const zRange = maxZ - minZ || 1 // Avoid division by zero
+
+        // Map Z to color (red = low, blue = high)
+        function getColorFromZ(z) {
+            // Normalize Z to [0, 1]
+            const normalized = (z - minZ) / zRange
+            // Map to hue: 0° (red) to 240° (blue)
+            const hue = normalized * 240
+            return `hsl(${hue}, 70%, 50%)`
+        }
+
+        // Build triangle array
+        const result = []
+        for (let i = 0; i < triangles.length; i += 3) {
+            const i0 = triangles[i]
+            const i1 = triangles[i + 1]
+            const i2 = triangles[i + 2]
+
+            const p1 = points[i0]
+            const p2 = points[i1]
+            const p3 = points[i2]
+
+            // Transform points to SVG coordinates
+            const v1 = transformPoint(p1, i0, false)
+            const v2 = transformPoint(p2, i1, false)
+            const v3 = transformPoint(p3, i2, false)
+
+            // Calculate average Z for color
+            const avgZ = (p1.z + p2.z + p3.z) / 3
+            const color = getColorFromZ(avgZ)
+
+            result.push({
+                vertices: [v1, v2, v3],
+                color
+            })
+        }
+
+        return result
+    })
+
+    // Toggle mesh visibility
+    function toggleMesh() {
+        showMesh.value = !showMesh.value
+    }
+
     return {
         // Display data
         displayPlacements,
@@ -129,6 +200,12 @@ export const usePreviewStore = defineStore('preview', () => {
         boardSide,
         activePlacementIndex,
         calibratedPlacementIndices,
+
+        // Mesh visualization
+        showMesh,
+        transformedCalibrationPoints,
+        transformedTriangles,
+        toggleMesh,
 
         // Transformation methods
         transformPoint,

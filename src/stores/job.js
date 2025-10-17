@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { loadGerberFiles } from '../utils/gerberParser'
 import { createPoint, createFiducial } from '../utils/factories'
 import { calculatePlaneCoefficients, getZForPlane, calculateBestFitPlane } from '../utils/geometry'
+import { createDelaunayTriangulation, interpolateZFromTriangulation } from '../utils/meshInterpolation'
 import { parseJobFile, exportJobToFile } from '../utils/jobFileService'
 import { useSerialStore } from './serial'
 import { fromTriangles, applyToPoint } from 'transformation-matrix'
@@ -43,6 +44,8 @@ export const useJobStore = defineStore('job', () => {
   const baseZ = ref(null)                 // From rough board position
   const planeCoefficients = ref(null)     // { A, B, C, D } from plane calibration
   const planeCalibrationPoints = ref([])  // [{ placementIndex, x, y, z }] manual Z calibration points
+  const meshCalibrationMethod = ref('plane') // 'plane' = flat plane fit, 'mesh' = triangulation mesh
+  const triangulationData = ref(null)     // Delaunay triangulation data for mesh interpolation
   const tipXoffset = ref(0)
   const tipYoffset = ref(0)
 
@@ -80,10 +83,20 @@ export const useJobStore = defineStore('job', () => {
       // Apply active XY transformation
       const [x, y] = applyToPoint(activeTransformMatrix.value, [p.x, p.y])
 
-      // Apply Z calibration (priority: plane > baseZ > original)
+      // Apply Z calibration (priority: mesh/plane > baseZ > original)
       let z
       if (planeCoefficients.value) {
-        z = getZForPlane(x, y, planeCoefficients.value)
+        // Check which calibration method to use
+        if (meshCalibrationMethod.value === 'mesh' && triangulationData.value) {
+          z = interpolateZFromTriangulation(x, y, triangulationData.value)
+          // Fall back to plane if mesh interpolation fails
+          if (z === null) {
+            z = getZForPlane(x, y, planeCoefficients.value)
+          }
+        } else {
+          // Use plane fit (default)
+          z = getZForPlane(x, y, planeCoefficients.value)
+        }
       } else if (baseZ.value !== null) {
         z = baseZ.value
       } else {
@@ -103,10 +116,20 @@ export const useJobStore = defineStore('job', () => {
       // Apply active XY transformation
       const [x, y] = applyToPoint(activeTransformMatrix.value, [f.x, f.y])
 
-      // Apply Z calibration (priority: plane > baseZ > original)
+      // Apply Z calibration (priority: mesh/plane > baseZ > original)
       let z
       if (planeCoefficients.value) {
-        z = getZForPlane(x, y, planeCoefficients.value)
+        // Check which calibration method to use
+        if (meshCalibrationMethod.value === 'mesh' && triangulationData.value) {
+          z = interpolateZFromTriangulation(x, y, triangulationData.value)
+          // Fall back to plane if mesh interpolation fails
+          if (z === null) {
+            z = getZForPlane(x, y, planeCoefficients.value)
+          }
+        } else {
+          // Use plane fit (default)
+          z = getZForPlane(x, y, planeCoefficients.value)
+        }
       } else if (baseZ.value !== null) {
         z = baseZ.value
       } else {
@@ -190,6 +213,8 @@ export const useJobStore = defineStore('job', () => {
       fidCalMatrix.value = data.calibration.fidCalMatrix
       baseZ.value = data.calibration.baseZ
       planeCoefficients.value = data.calibration.planeCoefficients
+      meshCalibrationMethod.value = data.calibration.meshCalibrationMethod || 'plane' // Default to plane for backwards compatibility
+      triangulationData.value = data.calibration.triangulationData || null
       tipXoffset.value = data.calibration.tipXoffset
       tipYoffset.value = data.calibration.tipYoffset
 
@@ -219,6 +244,8 @@ export const useJobStore = defineStore('job', () => {
       fidCalMatrix: fidCalMatrix.value,
       baseZ: baseZ.value,
       planeCoefficients: planeCoefficients.value,
+      meshCalibrationMethod: meshCalibrationMethod.value,
+      triangulationData: triangulationData.value,
       tipXoffset: tipXoffset.value,
       tipYoffset: tipYoffset.value,
       dispenseDegrees: dispenseDegrees.value,
@@ -259,6 +286,9 @@ export const useJobStore = defineStore('job', () => {
       roughBoardMatrix.value = null
       fidCalMatrix.value = null
       baseZ.value = null
+      planeCoefficients.value = null
+      planeCalibrationPoints.value = []
+      triangulationData.value = null
 
       // Clear legacy data for backwards compatibility
       placements.value = []
@@ -927,7 +957,8 @@ export const useJobStore = defineStore('job', () => {
   function clearCalibrationPoints() {
     planeCalibrationPoints.value = []
     planeCoefficients.value = null
-    console.log('Cleared all calibration points and plane coefficients')
+    triangulationData.value = null
+    console.log('Cleared all calibration points, plane coefficients, and triangulation data')
   }
 
   function calculatePlaneFromCalibrationPoints() {
@@ -950,12 +981,37 @@ export const useJobStore = defineStore('job', () => {
     console.log('Plane calculated from calibration points:', coeffs)
     console.log(`Using ${planeCalibrationPoints.value.length} calibration points`)
 
+    // Also create Delaunay triangulation for mesh interpolation
+    const triangulation = createDelaunayTriangulation(planeCalibrationPoints.value)
+    if (triangulation) {
+      triangulationData.value = triangulation
+      console.log('Triangulation mesh created for mesh interpolation mode')
+    } else {
+      console.warn('Failed to create triangulation - mesh mode will not be available')
+    }
+
     return true
   }
 
   // Helper to check if a placement has a calibration point
   function hasCalibrationPoint(placementIndex) {
     return planeCalibrationPoints.value.some(p => p.placementIndex === placementIndex)
+  }
+
+  // Set the mesh calibration method ('plane' or 'mesh')
+  function setMeshCalibrationMethod(method) {
+    if (method !== 'plane' && method !== 'mesh') {
+      console.error(`Invalid mesh calibration method: ${method}. Must be 'plane' or 'mesh'`)
+      return
+    }
+
+    if (method === 'mesh' && !triangulationData.value) {
+      console.error('Cannot switch to mesh mode - no triangulation data available. Add calibration points first.')
+      return
+    }
+
+    meshCalibrationMethod.value = method
+    console.log(`Mesh calibration method set to: ${method}`)
   }
 
   // Auto-calculate plane when we have 3 or more calibration points
@@ -1002,6 +1058,8 @@ export const useJobStore = defineStore('job', () => {
     baseZ,
     planeCoefficients,
     planeCalibrationPoints,
+    meshCalibrationMethod,
+    triangulationData,
     tipXoffset,
     tipYoffset,
 
@@ -1057,7 +1115,8 @@ export const useJobStore = defineStore('job', () => {
     deleteCalibrationPoint,
     clearCalibrationPoints,
     calculatePlaneFromCalibrationPoints,
-    hasCalibrationPoint
+    hasCalibrationPoint,
+    setMeshCalibrationMethod
   }
 }, {
   persist: {
@@ -1073,6 +1132,8 @@ export const useJobStore = defineStore('job', () => {
       'baseZ',
       'planeCoefficients',
       'planeCalibrationPoints',
+      'meshCalibrationMethod',
+      'triangulationData',
       'tipXoffset',
       'tipYoffset'
     ]

@@ -5,6 +5,18 @@
         <ButtonGroup v-model="jobStore.boardSide" :options="boardSideOptions" size="small" />
         <div class="border-l border-gray-600 h-6"></div>
         <ButtonGroup v-model="movementMode" :options="movementModeOptions" size="small" />
+        <template v-if="jobStore.triangulationData">
+          <div class="border-l border-gray-600 h-6"></div>
+          <Button
+            :icon="previewStore.showMesh ? 'eye-slash' : 'eye'"
+            size="small"
+            :type="previewStore.showMesh ? 'secondary' : 'tertiary'"
+            @click="previewStore.toggleMesh"
+            title="Toggle mesh visualization"
+          >
+            Mesh
+          </Button>
+        </template>
       </div>
     </template>
 
@@ -16,12 +28,15 @@
 <script setup>
 import { ref } from 'vue'
 import { useJobStore } from '../stores/job'
+import { usePreviewStore } from '../stores/preview'
 import { useModalStore } from '../stores/modal'
+import Button from './Button.vue'
 import ButtonGroup from './ButtonGroup.vue'
 import Card from './Card.vue'
 import JobPreview from './JobPreview.vue'
 
 const jobStore = useJobStore()
+const previewStore = usePreviewStore()
 const modalStore = useModalStore()
 const jobPreviewRef = ref(null)
 const movementMode = ref('nozzle') // Default to nozzle

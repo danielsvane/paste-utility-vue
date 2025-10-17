@@ -1,5 +1,18 @@
 <template>
   <Card title="Job Positions">
+    <template #actions>
+      <div v-if="jobStore.hasPlaneCalibration && jobStore.triangulationData" class="flex items-center gap-2">
+        <label for="mesh-method" class="text-sm text-gray-400">Z Interpolation:</label>
+        <select
+          id="mesh-method"
+          v-model="jobStore.meshCalibrationMethod"
+          class="bg-gray-700 text-white border border-gray-600 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="plane">Plane Fit</option>
+          <option value="mesh">Mesh</option>
+        </select>
+      </div>
+    </template>
 
     <div class="positions-list text-gray-300">
       <!-- Fiducial selection message -->
