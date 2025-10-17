@@ -6,7 +6,13 @@
       <FilePicker text="Load Project" type="tertiary" icon="folder-open" accept=".json" @change="handleLoadJob" />
       <Button @click="handleSaveProject" text="Save Project" type="tertiary" icon="save" />
       <Button @click="handleResetProject" text="Reset" type="tertiary" icon="trash" />
-      <Button @click="handleRunJob" text="Run Job" type="secondary" icon="play" />
+      <Button
+        @click="handleRunJob"
+        text="Run Job"
+        type="secondary"
+        icon="play"
+        :disabled="!serialStore.isConnected || jobStore.calibratedPlacements.length === 0 || !jobStore.isCalibrated"
+      />
       <div class="flex-1"></div>
       <Button @click="$router.push('/help')" text="Help" type="tertiary" />
     </div>
@@ -35,6 +41,7 @@
 </template>
 
 <script setup>
+import { inject } from 'vue'
 import Button from '../components/Button.vue'
 import CalibrationPanel from '../components/CalibrationPanel.vue'
 import ConsoleRepl from '../components/ConsoleRepl.vue'
@@ -51,11 +58,13 @@ import { useJobStore } from '../stores/job'
 import { useSerialStore } from '../stores/serial'
 import { useControlsStore } from '../stores/controls'
 import { useModalStore } from '../stores/modal'
+import { SAFE_Z_HEIGHT, EXTRUSION_HEIGHT } from '../constants'
 
 const serialStore = useSerialStore()
 const jobStore = useJobStore()
 const controlsStore = useControlsStore()
 const modalStore = useModalStore()
+const toast = inject('toast')
 
 async function handleLoadJob(file) {
   if (file) {
@@ -97,8 +106,28 @@ async function handleResetProject() {
   }
 }
 
-function handleRunJob() {
-  console.log('Run job clicked')
-  // Job running logic will be implemented
+async function handleRunJob() {
+  // Confirm with user
+  const confirmed = await modalStore.showConfirm(
+    `Run job with ${jobStore.calibratedPlacements.length} placements?\n\nSettings:\n- Dispense: ${jobStore.dispenseDegrees}°\n- Retraction: ${jobStore.retractionDegrees}°\n- Dwell: ${jobStore.dwellMilliseconds}ms`,
+    'Confirm Run Job'
+  )
+
+  if (!confirmed) {
+    return
+  }
+
+  try {
+    const result = await jobStore.runJob(toast)
+
+    if (result.success) {
+      alert('Job completed successfully!')
+    } else if (result.cancelled) {
+      alert('Job was cancelled')
+    }
+  } catch (error) {
+    console.error('Error running job:', error)
+    alert('Error running job: ' + error.message)
+  }
 }
 </script>

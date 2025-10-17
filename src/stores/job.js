@@ -357,7 +357,7 @@ export const useJobStore = defineStore('job', () => {
     // Position should be from calibratedPlacements or calibratedFiducials
     const x = position.x + tipXoffset.value
     const y = position.y + tipYoffset.value
-    const z = position.z - EXTRUSION_HEIGHT  // Add extrusion height above board surface
+    const z = position.z - EXTRUSION_HEIGHT  // Lift 0.2mm above the saved pad touch position
 
     // Safety: lift to safe Z, move XY, then descend to extrusion height
     await serialStore.send([
@@ -789,6 +789,87 @@ export const useJobStore = defineStore('job', () => {
     }
   }
 
+  async function runJob(toast) {
+    // Validation checks
+    if (calibratedPlacements.value.length === 0) {
+      throw new Error('No placements loaded')
+    }
+
+    if (!isCalibrated.value) {
+      throw new Error('Job is not calibrated')
+    }
+
+    // Reset to start of job
+    currentPlacementIndex.value = -1
+
+    // Track if user cancelled
+    let cancelled = false
+
+    // Show cancellable toast - it resolves with false when user closes it
+    const toastPromise = toast.value.show('Running job... Close this to cancel.')
+    toastPromise.then((result) => {
+      if (result === false) {
+        cancelled = true
+        console.log('User cancelled job')
+      }
+    })
+
+    try {
+      // Initialize: move to safe height
+      await serialStore.send([
+        'G90',
+        `G0 Z${SAFE_Z_HEIGHT}`
+      ])
+
+      // Process each placement
+      for (let i = 0; i < calibratedPlacements.value.length; i++) {
+        // Check for cancellation
+        if (cancelled) {
+          console.log('Job cancelled by user')
+          break
+        }
+
+        const position = calibratedPlacements.value[i]
+
+        // Apply tip offset and extrusion height (same as moveNozzleToPosition)
+        const x = position.x + tipXoffset.value
+        const y = position.y + tipYoffset.value
+        const z = position.z - EXTRUSION_HEIGHT  // Lift above the saved pad touch position
+
+        // Execute placement sequence
+        await serialStore.send([
+          `G0 X${x.toFixed(3)} Y${y.toFixed(3)}`,  // Move to XY position
+          `G0 Z${z.toFixed(3)}`,                    // Move to extrusion height
+          'G91',                                     // Relative positioning for B axis
+          `G0 B-${dispenseDegrees.value}`,          // Dispense paste (negative = extrude)
+          `G0 B${retractionDegrees.value}`,         // Retract (positive = retract)
+          'G90',                                     // Back to absolute positioning
+          `G4 P${dwellMilliseconds.value}`,         // Dwell
+          `G0 Z${SAFE_Z_HEIGHT}`                    // Raise to safe height
+        ])
+
+        currentPlacementIndex.value = i
+        lastNavigatedPlacementIndex.value = i  // Update for UI highlighting
+
+        console.log(`Completed placement ${i + 1} of ${calibratedPlacements.value.length}`)
+      }
+
+      // Return to home position
+      await serialStore.send(['G0 X5 Y5'])
+
+      if (!cancelled) {
+        console.log('Job completed successfully')
+      } else {
+        console.log('Job was cancelled')
+      }
+
+      return { success: !cancelled, cancelled }
+    } catch (error) {
+      console.error('Error running job:', error)
+      throw error
+    }
+  }
+
   async function performTipCalibration(toast) {
     await toast.show('Please jog the camera to be centered on any fiducial.')
 
@@ -971,6 +1052,7 @@ export const useJobStore = defineStore('job', () => {
     retractAndRaise,
     extrudeNextPosition,
     runAutomatedExtrusion,
+    runJob,
     saveCalibrationPointForPlacement,
     deleteCalibrationPoint,
     clearCalibrationPoints,
