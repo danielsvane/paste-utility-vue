@@ -145,6 +145,12 @@ export const useSerialStore = defineStore('serial', () => {
   }
 
   async function tryAutoConnect() {
+    // Don't try to connect if already connected (e.g., during hot reload)
+    if (isConnected.value) {
+      console.log('Already connected, skipping auto-connect')
+      return true
+    }
+
     // Only auto-connect if the setting is enabled
     if (!autoConnect.value) {
       return false
