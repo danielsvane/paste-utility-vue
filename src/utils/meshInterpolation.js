@@ -233,8 +233,6 @@ export function interpolateZFromTriangulation(x, y, triangulation) {
     // Extrapolate Z using barycentric coordinates (may be outside [0,1])
     const z = bary.u * z1 + bary.v * z2 + bary.w * z3
 
-    console.warn(`Point (${x.toFixed(2)}, ${y.toFixed(2)}) is outside calibrated area - extrapolating Z`)
-
     return z
   }
 }
