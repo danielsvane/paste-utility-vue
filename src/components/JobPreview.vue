@@ -4,16 +4,9 @@
       preserveAspectRatio="xMidYMid meet">
       <!-- Mesh visualization (Z height heat map) -->
       <g v-if="previewStore.showMesh" style="pointer-events: none;">
-        <polygon
-          v-for="(triangle, index) in previewStore.transformedTriangles"
-          :key="`triangle-${index}`"
+        <polygon v-for="(triangle, index) in previewStore.transformedTriangles" :key="`triangle-${index}`"
           :points="`${triangle.vertices[0].x},${triangle.vertices[0].y} ${triangle.vertices[1].x},${triangle.vertices[1].y} ${triangle.vertices[2].x},${triangle.vertices[2].y}`"
-          :fill="triangle.color"
-          fill-opacity="0.3"
-          :stroke="triangle.color"
-          stroke-width="1"
-          stroke-opacity="0.5"
-        />
+          :fill="triangle.color" fill-opacity="0.3" :stroke="triangle.color" stroke-width="1" stroke-opacity="0.5" />
       </g>
 
       <!-- Fiducials (blue circles) -->
@@ -26,18 +19,16 @@
           }" @click.stop="handleFiducialClick(index)" />
       </g>
 
-      <!-- Placements (goldenrod circles) -->
+      <!-- Placements (color-coded by Z height when calibrated) -->
       <g>
         <circle v-for="(placement, index) in previewStore.transformedPlacements" :key="`placement-${index}`"
           :cx="placement.x" :cy="placement.y"
-          :r="previewStore.pointRadius * (placement.index === previewStore.activePlacementIndex ? 2 : 1)"
-          :opacity="placement.opacity"
-          :class="{
-            'fill-goldenrod-dark transition-all duration-200 cursor-pointer': placement.index !== previewStore.activePlacementIndex && !previewStore.calibratedPlacementIndices.includes(placement.index),
-            'fill-goldenrod': placement.index !== previewStore.activePlacementIndex && !previewStore.calibratedPlacementIndices.includes(placement.index) && previewStore.clickMode !== 'fiducial-selection',
-            'fill-blue-500 animate-pulse': placement.index === previewStore.activePlacementIndex,
-            'fill-green-500 transition-all duration-200 cursor-pointer': previewStore.calibratedPlacementIndices.includes(placement.index) && placement.index !== previewStore.activePlacementIndex,
-            'fill-green-400': previewStore.calibratedPlacementIndices.includes(placement.index) && placement.index !== previewStore.activePlacementIndex && previewStore.clickMode !== 'fiducial-selection'
+          :r="previewStore.pointRadius * (placement.index === previewStore.activePlacementIndex ? 3 : 0.5)"
+          :fill="placement.color || 'goldenrod'"
+          :stroke="previewStore.calibratedPlacementIndices.includes(placement.index) ? '#22c55e' : 'none'"
+          :stroke-width="previewStore.pointRadius * 0.5" :class="{
+            'transition-all duration-200 cursor-pointer': true,
+            'animate-pulse': placement.index === previewStore.activePlacementIndex
           }" @click.stop="handlePlacementClick(placement.index)" />
       </g>
     </svg>

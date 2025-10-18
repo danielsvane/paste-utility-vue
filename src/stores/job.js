@@ -388,6 +388,7 @@ export const useJobStore = defineStore('job', () => {
     const x = position.x + tipXoffset.value
     const y = position.y + tipYoffset.value
     const z = position.z - EXTRUSION_HEIGHT  // Lift 0.2mm above the saved pad touch position
+    console.log(z)
 
     // Safety: lift to safe Z, move XY, then descend to extrusion height
     await serialStore.send([

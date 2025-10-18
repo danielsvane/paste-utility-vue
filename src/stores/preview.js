@@ -114,7 +114,7 @@ export const usePreviewStore = defineStore('preview', () => {
   })
 
   // Transform a point from world coordinates to SVG coordinates
-  function transformPoint(point, index, isSelected = false, includeOpacity = false) {
+  function transformPoint(point, index, isSelected = false, includeZColor = false) {
     // For backside, flip X-axis (board is viewed from bottom, so left/right are reversed)
     // Since we're using viewBox, we can work directly with the original coordinates
     const x = boardSide.value === 'back'
@@ -126,29 +126,28 @@ export const usePreviewStore = defineStore('preview', () => {
 
     const result = { x, y, index, original: point, selected: isSelected }
 
-    // Add opacity based on Z height if requested
-    if (includeOpacity && point.z !== null && point.z !== undefined) {
+    // Add color based on Z height if requested (red = low, blue = high)
+    if (includeZColor && point.z !== null && point.z !== undefined) {
       const { minZ, maxZ } = zRange.value
       const normalized = (point.z - minZ) / (maxZ - minZ)
-      // Map to opacity range: 0.6 (low Z) to 1.0 (high Z)
-      result.opacity = 0.3 + (normalized * 0.7)
-    } else {
-      result.opacity = 1.0
+      // Map to hue: 0° (red) to 240° (blue), same as mesh
+      const hue = normalized * 240
+      result.color = `hsl(${hue}, 70%, 50%)`
     }
 
     return result
   }
 
-  // Transformed placements for display (with Z-based opacity when calibrated)
+  // Transformed placements for display (with Z-based color when calibrated)
   const transformedPlacements = computed(() => {
     // Use calibrated placements for Z values if available
-    const placementsForOpacity = jobStore.isCalibrated && jobStore.calibratedPlacements.length > 0
+    const placementsForColor = jobStore.isCalibrated && jobStore.calibratedPlacements.length > 0
       ? jobStore.calibratedPlacements
       : displayPlacements.value
 
     return displayPlacements.value.map((p, i) => {
       // Get Z from calibrated placement if available
-      const pointWithZ = placementsForOpacity[i] || p
+      const pointWithZ = placementsForColor[i] || p
       const pointToTransform = { ...p, z: pointWithZ.z }
       return transformPoint(pointToTransform, i, false, jobStore.isCalibrated)
     })
