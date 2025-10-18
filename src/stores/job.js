@@ -927,11 +927,15 @@ export const useJobStore = defineStore('job', () => {
 
   // Manual plane calibration methods
   async function saveCalibrationPointForPlacement(placementIndex) {
-    // Get current position
+    // Get current Z position from machine
     const position = await serialStore.grabBoardPosition()
-    const x = parseFloat(position[0])
-    const y = parseFloat(position[1])
     const z = parseFloat(position[2])
+
+    // Use the calibrated X,Y position of the placement (not the grabbed position which includes tip offset)
+    // This ensures the calibration point is stored at the exact coordinates where mesh interpolation will look it up
+    const calibratedPlacement = calibratedPlacements.value[placementIndex]
+    const x = calibratedPlacement.x
+    const y = calibratedPlacement.y
 
     // Check if we already have a calibration point for this placement
     const existingIndex = planeCalibrationPoints.value.findIndex(p => p.placementIndex === placementIndex)
@@ -1015,18 +1019,20 @@ export const useJobStore = defineStore('job', () => {
     console.log(`Mesh calibration method set to: ${method}`)
   }
 
-  // Auto-calculate plane when we have 3 or more calibration points
+  // Auto-calculate plane when calibration points change (add, update, or remove)
   watch(
-    () => planeCalibrationPoints.value.length,
-    (newLength) => {
-      if (newLength >= 3) {
+    planeCalibrationPoints,
+    (newPoints) => {
+      if (newPoints.length >= 3) {
         calculatePlaneFromCalibrationPoints()
-      } else if (newLength < 3) {
-        // Clear plane coefficients if we drop below 3 points
+      } else if (newPoints.length < 3) {
+        // Clear plane coefficients and triangulation if we drop below 3 points
         planeCoefficients.value = null
+        triangulationData.value = null
         console.log('Plane coefficients cleared - need at least 3 calibration points')
       }
-    }
+    },
+    { deep: true }
   )
 
   return {
