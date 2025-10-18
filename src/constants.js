@@ -9,7 +9,7 @@ export const SAFE_Z_HEIGHT = 31.5
 export const DEFAULT_Z_HEIGHT = 31.5
 
 // Extrusion height above board surface (mm)
-export const EXTRUSION_HEIGHT = 0.4
+export const EXTRUSION_HEIGHT = 0.2
 
 // Amount to move B axis for pressurize/depressurize operations (mm)
 export const PRESSURE_AMOUNT = 1000
