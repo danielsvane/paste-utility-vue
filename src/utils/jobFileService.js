@@ -17,18 +17,23 @@ export async function parseJobFile(file) {
   // Legacy format: placements, fiducials with embedded calX/calY
 
   // Normalize original placements (prefer originalPlacements, fall back to placements)
-  const originalPlacements = (data.originalPlacements || data.placements || []).map(p => ({
-    x: p.x,
-    y: p.y,
-    z: p.z
-  }))
+  // Only include z if it exists (calibrated placements)
+  const originalPlacements = (data.originalPlacements || data.placements || []).map(p => {
+    const point = { x: p.x, y: p.y }
+    if (p.z !== undefined) {
+      point.z = p.z
+    }
+    return point
+  })
 
   // Normalize original fiducials (prefer originalFiducials, fall back to fiducials)
-  const originalFiducials = (data.originalFiducials || data.fiducials || []).map(f => ({
-    x: f.x,
-    y: f.y,
-    z: f.z
-  }))
+  const originalFiducials = (data.originalFiducials || data.fiducials || []).map(f => {
+    const fiducial = { x: f.x, y: f.y }
+    if (f.z !== undefined) {
+      fiducial.z = f.z
+    }
+    return fiducial
+  })
 
   // Extract calibration data (new format)
   const calibration = {

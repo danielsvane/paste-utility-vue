@@ -52,7 +52,7 @@
           type="secondary"
         />
         <Button
-          v-if="hasDisplacementPlane && jobStore.planeCalibrationPoints.length > 0"
+          v-if="hasDisplacementPlane && jobStore.placementsWithCalibratedZ.length > 0"
           @click="handleClearCalibrationPoints"
           text="Clear"
           type="tertiary"
@@ -128,16 +128,16 @@ const roughPositionStatusText = computed(() => {
 })
 
 const displacementPlaneStatusText = computed(() => {
-  const calibrationPointCount = jobStore.planeCalibrationPoints.length
+  const count = jobStore.placementsWithCalibratedZ.length
 
   if (!hasDisplacementPlane.value) {
-    if (calibrationPointCount > 0) {
-      return `${calibrationPointCount} placement${calibrationPointCount > 1 ? 's' : ''} with custom Z (need ≥3)`
+    if (count > 0) {
+      return `${count} placement${count > 1 ? 's' : ''} with custom Z (need ≥3)`
     }
     return 'Displacement plane not calibrated'
   }
 
-  return `${planeFormula.value} (from ${calibrationPointCount} point${calibrationPointCount > 1 ? 's' : ''})`
+  return `${planeFormula.value} (from ${count} point${count > 1 ? 's' : ''})`
 })
 
 const fidCalStatusText = computed(() => {

@@ -69,7 +69,7 @@
             <div class="section-header">
               {{ jobStore.originalPlacements.length }} <span class="text-gray-300">placements</span>
               <Button
-                v-if="jobStore.planeCalibrationPoints.length > 0"
+                v-if="jobStore.placementsWithCalibratedZ.length > 0"
                 icon="trash"
                 size="small"
                 type="tertiary"
@@ -199,7 +199,7 @@ async function handleSaveCalibrationPoint(index) {
 }
 
 function handleClearAllCalibrationPoints() {
-  const count = jobStore.planeCalibrationPoints.length
+  const count = jobStore.placementsWithCalibratedZ.length
   if (confirm(`Clear all ${count} saved Z height${count > 1 ? 's' : ''}?`)) {
     jobStore.clearCalibrationPoints()
     console.log('Cleared all calibration points')

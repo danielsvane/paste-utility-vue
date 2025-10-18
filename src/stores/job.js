@@ -43,7 +43,6 @@ export const useJobStore = defineStore('job', () => {
   const fidCalMatrix = ref(null)          // From fiducial calibration (CV refinement)
   const baseZ = ref(null)                 // From rough board position
   const planeCoefficients = ref(null)     // { A, B, C, D } from plane calibration
-  const planeCalibrationPoints = ref([])  // [{ placementIndex, x, y, z }] manual Z calibration points
   const meshCalibrationMethod = ref('plane') // 'plane' = flat plane fit, 'mesh' = triangulation mesh
   const triangulationData = ref(null)     // Delaunay triangulation data for mesh interpolation
   const tipXoffset = ref(0)
@@ -72,6 +71,17 @@ export const useJobStore = defineStore('job', () => {
   const hasFidCalibration = computed(() => fidCalMatrix.value !== null)
   const hasPlaneCalibration = computed(() => planeCoefficients.value !== null)
   const isCalibrated = computed(() => activeTransformMatrix.value !== null)
+
+  // COMPUTED - Placements with calibrated Z values
+  const placementsWithCalibratedZ = computed(() => {
+    return originalPlacements.value.filter(p => p.z !== undefined)
+  })
+
+  const calibratedPlacementIndices = computed(() => {
+    return originalPlacements.value
+      .map((p, index) => p.z !== undefined ? index : null)
+      .filter(index => index !== null)
+  })
 
   // COMPUTED CALIBRATED POSITIONS - Reactive, not saved
   const calibratedPlacements = computed(() => {
@@ -287,7 +297,6 @@ export const useJobStore = defineStore('job', () => {
       fidCalMatrix.value = null
       baseZ.value = null
       planeCoefficients.value = null
-      planeCalibrationPoints.value = []
       triangulationData.value = null
 
       // Clear legacy data for backwards compatibility
@@ -299,12 +308,12 @@ export const useJobStore = defineStore('job', () => {
       selectedFiducialIndices.value = []
       isFiducialSelectionMode.value = false
 
-      // Default Z height
+      // Default Z height for fiducials (placements don't get Z until calibrated)
       const defaultZ = DEFAULT_Z_HEIGHT
 
-      // Create plain objects for paste positions
+      // Create plain objects for paste positions (no Z - will be added during calibration)
       for (const pointData of pastePoints) {
-        originalPlacements.value.push(createPoint(pointData.x, pointData.y, defaultZ))
+        originalPlacements.value.push(createPoint(pointData.x, pointData.y))
       }
 
       // Store fiducial candidates as POTENTIAL fiducials (user will select 3)
@@ -930,49 +939,54 @@ export const useJobStore = defineStore('job', () => {
     const position = await serialStore.grabBoardPosition()
     const z = parseFloat(position[2])
 
-    // Use the calibrated X,Y position of the placement (not the grabbed position which includes tip offset)
-    // This ensures the calibration point is stored at the exact coordinates where mesh interpolation will look it up
-    const calibratedPlacement = calibratedPlacements.value[placementIndex]
-    const x = calibratedPlacement.x
-    const y = calibratedPlacement.y
+    // Store Z directly in the original placement
+    const hadCalibration = originalPlacements.value[placementIndex].z !== undefined
+    originalPlacements.value[placementIndex].z = z
 
-    // Check if we already have a calibration point for this placement
-    const existingIndex = planeCalibrationPoints.value.findIndex(p => p.placementIndex === placementIndex)
-
-    if (existingIndex >= 0) {
-      // Update existing point
-      planeCalibrationPoints.value[existingIndex] = { placementIndex, x, y, z }
-      console.log(`Updated calibration point for placement ${placementIndex}: (${x.toFixed(3)}, ${y.toFixed(3)}, ${z.toFixed(3)})`)
-    } else {
-      // Add new point
-      planeCalibrationPoints.value.push({ placementIndex, x, y, z })
-      console.log(`Added calibration point for placement ${placementIndex}: (${x.toFixed(3)}, ${y.toFixed(3)}, ${z.toFixed(3)})`)
-    }
+    const action = hadCalibration ? 'Updated' : 'Added'
+    console.log(`${action} calibration Z for placement ${placementIndex}: ${z.toFixed(3)}mm`)
   }
 
   function deleteCalibrationPoint(placementIndex) {
-    const index = planeCalibrationPoints.value.findIndex(p => p.placementIndex === placementIndex)
-    if (index >= 0) {
-      planeCalibrationPoints.value.splice(index, 1)
-      console.log(`Deleted calibration point for placement ${placementIndex}`)
+    if (originalPlacements.value[placementIndex]?.z !== undefined) {
+      delete originalPlacements.value[placementIndex].z
+      console.log(`Deleted calibration Z for placement ${placementIndex}`)
     }
   }
 
   function clearCalibrationPoints() {
-    planeCalibrationPoints.value = []
-    planeCoefficients.value = null
-    triangulationData.value = null
-    console.log('Cleared all calibration points, plane coefficients, and triangulation data')
+    // Remove Z from all placements
+    // The watcher will automatically clear planeCoefficients and triangulationData
+    originalPlacements.value.forEach(placement => {
+      delete placement.z
+    })
+    console.log('Cleared all calibration Z values')
   }
 
   function calculatePlaneFromCalibrationPoints() {
-    if (planeCalibrationPoints.value.length < 3) {
+    // Build calibration points array from placements that have Z values
+    // Use calibrated x,y (after transformation) and z from originalPlacements
+    const calibrationPoints = []
+
+    for (let i = 0; i < originalPlacements.value.length; i++) {
+      if (originalPlacements.value[i].z !== undefined) {
+        // Use calibrated X,Y (after transformation) with original Z
+        const calibratedPos = calibratedPlacements.value[i]
+        calibrationPoints.push({
+          x: calibratedPos.x,
+          y: calibratedPos.y,
+          z: originalPlacements.value[i].z
+        })
+      }
+    }
+
+    if (calibrationPoints.length < 3) {
       console.warn('Need at least 3 calibration points to calculate plane')
       return false
     }
 
     // Calculate best-fit plane from calibration points
-    const coeffs = calculateBestFitPlane(planeCalibrationPoints.value)
+    const coeffs = calculateBestFitPlane(calibrationPoints)
 
     if (!coeffs) {
       console.error('Failed to calculate plane from calibration points')
@@ -983,10 +997,10 @@ export const useJobStore = defineStore('job', () => {
     planeCoefficients.value = coeffs
 
     console.log('Plane calculated from calibration points:', coeffs)
-    console.log(`Using ${planeCalibrationPoints.value.length} calibration points`)
+    console.log(`Using ${calibrationPoints.length} calibration points`)
 
     // Also create Delaunay triangulation for mesh interpolation
-    const triangulation = createDelaunayTriangulation(planeCalibrationPoints.value)
+    const triangulation = createDelaunayTriangulation(calibrationPoints)
     if (triangulation) {
       triangulationData.value = triangulation
       console.log('Triangulation mesh created for mesh interpolation mode')
@@ -999,7 +1013,7 @@ export const useJobStore = defineStore('job', () => {
 
   // Helper to check if a placement has a calibration point
   function hasCalibrationPoint(placementIndex) {
-    return planeCalibrationPoints.value.some(p => p.placementIndex === placementIndex)
+    return originalPlacements.value[placementIndex]?.z !== undefined
   }
 
   // Set the mesh calibration method ('plane' or 'mesh')
@@ -1019,16 +1033,22 @@ export const useJobStore = defineStore('job', () => {
   }
 
   // Auto-calculate plane when calibration points change (add, update, or remove)
+  // Watch both originalPlacements (for Z changes) and activeTransformMatrix (for XY changes)
   watch(
-    planeCalibrationPoints,
-    (newPoints) => {
-      if (newPoints.length >= 3) {
+    [originalPlacements, activeTransformMatrix],
+    () => {
+      // Count how many placements have Z values
+      const calibratedCount = originalPlacements.value.filter(p => p.z !== undefined).length
+
+      if (calibratedCount >= 3) {
         calculatePlaneFromCalibrationPoints()
-      } else if (newPoints.length < 3) {
+      } else if (calibratedCount < 3) {
         // Clear plane coefficients and triangulation if we drop below 3 points
         planeCoefficients.value = null
         triangulationData.value = null
-        console.log('Plane coefficients cleared - need at least 3 calibration points')
+        if (calibratedCount > 0) {
+          console.log('Plane coefficients cleared - need at least 3 calibration points')
+        }
       }
     },
     { deep: true }
@@ -1063,7 +1083,6 @@ export const useJobStore = defineStore('job', () => {
     fidCalMatrix,
     baseZ,
     planeCoefficients,
-    planeCalibrationPoints,
     meshCalibrationMethod,
     triangulationData,
     tipXoffset,
@@ -1087,6 +1106,8 @@ export const useJobStore = defineStore('job', () => {
     hasFidCalibration,
     hasPlaneCalibration,
     isCalibrated,
+    placementsWithCalibratedZ,
+    calibratedPlacementIndices,
     calibratedPlacements,
     calibratedFiducials,
 
@@ -1136,7 +1157,6 @@ export const useJobStore = defineStore('job', () => {
       'roughBoardMatrix',
       'fidCalMatrix',
       'baseZ',
-      'planeCalibrationPoints',
       'meshCalibrationMethod',
       'tipXoffset',
       'tipYoffset'

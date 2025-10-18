@@ -6,15 +6,15 @@
  * Create a point object
  * @param {number} x - X coordinate
  * @param {number} y - Y coordinate
- * @param {number} z - Z coordinate
- * @returns {Object} Point object with x, y, z coordinates
+ * @param {number} [z] - Z coordinate (optional, only set for calibrated points)
+ * @returns {Object} Point object with x, y, and optionally z coordinates
  */
 export function createPoint(x, y, z) {
-  return {
-    x,
-    y,
-    z
+  const point = { x, y }
+  if (z !== undefined) {
+    point.z = z
   }
+  return point
 }
 
 /**

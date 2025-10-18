@@ -86,7 +86,7 @@ export const usePreviewStore = defineStore('preview', () => {
 
   // Get indices of placements with calibration points (for highlighting)
   const calibratedPlacementIndices = computed(() => {
-    return jobStore.planeCalibrationPoints.map(p => p.placementIndex)
+    return jobStore.calibratedPlacementIndices
   })
 
   // Calculate min/max Z from calibrated placements for opacity mapping
@@ -162,30 +162,21 @@ export const usePreviewStore = defineStore('preview', () => {
 
   // Get calibration points in original gerber coordinate space for triangulation
   const calibrationPointsInGerberSpace = computed(() => {
-    if (!jobStore.planeCalibrationPoints || jobStore.planeCalibrationPoints.length === 0) {
+    if (!jobStore.placementsWithCalibratedZ || jobStore.placementsWithCalibratedZ.length === 0) {
       return []
     }
 
-    // Map calibration points to use original placement XY positions
-    return jobStore.planeCalibrationPoints.map(calPoint => {
-      const originalPlacement = jobStore.originalPlacements[calPoint.placementIndex]
-      if (!originalPlacement) {
-        console.warn(`No original placement found for calibration point index ${calPoint.placementIndex}`)
-        return null
-      }
-
-      // Use original gerber XY, but calibrated Z
-      return {
-        x: originalPlacement.x,
-        y: originalPlacement.y,
-        z: calPoint.z
-      }
-    }).filter(p => p !== null)
+    // Return placements that have Z values (already in gerber coordinate space)
+    return jobStore.placementsWithCalibratedZ.map(p => ({
+      x: p.x,
+      y: p.y,
+      z: p.z
+    }))
   })
 
   // Transformed triangles with Z-based color mapping
   const transformedTriangles = computed(() => {
-    if (!showMesh.value || !jobStore.triangulationData || !jobStore.planeCalibrationPoints.length) {
+    if (!showMesh.value || !jobStore.triangulationData || !jobStore.placementsWithCalibratedZ.length) {
       return []
     }
 
