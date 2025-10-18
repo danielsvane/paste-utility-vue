@@ -100,9 +100,6 @@ async function handleResetProject() {
     localStorage.removeItem('controls')
 
     console.log('Project reset - all localStorage cleared')
-
-    // Reload page to ensure clean state
-    window.location.reload()
   }
 }
 

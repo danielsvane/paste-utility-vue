@@ -1136,10 +1136,8 @@ export const useJobStore = defineStore('job', () => {
       'roughBoardMatrix',
       'fidCalMatrix',
       'baseZ',
-      'planeCoefficients',
       'planeCalibrationPoints',
       'meshCalibrationMethod',
-      'triangulationData',
       'tipXoffset',
       'tipYoffset'
     ]
