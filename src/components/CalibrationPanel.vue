@@ -12,6 +12,17 @@
         </span>
       </div>
 
+      <!-- Get Z Height -->
+      <Button @click="handleGetZHeight" text="Get Z Height" type="secondary" />
+      <div class="status-container">
+        <span class="status-indicator" :class="{ completed: hasZHeight }">
+          {{ hasZHeight ? '✓' : '' }}
+        </span>
+        <span class="status-text" :class="{ calibrated: hasZHeight }">
+          {{ zHeightStatusText }}
+        </span>
+      </div>
+
       <!-- Perform Fid Cal -->
       <div class="flex gap-2">
         <Button @click="handlePerformFidCal" text="Perform Fid Cal" type="secondary" />
@@ -87,6 +98,8 @@ const tipYoffset = computed(() => jobStore.tipYoffset)
 // Use new calibration status flags
 const hasRoughPosition = computed(() => jobStore.hasRoughCalibration)
 
+const hasZHeight = computed(() => jobStore.hasZCalibration)
+
 const hasDisplacementPlane = computed(() => jobStore.hasPlaneCalibration)
 
 const hasFidCal = computed(() => jobStore.hasFidCalibration)
@@ -112,13 +125,20 @@ const nozzleOffsetStatusText = computed(() => {
 
 const roughPositionStatusText = computed(() => {
   if (!hasRoughPosition.value) {
-    return 'Board position not calibrated'
+    return 'Board XY position not calibrated'
   }
-  // Show x, y, z position
-  if (jobStore.roughBoardPosition !== null) {
-    return `X: ${jobStore.roughBoardPosition.x.toFixed(3)}mm, Y: ${jobStore.roughBoardPosition.y.toFixed(3)}mm, Z: ${jobStore.roughBoardPosition.z.toFixed(3)}mm`
+  // Show transformation matrix
+  if (jobStore.roughBoardMatrix !== null) {
+    return JSON.stringify(jobStore.roughBoardMatrix)
   }
-  return 'Rough calibration complete'
+  return 'Rough XY calibration complete'
+})
+
+const zHeightStatusText = computed(() => {
+  if (!hasZHeight.value) {
+    return 'Z height not calibrated'
+  }
+  return `Z: ${jobStore.baseZ.toFixed(3)}mm`
 })
 
 const displacementPlaneStatusText = computed(() => {
@@ -160,6 +180,16 @@ async function handleGetRoughPosition() {
     console.log('Rough board position captured successfully')
   } catch (error) {
     console.error('Error during rough board position capture:', error)
+  }
+}
+
+async function handleGetZHeight() {
+  console.log('Get Z Height clicked')
+  try {
+    await jobStore.findZHeight(toast.value)
+    console.log('Z height calibrated successfully')
+  } catch (error) {
+    console.error('Error during Z height calibration:', error)
   }
 }
 

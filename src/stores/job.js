@@ -58,6 +58,7 @@ export const useJobStore = defineStore('job', () => {
 
   // COMPUTED - Calibration status flags
   const hasRoughCalibration = computed(() => roughBoardMatrix.value !== null)
+  const hasZCalibration = computed(() => baseZ.value !== null)
   const hasFidCalibration = computed(() => fidCalMatrix.value !== null)
   const hasPlaneCalibration = computed(() => planeCoefficients.value !== null)
   const isCalibrated = computed(() => activeTransformMatrix.value !== null)
@@ -522,6 +523,24 @@ export const useJobStore = defineStore('job', () => {
 
     console.log('Rough calibration complete')
     console.log('Rough board matrix:', roughBoardMatrix.value)
+    console.log('Base Z:', baseZ.value)
+  }
+
+  async function findZHeight(toast) {
+    // Ask to jog tip to desired extrusion height
+    await toast.show('Please jog the paste extruder tip to your desired extrusion height.')
+
+    // Grab z pos directly - no offset
+    let zPos = await serialStore.grabBoardPosition()
+
+    await serialStore.send([`G0 Z${SAFE_Z_HEIGHT}`])
+
+    zPos = parseFloat(zPos[2])
+
+    // Store base Z height
+    baseZ.value = zPos
+
+    console.log('Z height calibration complete')
     console.log('Base Z:', baseZ.value)
   }
 
@@ -1038,6 +1057,7 @@ export const useJobStore = defineStore('job', () => {
     // Computed properties
     activeTransformMatrix,
     hasRoughCalibration,
+    hasZCalibration,
     hasFidCalibration,
     hasPlaneCalibration,
     isCalibrated,
@@ -1060,6 +1080,7 @@ export const useJobStore = defineStore('job', () => {
     startFiducialSelection,
     selectFiducials,
     findBoardRoughPosition,
+    findZHeight,
     performFiducialCalibration,
     clearFiducialCalibration,
     performTipCalibration,
