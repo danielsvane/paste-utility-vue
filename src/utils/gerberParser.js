@@ -1,4 +1,4 @@
-import { createParser } from '@tracespace/parser'
+import { parse } from '@tracespace/parser'
 import { calculateApertureArea } from './calculateApertureArea'
 
 /**
@@ -26,9 +26,7 @@ export function buildApertureLookup(syntaxTree) {
  */
 export async function parseGerberPositions(gerberFile) {
   const gerberText = await gerberFile.text()
-  const parser = createParser()
-  parser.feed(gerberText)
-  const syntaxTree = parser.results()
+  const syntaxTree = parse(gerberText)
 
   // Build aperture lookup table
   const apertures = buildApertureLookup(syntaxTree)
