@@ -186,7 +186,7 @@ export const usePreviewStore = defineStore('preview', () => {
     }))
   })
 
-  // Transformed triangles with Z-based color mapping
+  // Transformed triangles for mesh visualization
   const transformedTriangles = computed(() => {
     if (!showMesh.value || !jobStore.triangulationData || !jobStore.placementsWithCalibratedZ.length) {
       return []
@@ -197,25 +197,6 @@ export const usePreviewStore = defineStore('preview', () => {
 
     // Use points in gerber coordinate space (not machine coordinates)
     const points = calibrationPointsInGerberSpace.value
-
-    // Calculate min/max Z for color mapping
-    let minZ = Infinity
-    let maxZ = -Infinity
-    for (const p of points) {
-      minZ = Math.min(minZ, p.z)
-      maxZ = Math.max(maxZ, p.z)
-    }
-
-    const zRange = maxZ - minZ || 1 // Avoid division by zero
-
-    // Map Z to color (red = low, blue = high)
-    function getColorFromZ(z) {
-      // Normalize Z to [0, 1]
-      const normalized = (z - minZ) / zRange
-      // Map to hue: 0° (red) to 240° (blue)
-      const hue = normalized * 240
-      return `hsl(${hue}, 70%, 50%)`
-    }
 
     // Build triangle array
     const result = []
@@ -233,13 +214,8 @@ export const usePreviewStore = defineStore('preview', () => {
       const v2 = transformPoint(p2, i1, false)
       const v3 = transformPoint(p3, i2, false)
 
-      // Calculate average Z for color
-      const avgZ = (p1.z + p2.z + p3.z) / 3
-      const color = getColorFromZ(avgZ)
-
       result.push({
-        vertices: [v1, v2, v3],
-        color
+        vertices: [v1, v2, v3]
       })
     }
 

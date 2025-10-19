@@ -2,11 +2,11 @@
   <div class="w-full h-[600px] bg-gray-900/50 rounded-lg overflow-hidden">
     <svg ref="svgRef" class="w-full h-full cursor-default" :viewBox="previewStore.viewBox"
       preserveAspectRatio="xMidYMid meet">
-      <!-- Mesh visualization (Z height heat map) -->
+      <!-- Mesh visualization (simple gray triangles) -->
       <g v-if="previewStore.showMesh" style="pointer-events: none;">
         <polygon v-for="(triangle, index) in previewStore.transformedTriangles" :key="`triangle-${index}`"
           :points="`${triangle.vertices[0].x},${triangle.vertices[0].y} ${triangle.vertices[1].x},${triangle.vertices[1].y} ${triangle.vertices[2].x},${triangle.vertices[2].y}`"
-          :fill="triangle.color" fill-opacity="0.3" :stroke="triangle.color" stroke-width="1" stroke-opacity="0.5" />
+          fill="#6b7280" fill-opacity="0.15" stroke="#6b7280" stroke-width="0.3" stroke-opacity="0.4" />
       </g>
 
       <!-- Fiducials (white circles) -->
