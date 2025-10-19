@@ -25,8 +25,10 @@
           :cx="placement.x" :cy="placement.y"
           :r="(placement.radius || previewStore.pointRadius) * (placement.index === previewStore.activePlacementIndex ? 3 : 0.5)"
           :fill="placement.color || 'goldenrod'"
-          :stroke="previewStore.calibratedPlacementIndices.includes(placement.index) ? '#22c55e' : 'none'"
-          :stroke-width="0.5" :class="{
+          :stroke="previewStore.calibratedPlacementIndices.includes(placement.index) ? 'white' : 'none'"
+          :stroke-width="0.5"
+          style="paint-order: stroke"
+          :class="{
             'transition-all duration-200 cursor-pointer': true,
             'animate-pulse': placement.index === previewStore.activePlacementIndex
           }" @click.stop="handlePlacementClick(placement.index)" />
