@@ -30,7 +30,8 @@ import {
   faPlus,
   faEye,
   faEyeSlash,
-  faCrosshairs
+  faCrosshairs,
+  faDrawPolygon
 } from '@fortawesome/free-solid-svg-icons'
 
 // Add icons to the library
@@ -61,7 +62,8 @@ library.add(
   faPlus,
   faEye,
   faEyeSlash,
-  faCrosshairs
+  faCrosshairs,
+  faDrawPolygon
 )
 
 // Export plugin function

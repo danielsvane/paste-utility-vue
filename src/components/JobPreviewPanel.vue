@@ -8,7 +8,7 @@
         <template v-if="jobStore.triangulationData">
           <div class="border-l border-gray-600 h-6"></div>
           <Button
-            :icon="previewStore.showMesh ? 'eye-slash' : 'eye'"
+            icon="draw-polygon"
             size="small"
             :type="previewStore.showMesh ? 'secondary' : 'tertiary'"
             @click="previewStore.toggleMesh"
