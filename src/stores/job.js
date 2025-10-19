@@ -104,7 +104,7 @@ export const useJobStore = defineStore('job', () => {
         z = p.z  // Default 31.5
       }
 
-      return { x, y, z }
+      return { x, y, z, area: p.area }
     })
   })
 

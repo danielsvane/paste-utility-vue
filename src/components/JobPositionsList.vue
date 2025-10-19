@@ -51,6 +51,7 @@
           <div class="grid-header">X</div>
           <div class="grid-header">Y</div>
           <div class="grid-header">Z</div>
+          <div class="grid-header">Area</div>
           <div class="grid-header"></div>
           <div class="grid-header">Actions</div>
 
@@ -65,6 +66,7 @@
               <div class="grid-cell">{{ fiducial.x != null ? fiducial.x.toFixed(3) : 'N/A' }}</div>
               <div class="grid-cell">{{ fiducial.y != null ? fiducial.y.toFixed(3) : 'N/A' }}</div>
               <div class="grid-cell">{{ fiducial.z != null ? fiducial.z.toFixed(3) : 'N/A' }}</div>
+              <div class="grid-cell text-gray-500">N/A</div>
               <div class="grid-cell"></div>
               <div class="grid-cell">
                 <div class="action-buttons">
@@ -101,6 +103,7 @@
               <div class="grid-cell" :class="{ 'calibrated-z': jobStore.hasCalibrationPoint(index) }">
                 {{ placement.z != null ? placement.z.toFixed(3) : 'N/A' }}
               </div>
+              <div class="grid-cell">{{ placement.area != null ? placement.area.toFixed(3) : 'N/A' }}</div>
               <div class="grid-cell"></div>
               <div class="grid-cell">
                 <div class="action-buttons">
@@ -242,7 +245,7 @@ function handleClearAllPositions() {
 
 .positions-grid-container {
   @apply w-full grid gap-0;
-  grid-template-columns: 50px 80px 80px 80px minmax(0, 1fr) 140px;
+  grid-template-columns: 50px 80px 80px 80px 80px minmax(0, 1fr) 140px;
 }
 
 .grid-header {
@@ -257,11 +260,11 @@ function handleClearAllPositions() {
 }
 
 .section-header {
-  @apply col-span-6 text-sm font-semibold text-gray-100 mt-3 mb-2 px-3;
+  @apply col-span-7 text-sm font-semibold text-gray-100 mt-3 mb-2 px-3;
 }
 
 .grid-row {
-  @apply col-span-6 grid items-center border-b border-gray-700 transition-colors rounded;
+  @apply col-span-7 grid items-center border-b border-gray-700 transition-colors rounded;
   display: grid;
   grid-column: 1 / -1;
   grid-template-columns: subgrid;
