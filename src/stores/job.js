@@ -369,11 +369,11 @@ export const useJobStore = defineStore('job', () => {
     isFiducialSelectionMode.value = false
 
     // Clear calibration data
-    roughBoardMatrix.value = null
-    fidCalMatrix.value = null
-    baseZ.value = null
-    planeCoefficients.value = null
-    triangulationData.value = null
+    // roughBoardMatrix.value = null
+    // fidCalMatrix.value = null
+    // baseZ.value = null
+    // planeCoefficients.value = null
+    // triangulationData.value = null
 
     console.log('Cleared all positions and calibration data')
   }
