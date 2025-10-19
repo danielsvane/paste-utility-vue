@@ -1,90 +1,46 @@
 <template>
   <Card title="Calibration">
-    <div class="calibration-grid">
-      <!-- Get Rough Board Position -->
-      <Button @click="handleGetRoughPosition" text="Get Rough Board Position" type="secondary" />
-      <div class="status-container">
-        <span class="status-indicator" :class="{ completed: hasRoughPosition }">
-          {{ hasRoughPosition ? '✓' : '' }}
-        </span>
-        <span class="status-text" :class="{ calibrated: hasRoughPosition }">
-          {{ roughPositionStatusText }}
-        </span>
-      </div>
-
-      <!-- Get Z Height -->
-      <Button @click="handleGetZHeight" text="Get Z Height" type="secondary" />
-      <div class="status-container">
-        <span class="status-indicator" :class="{ completed: hasZHeight }">
-          {{ hasZHeight ? '✓' : '' }}
-        </span>
-        <span class="status-text" :class="{ calibrated: hasZHeight }">
-          {{ zHeightStatusText }}
-        </span>
-      </div>
-
-      <!-- Perform Fid Cal -->
-      <div class="flex gap-2">
-        <Button @click="handlePerformFidCal" text="Perform Fid Cal" type="secondary" />
-        <Button
-          v-if="hasFidCal"
-          @click="handleClearFidCal"
-          text="Clear"
-          type="tertiary"
-          class="!px-3"
-        />
-      </div>
-      <div class="status-container">
-        <span class="status-indicator" :class="{ completed: hasFidCal }">
-          {{ hasFidCal ? '✓' : '' }}
-        </span>
-        <span class="status-text" :class="{ calibrated: hasFidCal }">
-          {{ fidCalStatusText }}
-        </span>
-      </div>
-
-      <!-- Nozzle Offset Calibration -->
-      <Button @click="handleNozzleOffsetCal" text="Nozzle Offset Cal" type="secondary" />
-      <div class="status-container">
-        <span class="status-indicator" :class="{ completed: hasNozzleOffset }">
-          {{ hasNozzleOffset ? '✓' : '' }}
-        </span>
-        <span class="status-text" :class="{ calibrated: hasNozzleOffset }">
-          {{ nozzleOffsetStatusText }}
-        </span>
-      </div>
-
-      <!-- Get Displacement Plane -->
-      <div class="flex gap-2">
-        <Button
-          v-if="hasDisplacementPlane && jobStore.placementsWithCalibratedZ.length > 0"
-          @click="handleClearCalibrationPoints"
-          text="Clear"
-          type="tertiary"
-          class="!px-3"
-        />
-      </div>
-      <div class="status-container">
-        <span class="status-indicator" :class="{ completed: hasDisplacementPlane }">
-          {{ hasDisplacementPlane ? '✓' : '' }}
-        </span>
-        <span class="status-text" :class="{ calibrated: hasDisplacementPlane }">
-          {{ displacementPlaneStatusText }}
-        </span>
-      </div>
+    <div class="grid gap-x-4 gap-y-3 items-center" style="grid-template-columns: max-content 1fr max-content;">
+      <CalibrationRow
+        button-text="Get Board Position"
+        :status-text="roughPositionStatusText"
+        :is-calibrated="hasRoughPosition"
+        @calibrate="handleGetRoughPosition"
+        @clear="handleClearRoughPosition"
+      />
+      <CalibrationRow
+        button-text="Get Z Height"
+        :status-text="zHeightStatusText"
+        :is-calibrated="hasZHeight"
+        @calibrate="handleGetZHeight"
+        @clear="handleClearZHeight"
+      />
+      <CalibrationRow
+        button-text="Perform Fid Cal"
+        :status-text="fidCalStatusText"
+        :is-calibrated="hasFidCal"
+        @calibrate="handlePerformFidCal"
+        @clear="handleClearFidCal"
+      />
+      <CalibrationRow
+        button-text="Nozzle Offset Cal"
+        :status-text="nozzleOffsetStatusText"
+        :is-calibrated="hasNozzleOffset"
+        @calibrate="handleNozzleOffsetCal"
+        @clear="handleClearNozzleOffset"
+      />
     </div>
   </Card>
 </template>
 
 <script setup>
 import { computed, inject } from 'vue'
-import Button from './Button.vue'
 import Card from './Card.vue'
+import CalibrationRow from './CalibrationRow.vue'
 import { useJobStore } from '../stores/job'
-import { useSerialStore } from '../stores/serial'
+import { decomposeTSR } from 'transformation-matrix'
 
 const jobStore = useJobStore()
-const serialStore = useSerialStore()
 const toast = inject('toast')
 
 // Computed properties for calibration status
@@ -100,20 +56,7 @@ const hasRoughPosition = computed(() => jobStore.hasRoughCalibration)
 
 const hasZHeight = computed(() => jobStore.hasZCalibration)
 
-const hasDisplacementPlane = computed(() => jobStore.hasPlaneCalibration)
-
 const hasFidCal = computed(() => jobStore.hasFidCalibration)
-
-const planeFormula = computed(() => {
-  if (!hasDisplacementPlane.value || !jobStore.planeCoefficients) return ''
-
-  const A = jobStore.planeCoefficients.A.toFixed(4)
-  const B = jobStore.planeCoefficients.B.toFixed(4)
-  const C = jobStore.planeCoefficients.C.toFixed(4)
-  const D = jobStore.planeCoefficients.D.toFixed(4)
-
-  return `${A}x + ${B}y + ${C}z + ${D} = 0`
-})
 
 // Status text for each calibration item
 const nozzleOffsetStatusText = computed(() => {
@@ -127,9 +70,15 @@ const roughPositionStatusText = computed(() => {
   if (!hasRoughPosition.value) {
     return 'Board XY position not calibrated'
   }
-  // Show transformation matrix
+  // Decompose transformation matrix into meaningful components
   if (jobStore.roughBoardMatrix !== null) {
-    return JSON.stringify(jobStore.roughBoardMatrix)
+    const decomposed = decomposeTSR(jobStore.roughBoardMatrix)
+    const offsetX = decomposed.translate.tx.toFixed(2)
+    const offsetY = decomposed.translate.ty.toFixed(2)
+    const rotation = (decomposed.rotation.angle * 180 / Math.PI).toFixed(2)
+    const scaleX = decomposed.scale.sx.toFixed(3)
+    const scaleY = decomposed.scale.sy.toFixed(3)
+    return `Offset: (${offsetX}, ${offsetY})mm, Rot: ${rotation}°, Scale: (${scaleX}, ${scaleY})`
   }
   return 'Rough XY calibration complete'
 })
@@ -141,24 +90,21 @@ const zHeightStatusText = computed(() => {
   return `Z: ${jobStore.baseZ.toFixed(3)}mm`
 })
 
-const displacementPlaneStatusText = computed(() => {
-  const count = jobStore.placementsWithCalibratedZ.length
-
-  if (!hasDisplacementPlane.value) {
-    if (count > 0) {
-      return `${count} placement${count > 1 ? 's' : ''} with custom Z (need ≥3)`
-    }
-    return 'Displacement plane not calibrated'
-  }
-
-  return `${planeFormula.value} (from ${count} point${count > 1 ? 's' : ''})`
-})
-
 const fidCalStatusText = computed(() => {
   if (!hasFidCal.value) {
     return 'Fiducials not calibrated'
   }
-  return `${jobStore.originalFiducials.length} fiducials calibrated (CV refined)`
+  // Decompose transformation matrix into meaningful components
+  if (jobStore.fidCalMatrix !== null) {
+    const decomposed = decomposeTSR(jobStore.fidCalMatrix)
+    const offsetX = decomposed.translate.tx.toFixed(2)
+    const offsetY = decomposed.translate.ty.toFixed(2)
+    const rotation = (decomposed.rotation.angle * 180 / Math.PI).toFixed(2)
+    const scaleX = decomposed.scale.sx.toFixed(3)
+    const scaleY = decomposed.scale.sy.toFixed(3)
+    return `Offset: (${offsetX}, ${offsetY})mm, Rot: ${rotation}°, Scale: (${scaleX}, ${scaleY})`
+  }
+  return `${jobStore.originalFiducials.length} fiducials calibrated`
 })
 
 // Event handlers
@@ -193,13 +139,6 @@ async function handleGetZHeight() {
   }
 }
 
-function handleClearCalibrationPoints() {
-  if (confirm('Are you sure you want to clear all calibration points and the displacement plane?')) {
-    jobStore.clearCalibrationPoints()
-    console.log('Calibration points cleared')
-  }
-}
-
 async function handlePerformFidCal() {
   console.log('Perform Fid Cal clicked')
   try {
@@ -219,33 +158,25 @@ function handleClearFidCal() {
     console.log('fidCalMatrix after clear:', jobStore.fidCalMatrix)
   }
 }
+
+function handleClearRoughPosition() {
+  if (confirm('Are you sure you want to clear the rough board position calibration?')) {
+    jobStore.clearRoughCalibration()
+    console.log('Rough position calibration cleared')
+  }
+}
+
+function handleClearZHeight() {
+  if (confirm('Are you sure you want to clear the Z height calibration?')) {
+    jobStore.clearZCalibration()
+    console.log('Z height calibration cleared')
+  }
+}
+
+function handleClearNozzleOffset() {
+  if (confirm('Are you sure you want to clear the nozzle offset calibration?')) {
+    jobStore.clearNozzleOffsetCalibration()
+    console.log('Nozzle offset calibration cleared')
+  }
+}
 </script>
-
-<style scoped>
-@reference "tailwindcss";
-
-.calibration-grid {
-  @apply grid gap-x-4 gap-y-3 items-center;
-  grid-template-columns: max-content 1fr;
-}
-
-.status-container {
-  @apply flex items-center gap-2;
-}
-
-.status-indicator {
-  @apply w-6 h-6 flex items-center justify-center rounded-full border-2 border-gray-500 text-sm flex-shrink-0;
-}
-
-.status-indicator.completed {
-  @apply border-green-500 bg-green-500 text-white;
-}
-
-.status-text {
-  @apply text-sm text-gray-500;
-}
-
-.status-text.calibrated {
-  @apply text-green-400 font-mono;
-}
-</style>

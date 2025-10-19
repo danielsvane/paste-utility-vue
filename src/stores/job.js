@@ -611,6 +611,22 @@ export const useJobStore = defineStore('job', () => {
     console.log('hasFidCalibration is now:', hasFidCalibration.value)
   }
 
+  function clearRoughCalibration() {
+    roughBoardMatrix.value = null
+    console.log('Rough calibration cleared')
+  }
+
+  function clearZCalibration() {
+    baseZ.value = null
+    console.log('Z calibration cleared')
+  }
+
+  function clearNozzleOffsetCalibration() {
+    tipXoffset.value = 0
+    tipYoffset.value = 0
+    console.log('Nozzle offset calibration cleared')
+  }
+
   async function pressurize() {
     await macros.pressurize()
   }
@@ -1083,6 +1099,9 @@ export const useJobStore = defineStore('job', () => {
     findZHeight,
     performFiducialCalibration,
     clearFiducialCalibration,
+    clearRoughCalibration,
+    clearZCalibration,
+    clearNozzleOffsetCalibration,
     performTipCalibration,
     pressurize,
     depressurize,
