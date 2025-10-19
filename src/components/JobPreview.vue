@@ -9,12 +9,12 @@
           :fill="triangle.color" fill-opacity="0.3" :stroke="triangle.color" stroke-width="1" stroke-opacity="0.5" />
       </g>
 
-      <!-- Fiducials (blue circles) -->
+      <!-- Fiducials (white circles) -->
       <g>
         <circle v-for="(fid, index) in transformedFiducials" :key="`fid-${index}`" :cx="fid.x" :cy="fid.y"
           :r="previewStore.pointRadius * (fid.selected ? 1.5 : 1)" :class="{
-            'fill-blue-500 transition-all duration-200 cursor-pointer': !fid.selected,
-            'fill-blue-400': !fid.selected && previewStore.clickMode === 'fiducial-selection',
+            'fill-white transition-all duration-200 cursor-pointer': !fid.selected,
+            'fill-white': !fid.selected && previewStore.clickMode === 'fiducial-selection',
             'fill-green-500 transition-all duration-200 cursor-pointer': fid.selected
           }" @click.stop="handleFiducialClick(index)" />
       </g>
@@ -26,7 +26,7 @@
           :r="(placement.radius || previewStore.pointRadius) * (placement.index === previewStore.activePlacementIndex ? 3 : 0.5)"
           :fill="placement.color || 'goldenrod'"
           :stroke="previewStore.calibratedPlacementIndices.includes(placement.index) ? '#22c55e' : 'none'"
-          :stroke-width="previewStore.pointRadius * 0.5" :class="{
+          :stroke-width="0.5" :class="{
             'transition-all duration-200 cursor-pointer': true,
             'animate-pulse': placement.index === previewStore.activePlacementIndex
           }" @click.stop="handlePlacementClick(placement.index)" />
