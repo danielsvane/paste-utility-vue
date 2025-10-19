@@ -18,17 +18,14 @@ export const useJobStore = defineStore('job', () => {
   const originalPlacements = ref([])  // { x, y, z: 31.5 }
   const originalFiducials = ref([])   // { x, y, z: 31.5 }
 
-  // Legacy state - kept for backwards compatibility
-  const placements = ref([])
-  const fiducials = ref([])
-
   const dispenseDegrees = ref(30)
+  const dispenseAdaptive = ref(9) // Degrees per mm² for adaptive mode
+  const extrusionMode = ref('fixed') // 'fixed' or 'adaptive'
   const retractionDegrees = ref(1)
   const dwellMilliseconds = ref(100)
 
   const boardSide = ref('front') // 'front' or 'back'
 
-  const clickedFidBuffer = ref([])
   const currentPlacementIndex = ref(-1)
   const lastNavigatedPlacementIndex = ref(-1)  // Track last navigated placement for UI highlighting
 
@@ -53,13 +50,6 @@ export const useJobStore = defineStore('job', () => {
   const selectedFiducialIndices = ref([]) // Indices of user-selected fiducials
   const isFiducialSelectionMode = ref(false)
   const fiducialSelectionResolve = ref(null) // Promise resolver for toast workflow
-
-  // Legacy plane coefficients - kept for backwards compatibility
-  const planeA = ref(null)
-  const planeB = ref(null)
-  const planeC = ref(null)
-  const planeD = ref(null)
-  const roughBoardPosition = ref(null) // { x, y, z }
 
   // COMPUTED - Active transformation matrix (priority: fid cal > rough)
   const activeTransformMatrix = computed(() => {
@@ -151,65 +141,6 @@ export const useJobStore = defineStore('job', () => {
   })
 
   // Methods
-  function calculateBoardPlane() {
-    if (fiducials.value.length !== 3) {
-      console.error('Need exactly 3 fiducials for plane calculation')
-      return false
-    }
-
-    if (
-      fiducials.value[0].calZ === null ||
-      fiducials.value[1].calZ === null ||
-      fiducials.value[2].calZ === null
-    ) {
-      console.error('All fiducials must have probed Z-heights (calZ)')
-      return false
-    }
-
-    // Extract calibrated or original positions
-    const p1 = {
-      x: fiducials.value[0].calX !== null ? fiducials.value[0].calX : fiducials.value[0].x,
-      y: fiducials.value[0].calY !== null ? fiducials.value[0].calY : fiducials.value[0].y,
-      z: fiducials.value[0].calZ
-    }
-    const p2 = {
-      x: fiducials.value[1].calX !== null ? fiducials.value[1].calX : fiducials.value[1].x,
-      y: fiducials.value[1].calY !== null ? fiducials.value[1].calY : fiducials.value[1].y,
-      z: fiducials.value[1].calZ
-    }
-    const p3 = {
-      x: fiducials.value[2].calX !== null ? fiducials.value[2].calX : fiducials.value[2].x,
-      y: fiducials.value[2].calY !== null ? fiducials.value[2].calY : fiducials.value[2].y,
-      z: fiducials.value[2].calZ
-    }
-
-    // Calculate plane coefficients using geometry utility
-    const coeffs = calculatePlaneCoefficients(p1, p2, p3)
-    if (!coeffs) {
-      return false
-    }
-
-    // Store plane coefficients
-    planeA.value = coeffs.A
-    planeB.value = coeffs.B
-    planeC.value = coeffs.C
-    planeD.value = coeffs.D
-
-    console.log('Board plane calculated:', coeffs)
-
-    return true
-  }
-
-  function getZForPosition(x, y) {
-    const planeCoeffs = {
-      A: planeA.value,
-      B: planeB.value,
-      C: planeC.value,
-      D: planeD.value
-    }
-    return getZForPlane(x, y, planeCoeffs)
-  }
-
   async function importFromFile(file) {
     try {
       const data = await parseJobFile(file)
@@ -230,6 +161,8 @@ export const useJobStore = defineStore('job', () => {
 
       // Update settings if provided
       if (data.settings.dispenseDegrees) dispenseDegrees.value = data.settings.dispenseDegrees
+      if (data.settings.dispenseAdaptive !== undefined) dispenseAdaptive.value = data.settings.dispenseAdaptive
+      if (data.settings.extrusionMode) extrusionMode.value = data.settings.extrusionMode
       if (data.settings.retractionDegrees) retractionDegrees.value = data.settings.retractionDegrees
       if (data.settings.dwellMilliseconds) dwellMilliseconds.value = data.settings.dwellMilliseconds
 
@@ -259,6 +192,8 @@ export const useJobStore = defineStore('job', () => {
       tipXoffset: tipXoffset.value,
       tipYoffset: tipYoffset.value,
       dispenseDegrees: dispenseDegrees.value,
+      dispenseAdaptive: dispenseAdaptive.value,
+      extrusionMode: extrusionMode.value,
       retractionDegrees: retractionDegrees.value,
       dwellMilliseconds: dwellMilliseconds.value
     }
@@ -299,10 +234,6 @@ export const useJobStore = defineStore('job', () => {
       planeCoefficients.value = null
       triangulationData.value = null
 
-      // Clear legacy data for backwards compatibility
-      placements.value = []
-      fiducials.value = []
-
       // Clear fiducial selection state
       potentialFiducials.value = []
       selectedFiducialIndices.value = []
@@ -313,7 +244,7 @@ export const useJobStore = defineStore('job', () => {
 
       // Create plain objects for paste positions (no Z - will be added during calibration)
       for (const pointData of pastePoints) {
-        originalPlacements.value.push(createPoint(pointData.x, pointData.y))
+        originalPlacements.value.push(createPoint(pointData.x, pointData.y, undefined, pointData.area))
       }
 
       // Store fiducial candidates as POTENTIAL fiducials (user will select 3)
@@ -416,11 +347,6 @@ export const useJobStore = defineStore('job', () => {
     if (index >= 0 && index < originalPlacements.value.length) {
       originalPlacements.value.splice(index, 1)
       console.log(`Deleted placement at index ${index}`)
-
-      // Also delete from legacy array for backwards compatibility
-      if (index < placements.value.length) {
-        placements.value.splice(index, 1)
-      }
     }
   }
 
@@ -428,12 +354,27 @@ export const useJobStore = defineStore('job', () => {
     if (index >= 0 && index < originalFiducials.value.length) {
       originalFiducials.value.splice(index, 1)
       console.log(`Deleted fiducial at index ${index}`)
-
-      // Also delete from legacy array for backwards compatibility
-      if (index < fiducials.value.length) {
-        fiducials.value.splice(index, 1)
-      }
     }
+  }
+
+  function clearAllPositions() {
+    // Clear all placements and fiducials
+    originalPlacements.value = []
+    originalFiducials.value = []
+
+    // Clear fiducial selection state
+    potentialFiducials.value = []
+    selectedFiducialIndices.value = []
+    isFiducialSelectionMode.value = false
+
+    // Clear calibration data
+    roughBoardMatrix.value = null
+    fidCalMatrix.value = null
+    baseZ.value = null
+    planeCoefficients.value = null
+    triangulationData.value = null
+
+    console.log('Cleared all positions and calibration data')
   }
 
   // Handle fiducial click event from JobPreview component
@@ -582,13 +523,6 @@ export const useJobStore = defineStore('job', () => {
     console.log('Rough calibration complete')
     console.log('Rough board matrix:', roughBoardMatrix.value)
     console.log('Base Z:', baseZ.value)
-
-    // Update legacy rough board position for backwards compatibility
-    roughBoardPosition.value = {
-      x: parseFloat(fid1Rough[0]),
-      y: parseFloat(fid1Rough[1]),
-      z: zPos
-    }
   }
 
   async function performFiducialCalibration() {
@@ -869,6 +803,17 @@ export const useJobStore = defineStore('job', () => {
         }
 
         const position = calibratedPlacements.value[i]
+        const originalPlacement = originalPlacements.value[i]
+
+        // Calculate dispense amount based on extrusion mode
+        let dispenseAmount
+        if (extrusionMode.value === 'adaptive' && originalPlacement.area) {
+          // Area-based: degrees per mm² × pad area
+          dispenseAmount = dispenseAdaptive.value * originalPlacement.area
+        } else {
+          // Fixed mode: use fixed degrees per pad
+          dispenseAmount = dispenseDegrees.value
+        }
 
         // Apply tip offset and extrusion height (same as moveNozzleToPosition)
         const x = position.x + tipXoffset.value
@@ -880,7 +825,7 @@ export const useJobStore = defineStore('job', () => {
           `G0 X${x.toFixed(3)} Y${y.toFixed(3)}`,  // Move to XY position
           `G0 Z${z.toFixed(3)}`,                    // Move to extrusion height
           'G91',                                     // Relative positioning for B axis
-          `G0 B-${dispenseDegrees.value}`,          // Dispense paste (negative = extrude)
+          `G0 B-${dispenseAmount.toFixed(2)}`,      // Dispense paste (negative = extrude)
           `G0 B${retractionDegrees.value}`,         // Retract (positive = retract)
           'G90',                                     // Back to absolute positioning
           `G4 P${dwellMilliseconds.value}`,         // Dwell
@@ -1059,16 +1004,13 @@ export const useJobStore = defineStore('job', () => {
     originalPlacements,
     originalFiducials,
 
-    // Legacy state (backwards compatibility)
-    placements,
-    fiducials,
-
     // Settings
     dispenseDegrees,
+    dispenseAdaptive,
+    extrusionMode,
     retractionDegrees,
     dwellMilliseconds,
     boardSide,
-    clickedFidBuffer,
     currentPlacementIndex,
     lastNavigatedPlacementIndex,
 
@@ -1093,13 +1035,6 @@ export const useJobStore = defineStore('job', () => {
     selectedFiducialIndices,
     isFiducialSelectionMode,
 
-    // Legacy calibration (backwards compatibility)
-    planeA,
-    planeB,
-    planeC,
-    planeD,
-    roughBoardPosition,
-
     // Computed properties
     activeTransformMatrix,
     hasRoughCalibration,
@@ -1112,8 +1047,6 @@ export const useJobStore = defineStore('job', () => {
     calibratedFiducials,
 
     // Methods
-    calculateBoardPlane,
-    getZForPosition,
     importFromFile,
     saveToFile,
     loadJobFromGerbers,
@@ -1122,6 +1055,7 @@ export const useJobStore = defineStore('job', () => {
     moveNozzleToPosition,
     deletePlacement,
     deleteFiducial,
+    clearAllPositions,
     handleFiducialClick,
     startFiducialSelection,
     selectFiducials,
@@ -1151,6 +1085,8 @@ export const useJobStore = defineStore('job', () => {
       'originalPlacements',
       'originalFiducials',
       'dispenseDegrees',
+      'dispenseAdaptive',
+      'extrusionMode',
       'retractionDegrees',
       'dwellMilliseconds',
       'boardSide',

@@ -46,12 +46,6 @@
       <!-- Get Displacement Plane -->
       <div class="flex gap-2">
         <Button
-          v-if="!hasDisplacementPlane"
-          @click="handleGetDisplacementPlane"
-          text="Get Displacement Plane (Legacy)"
-          type="secondary"
-        />
-        <Button
           v-if="hasDisplacementPlane && jobStore.placementsWithCalibratedZ.length > 0"
           @click="handleClearCalibrationPoints"
           text="Clear"
@@ -166,15 +160,6 @@ async function handleGetRoughPosition() {
     console.log('Rough board position captured successfully')
   } catch (error) {
     console.error('Error during rough board position capture:', error)
-  }
-}
-
-function handleGetDisplacementPlane() {
-  console.log('Get Displacement Plane clicked')
-  // Calculate plane from fiducials (legacy method)
-  const success = jobStore.calculateBoardPlane()
-  if (!success) {
-    alert('Failed to calculate displacement plane. Ensure 3 fiducials have calZ values.')
   }
 }
 

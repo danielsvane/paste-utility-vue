@@ -19,11 +19,11 @@
           }" @click.stop="handleFiducialClick(index)" />
       </g>
 
-      <!-- Placements (color-coded by Z height when calibrated) -->
+      <!-- Placements (color-coded by Z height when calibrated, scaled by area in adaptive mode) -->
       <g>
         <circle v-for="(placement, index) in previewStore.transformedPlacements" :key="`placement-${index}`"
           :cx="placement.x" :cy="placement.y"
-          :r="previewStore.pointRadius * (placement.index === previewStore.activePlacementIndex ? 3 : 0.5)"
+          :r="(placement.radius || previewStore.pointRadius) * (placement.index === previewStore.activePlacementIndex ? 3 : 0.5)"
           :fill="placement.color || 'goldenrod'"
           :stroke="previewStore.calibratedPlacementIndices.includes(placement.index) ? '#22c55e' : 'none'"
           :stroke-width="previewStore.pointRadius * 0.5" :class="{

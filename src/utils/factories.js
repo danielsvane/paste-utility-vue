@@ -7,12 +7,16 @@
  * @param {number} x - X coordinate
  * @param {number} y - Y coordinate
  * @param {number} [z] - Z coordinate (optional, only set for calibrated points)
- * @returns {Object} Point object with x, y, and optionally z coordinates
+ * @param {number} [area] - Pad area in mm² (optional, from gerber aperture)
+ * @returns {Object} Point object with x, y, and optionally z and area
  */
-export function createPoint(x, y, z) {
+export function createPoint(x, y, z, area) {
   const point = { x, y }
   if (z !== undefined) {
     point.z = z
+  }
+  if (area !== undefined && area !== null) {
+    point.area = area
   }
   return point
 }

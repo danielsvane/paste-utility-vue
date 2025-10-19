@@ -12,22 +12,20 @@ export async function parseJobFile(file) {
   const text = await file.text()
   const data = JSON.parse(text)
 
-  // Support both new and legacy formats
-  // New format: originalPlacements, originalFiducials + calibration matrices
-  // Legacy format: placements, fiducials with embedded calX/calY
-
-  // Normalize original placements (prefer originalPlacements, fall back to placements)
-  // Only include z if it exists (calibrated placements)
-  const originalPlacements = (data.originalPlacements || data.placements || []).map(p => {
+  // Parse original placements (only include z if it exists)
+  const originalPlacements = (data.originalPlacements || []).map(p => {
     const point = { x: p.x, y: p.y }
     if (p.z !== undefined) {
       point.z = p.z
     }
+    if (p.area !== undefined && p.area !== null) {
+      point.area = p.area
+    }
     return point
   })
 
-  // Normalize original fiducials (prefer originalFiducials, fall back to fiducials)
-  const originalFiducials = (data.originalFiducials || data.fiducials || []).map(f => {
+  // Parse original fiducials
+  const originalFiducials = (data.originalFiducials || []).map(f => {
     const fiducial = { x: f.x, y: f.y }
     if (f.z !== undefined) {
       fiducial.z = f.z

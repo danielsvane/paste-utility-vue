@@ -114,7 +114,7 @@ export const usePreviewStore = defineStore('preview', () => {
   })
 
   // Transform a point from world coordinates to SVG coordinates
-  function transformPoint(point, index, isSelected = false, includeZColor = false) {
+  function transformPoint(point, index, isSelected = false, includeZColor = false, calculateRadius = false) {
     // For backside, flip X-axis (board is viewed from bottom, so left/right are reversed)
     // Since we're using viewBox, we can work directly with the original coordinates
     const x = boardSide.value === 'back'
@@ -135,6 +135,18 @@ export const usePreviewStore = defineStore('preview', () => {
       result.color = `hsl(${hue}, 70%, 50%)`
     }
 
+    // Add radius based on area if requested (for adaptive extrusion mode)
+    if (calculateRadius && jobStore.extrusionMode === 'adaptive' && point.area) {
+      // Calculate radius from area (area = π × r², so r = sqrt(area / π))
+      // Scale to viewport coordinates
+      const baseRadius = Math.sqrt(point.area / Math.PI)
+      const scale = Math.max(bounds.value.width, bounds.value.height) * 0.01
+      result.radius = baseRadius * scale
+    } else if (calculateRadius) {
+      // Fixed mode: use base point radius
+      result.radius = pointRadius.value
+    }
+
     return result
   }
 
@@ -149,7 +161,7 @@ export const usePreviewStore = defineStore('preview', () => {
       // Get Z from calibrated placement if available
       const pointWithZ = placementsForColor[i] || p
       const pointToTransform = { ...p, z: pointWithZ.z }
-      return transformPoint(pointToTransform, i, false, jobStore.isCalibrated)
+      return transformPoint(pointToTransform, i, false, jobStore.isCalibrated, true)
     })
   })
 

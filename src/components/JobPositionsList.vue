@@ -1,16 +1,31 @@
 <template>
   <Card title="Job Positions">
     <template #actions>
-      <div v-if="jobStore.hasPlaneCalibration && jobStore.triangulationData" class="flex items-center gap-2">
-        <label for="mesh-method" class="text-sm text-gray-400">Z Interpolation:</label>
-        <select
-          id="mesh-method"
-          v-model="jobStore.meshCalibrationMethod"
-          class="bg-gray-700 text-white border border-gray-600 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      <div class="flex items-center gap-2">
+        <!-- Clear All Button -->
+        <Button
+          v-if="jobStore.originalPlacements.length > 0 || jobStore.originalFiducials.length > 0"
+          icon="trash"
+          size="small"
+          type="secondary"
+          @click="handleClearAllPositions"
+          title="Clear all placements and fiducials"
         >
-          <option value="plane">Plane Fit</option>
-          <option value="mesh">Mesh</option>
-        </select>
+          Clear All
+        </Button>
+
+        <!-- Z Interpolation Selector -->
+        <div v-if="jobStore.hasPlaneCalibration && jobStore.triangulationData" class="flex items-center gap-2">
+          <label for="mesh-method" class="text-sm text-gray-400">Z Interpolation:</label>
+          <select
+            id="mesh-method"
+            v-model="jobStore.meshCalibrationMethod"
+            class="bg-gray-700 text-white border border-gray-600 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="plane">Plane Fit</option>
+            <option value="mesh">Mesh</option>
+          </select>
+        </div>
       </div>
     </template>
 
@@ -47,9 +62,9 @@
 
             <div v-for="(fiducial, index) in displayFiducials" :key="`fiducial-${index}`" class="grid-row fiducial-row">
               <div class="grid-cell text-gray-400">{{ index + 1 }}</div>
-              <div class="grid-cell">{{ fiducial.x !== null ? fiducial.x.toFixed(3) : 'N/A' }}</div>
-              <div class="grid-cell">{{ fiducial.y !== null ? fiducial.y.toFixed(3) : 'N/A' }}</div>
-              <div class="grid-cell">{{ fiducial.z !== null ? fiducial.z.toFixed(3) : 'N/A' }}</div>
+              <div class="grid-cell">{{ fiducial.x != null ? fiducial.x.toFixed(3) : 'N/A' }}</div>
+              <div class="grid-cell">{{ fiducial.y != null ? fiducial.y.toFixed(3) : 'N/A' }}</div>
+              <div class="grid-cell">{{ fiducial.z != null ? fiducial.z.toFixed(3) : 'N/A' }}</div>
               <div class="grid-cell"></div>
               <div class="grid-cell">
                 <div class="action-buttons">
@@ -81,10 +96,10 @@
             <div v-for="(placement, index) in displayPlacements" :key="`placement-${index}`" class="grid-row"
               :class="{ 'active-placement': jobStore.lastNavigatedPlacementIndex === index }">
               <div class="grid-cell text-gray-400">{{ index + 1 }}</div>
-              <div class="grid-cell">{{ placement.x !== null ? placement.x.toFixed(3) : 'N/A' }}</div>
-              <div class="grid-cell">{{ placement.y !== null ? placement.y.toFixed(3) : 'N/A' }}</div>
+              <div class="grid-cell">{{ placement.x != null ? placement.x.toFixed(3) : 'N/A' }}</div>
+              <div class="grid-cell">{{ placement.y != null ? placement.y.toFixed(3) : 'N/A' }}</div>
               <div class="grid-cell" :class="{ 'calibrated-z': jobStore.hasCalibrationPoint(index) }">
-                {{ placement.z !== null ? placement.z.toFixed(3) : 'N/A' }}
+                {{ placement.z != null ? placement.z.toFixed(3) : 'N/A' }}
               </div>
               <div class="grid-cell"></div>
               <div class="grid-cell">
@@ -203,6 +218,17 @@ function handleClearAllCalibrationPoints() {
   if (confirm(`Clear all ${count} saved Z height${count > 1 ? 's' : ''}?`)) {
     jobStore.clearCalibrationPoints()
     console.log('Cleared all calibration points')
+  }
+}
+
+function handleClearAllPositions() {
+  const placementCount = jobStore.originalPlacements.length
+  const fiducialCount = jobStore.originalFiducials.length
+  const totalCount = placementCount + fiducialCount
+
+  if (confirm(`Clear all ${totalCount} position${totalCount > 1 ? 's' : ''} (${placementCount} placement${placementCount > 1 ? 's' : ''}, ${fiducialCount} fiducial${fiducialCount > 1 ? 's' : ''})?\n\nThis will also clear all calibration data.`)) {
+    jobStore.clearAllPositions()
+    console.log('Cleared all positions and calibration data')
   }
 }
 </script>
