@@ -567,6 +567,8 @@ export const useJobStore = defineStore('job', () => {
       console.log('Jogging to rough position:', roughPos.x, roughPos.y)
 
       try {
+        // Safety: lift to safe Z first before moving XY
+        await serialStore.send([`G0 Z${SAFE_Z_HEIGHT}`])
         await macros.goTo(roughPos.x, roughPos.y)
         await new Promise(resolve => setTimeout(resolve, 1500))
 
