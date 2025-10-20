@@ -13,8 +13,8 @@
       <g>
         <circle v-for="(fid, index) in transformedFiducials" :key="`fid-${index}`" :cx="fid.x" :cy="fid.y"
           :r="previewStore.pointRadius * (fid.selected ? 1.5 : 1)" :class="{
-            'fill-white transition-all duration-200 cursor-pointer': !fid.selected,
-            'fill-white': !fid.selected && previewStore.clickMode === 'fiducial-selection',
+            'fill-gray-500 transition-all duration-200 cursor-pointer': !fid.selected,
+            'fill-gray-500': !fid.selected && previewStore.clickMode === 'fiducial-selection',
             'fill-green-500 transition-all duration-200 cursor-pointer': fid.selected
           }" @click.stop="handleFiducialClick(index)" />
       </g>
@@ -26,9 +26,7 @@
           :r="(placement.radius || previewStore.pointRadius) * (placement.index === previewStore.activePlacementIndex ? 3 : 0.5)"
           :fill="placement.color || 'goldenrod'"
           :stroke="previewStore.calibratedPlacementIndices.includes(placement.index) ? 'white' : 'none'"
-          :stroke-width="0.5"
-          style="paint-order: stroke"
-          :class="{
+          :stroke-width="1" style="paint-order: stroke" :class="{
             'transition-all duration-200 cursor-pointer': true,
             'animate-pulse': placement.index === previewStore.activePlacementIndex
           }" @click.stop="handlePlacementClick(placement.index)" />
