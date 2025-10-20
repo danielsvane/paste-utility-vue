@@ -8,6 +8,6 @@ cd /home/daniel/paste-utility-vue
 git pull
 npm install
 npm run build
-pm2 restart paste-utility-vue
+/home/daniel/.nvm/versions/node/v20.8.0/bin/pm2 restart paste-utility-vue
 
 EOF
