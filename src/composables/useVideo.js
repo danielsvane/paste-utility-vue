@@ -17,6 +17,18 @@ export function useVideo(cv) {
 
   async function populateCameraList() {
     try {
+      // Request camera permission first - this triggers the browser permission prompt
+      // We'll immediately stop the stream, we just need it to get device labels
+      let permissionStream = null
+      try {
+        permissionStream = await navigator.mediaDevices.getUserMedia({ video: true })
+        // Stop the stream immediately - we only needed it to get permissions
+        permissionStream.getTracks().forEach(track => track.stop())
+      } catch (permErr) {
+        console.warn('Could not get camera permission:', permErr)
+        // Continue anyway - will return cameras with generic labels
+      }
+
       const devices = await navigator.mediaDevices.enumerateDevices()
       const videoDevices = devices.filter(device => device.kind === 'videoinput')
 
