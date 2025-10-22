@@ -75,6 +75,18 @@
         />
       </div>
     </div>
+
+    <!-- Depressurize After Job Checkbox -->
+    <div class="mt-4">
+      <label class="flex items-center cursor-pointer">
+        <input
+          v-model="jobStore.depressurizeAfterJob"
+          type="checkbox"
+          class="mr-2 cursor-pointer"
+        />
+        <span class="text-white">Depressurize after job</span>
+      </label>
+    </div>
   </Card>
 </template>
 

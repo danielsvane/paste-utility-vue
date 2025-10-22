@@ -23,6 +23,7 @@ export const useJobStore = defineStore('job', () => {
   const extrusionMode = ref('fixed') // 'fixed' or 'adaptive'
   const retractionDegrees = ref(1)
   const dwellMilliseconds = ref(100)
+  const depressurizeAfterJob = ref(true)
 
   const boardSide = ref('front') // 'front' or 'back'
 
@@ -166,6 +167,7 @@ export const useJobStore = defineStore('job', () => {
       if (data.settings.extrusionMode) extrusionMode.value = data.settings.extrusionMode
       if (data.settings.retractionDegrees) retractionDegrees.value = data.settings.retractionDegrees
       if (data.settings.dwellMilliseconds) dwellMilliseconds.value = data.settings.dwellMilliseconds
+      if (data.settings.depressurizeAfterJob !== undefined) depressurizeAfterJob.value = data.settings.depressurizeAfterJob
 
       console.log(`Loaded ${originalPlacements.value.length} placements and ${originalFiducials.value.length} fiducials`)
       console.log('Calibration status:', {
@@ -196,7 +198,8 @@ export const useJobStore = defineStore('job', () => {
       dispenseAdaptive: dispenseAdaptive.value,
       extrusionMode: extrusionMode.value,
       retractionDegrees: retractionDegrees.value,
-      dwellMilliseconds: dwellMilliseconds.value
+      dwellMilliseconds: dwellMilliseconds.value,
+      depressurizeAfterJob: depressurizeAfterJob.value
     }
 
     exportJobToFile(jobData)
@@ -788,12 +791,26 @@ export const useJobStore = defineStore('job', () => {
         await stopExtrude()
         await retractAndRaise()
         await serialStore.send(['G0 X5 Y5'])
+
+        // Depressurize if setting is enabled
+        if (depressurizeAfterJob.value) {
+          await depressurize()
+          console.log('Depressurized after cancellation')
+        }
+
         console.log('Automated extrusion cancelled - returned to safe position')
       } else {
         // Normal completion
         await stopExtrude()
         await retractAndRaise()
         await serialStore.send(['G0 X5 Y5'])
+
+        // Depressurize if setting is enabled
+        if (depressurizeAfterJob.value) {
+          await depressurize()
+          console.log('Depressurized after automated extrusion')
+        }
+
         console.log('Automated extrusion complete')
       }
     } finally {
@@ -880,6 +897,12 @@ export const useJobStore = defineStore('job', () => {
 
       // Return to home position
       await serialStore.send(['G0 X5 Y5'])
+
+      // Depressurize if setting is enabled
+      if (depressurizeAfterJob.value) {
+        await depressurize()
+        console.log('Depressurized after job')
+      }
 
       if (!cancelled) {
         console.log('Job completed successfully')
@@ -1050,6 +1073,7 @@ export const useJobStore = defineStore('job', () => {
     extrusionMode,
     retractionDegrees,
     dwellMilliseconds,
+    depressurizeAfterJob,
     boardSide,
     currentPlacementIndex,
     lastNavigatedPlacementIndex,
@@ -1134,6 +1158,7 @@ export const useJobStore = defineStore('job', () => {
       'extrusionMode',
       'retractionDegrees',
       'dwellMilliseconds',
+      'depressurizeAfterJob',
       'boardSide',
       'roughBoardMatrix',
       'fidCalMatrix',
