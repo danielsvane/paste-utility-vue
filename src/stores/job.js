@@ -457,6 +457,9 @@ export const useJobStore = defineStore('job', () => {
 
         console.log('Fiducial selection complete:', originalFiducials.value)
 
+        // Hide the toast now that selection is complete
+        toast.hide()
+
         // Exit selection mode
         isFiducialSelectionMode.value = false
         potentialFiducials.value = []

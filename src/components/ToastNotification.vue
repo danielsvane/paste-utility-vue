@@ -35,5 +35,9 @@ function handleClose() {
   resolvePromise?.(false)
 }
 
-defineExpose({ show })
+function hide() {
+  isVisible.value = false
+}
+
+defineExpose({ show, hide })
 </script>
