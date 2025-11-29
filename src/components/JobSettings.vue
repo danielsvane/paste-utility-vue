@@ -65,13 +65,33 @@
         />
       </div>
       <div>
-        <label class="block text-sm text-gray-300 mb-1">Dwell Milliseconds:</label>
+        <!-- Empty space for grid alignment -->
+      </div>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">
+          Dwell Milliseconds (Fixed):
+        </label>
         <input
           v-model.number="jobStore.dwellMilliseconds"
           type="number"
           min="0"
           max="5000"
-          class="w-full bg-gray-800 text-white border border-gray-600 rounded px-3 py-2"
+          :disabled="jobStore.extrusionMode === 'adaptive'"
+          class="w-full bg-gray-800 text-white border border-gray-600 rounded px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        />
+      </div>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">
+          Dwell Milliseconds/mm² (Adaptive):
+        </label>
+        <input
+          v-model.number="jobStore.dwellAdaptive"
+          type="number"
+          min="0"
+          max="500"
+          step="1"
+          :disabled="jobStore.extrusionMode === 'fixed'"
+          class="w-full bg-gray-800 text-white border border-gray-600 rounded px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
         />
       </div>
     </div>

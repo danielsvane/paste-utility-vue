@@ -23,6 +23,7 @@ export const useJobStore = defineStore('job', () => {
   const extrusionMode = ref('fixed') // 'fixed' or 'adaptive'
   const retractionDegrees = ref(1)
   const dwellMilliseconds = ref(100)
+  const dwellAdaptive = ref(25) // Milliseconds per mm² for adaptive mode
   const depressurizeAfterJob = ref(true)
 
   const boardSide = ref('front') // 'front' or 'back'
@@ -167,6 +168,7 @@ export const useJobStore = defineStore('job', () => {
       if (data.settings.extrusionMode) extrusionMode.value = data.settings.extrusionMode
       if (data.settings.retractionDegrees) retractionDegrees.value = data.settings.retractionDegrees
       if (data.settings.dwellMilliseconds) dwellMilliseconds.value = data.settings.dwellMilliseconds
+      if (data.settings.dwellAdaptive !== undefined) dwellAdaptive.value = data.settings.dwellAdaptive
       if (data.settings.depressurizeAfterJob !== undefined) depressurizeAfterJob.value = data.settings.depressurizeAfterJob
 
       console.log(`Loaded ${originalPlacements.value.length} placements and ${originalFiducials.value.length} fiducials`)
@@ -199,6 +201,7 @@ export const useJobStore = defineStore('job', () => {
       extrusionMode: extrusionMode.value,
       retractionDegrees: retractionDegrees.value,
       dwellMilliseconds: dwellMilliseconds.value,
+      dwellAdaptive: dwellAdaptive.value,
       depressurizeAfterJob: depressurizeAfterJob.value
     }
 
@@ -872,6 +875,16 @@ export const useJobStore = defineStore('job', () => {
           dispenseAmount = dispenseDegrees.value
         }
 
+        // Calculate dwell time based on extrusion mode
+        let dwellTime
+        if (extrusionMode.value === 'adaptive' && originalPlacement.area) {
+          // Area-based: milliseconds per mm² × pad area
+          dwellTime = dwellAdaptive.value * originalPlacement.area
+        } else {
+          // Fixed mode: use fixed milliseconds
+          dwellTime = dwellMilliseconds.value
+        }
+
         // Apply tip offset and extrusion height (same as moveNozzleToPosition)
         const x = position.x + tipXoffset.value
         const y = position.y + tipYoffset.value
@@ -885,7 +898,7 @@ export const useJobStore = defineStore('job', () => {
           `G0 B-${dispenseAmount.toFixed(2)}`,      // Dispense paste (negative = extrude)
           `G0 B${retractionDegrees.value}`,         // Retract (positive = retract)
           'G90',                                     // Back to absolute positioning
-          `G4 P${dwellMilliseconds.value}`,         // Dwell
+          `G4 P${Math.round(dwellTime)}`,           // Dwell (rounded to integer)
           `G0 Z${SAFE_Z_HEIGHT}`                    // Raise to safe height
         ])
 
@@ -1073,6 +1086,7 @@ export const useJobStore = defineStore('job', () => {
     extrusionMode,
     retractionDegrees,
     dwellMilliseconds,
+    dwellAdaptive,
     depressurizeAfterJob,
     boardSide,
     currentPlacementIndex,
@@ -1158,6 +1172,7 @@ export const useJobStore = defineStore('job', () => {
       'extrusionMode',
       'retractionDegrees',
       'dwellMilliseconds',
+      'dwellAdaptive',
       'depressurizeAfterJob',
       'boardSide',
       'roughBoardMatrix',
