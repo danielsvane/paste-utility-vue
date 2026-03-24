@@ -69,6 +69,14 @@ export const useControlsStore = defineStore(
     macros.retract()
   }
 
+  function startSlowExtrude() {
+    macros.startSlowExtrude()
+  }
+
+  function stopExtrude() {
+    macros.stopExtrude()
+  }
+
   // Visual homing operations
   async function jogToFid() {
     const videoComposable = videoStore.videoComposable
@@ -164,6 +172,8 @@ export const useControlsStore = defineStore(
       jogZMinus,
       extrude,
       retract,
+      startSlowExtrude,
+      stopExtrude,
       jogToFid,
       visualHome,
       ringLightsOn,

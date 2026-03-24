@@ -36,6 +36,12 @@
       <Button @click="controls.visualHome()" type="secondary" text="Home Fid" fill />
     </div>
 
+    <!-- Slow Extrude Controls -->
+    <div class="flex gap-3 w-full h-11">
+      <Button @click="controls.startSlowExtrude()" type="secondary" text="Slow Extrude" fill />
+      <Button @click="controls.stopExtrude()" type="destructive" text="Stop" fill />
+    </div>
+
     <!-- <Button :full-width="true" class="mt-2" text="Update Z Offset" /> -->
   </div>
 </template>
