@@ -90,7 +90,7 @@ export async function jogZMinus(distance) {
  * Quick extrude movement (controls version)
  * @param {number} amount - Amount to extrude (default 2mm)
  */
-export async function extrude(amount = 50) {
+export async function extrude(amount = 300) {
   await serialStore.send(['G91', `G0 B-${amount}`, 'G90'])
 }
 
@@ -98,7 +98,7 @@ export async function extrude(amount = 50) {
  * Quick retract movement (controls version)
  * @param {number} amount - Amount to retract (default 2mm)
  */
-export async function retract(amount = 50) {
+export async function retract(amount = 10) {
   await serialStore.send(['G91', `G0 B${amount}`, 'G90'])
 }
 
@@ -132,7 +132,7 @@ export async function extrudePaste(amount = 10) {
  * Start continuous slow extrusion
  */
 export async function startSlowExtrude() {
-  await serialStore.send(['G91', 'G1 B-20000 F2000', 'G90'])
+  await serialStore.send(['G91', 'G1 B-20000 F6000', 'G90'])
 }
 
 /**
