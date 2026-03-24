@@ -6,13 +6,8 @@
       <FilePicker text="Load Project" type="tertiary" icon="folder-open" accept=".json" @change="handleLoadJob" />
       <Button @click="handleSaveProject" text="Save Project" type="tertiary" icon="save" />
       <Button @click="handleResetProject" text="Reset" type="tertiary" icon="trash" />
-      <Button
-        @click="handleRunJob"
-        text="Run Job"
-        type="secondary"
-        icon="play"
-        :disabled="!serialStore.isConnected || jobStore.calibratedPlacements.length === 0 || !jobStore.isCalibrated"
-      />
+      <Button @click="handleRunJob" text="Run Job" type="secondary" icon="play"
+        :disabled="!serialStore.isConnected || jobStore.calibratedPlacements.length === 0 || !jobStore.isCalibrated" />
       <div class="flex-1"></div>
       <Button @click="$router.push('/help')" text="Help" type="tertiary" />
     </div>
@@ -31,7 +26,7 @@
       <!-- Right Column -->
       <div class="max-w-2xl flex flex-col gap-6">
         <VideoControls />
-        <SemiAutomaticJob v-if="serialStore.isConnected" />
+        <!-- <SemiAutomaticJob v-if="serialStore.isConnected" /> -->
         <CalibrationPanel v-if="serialStore.isConnected" />
         <ConsoleRepl v-if="serialStore.isConnected" />
         <MachineControls v-if="serialStore.isConnected" />
