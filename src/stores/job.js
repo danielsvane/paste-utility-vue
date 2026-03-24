@@ -6,9 +6,18 @@ import { calculatePlaneCoefficients, getZForPlane, calculateBestFitPlane } from 
 import { createDelaunayTriangulation, interpolateZFromTriangulation } from '../utils/meshInterpolation'
 import { parseJobFile, exportJobToFile } from '../utils/jobFileService'
 import { useSerialStore } from './serial'
-import { fromTriangles, applyToPoint } from 'transformation-matrix'
+import { fromTriangles, applyToPoint, translate } from 'transformation-matrix'
 import { SAFE_Z_HEIGHT, DEFAULT_Z_HEIGHT, EXTRUSION_HEIGHT } from '../constants'
 import * as macros from '../utils/macros'
+
+// LumenPnP staging plate grid → machine coordinate transform (hardcoded from 3 measured points)
+// Calibration points: 11A → (82.62, 105.8), 33A → (412.84, 106.45), 34F → (427.84, 181.45)
+// Uses affine transform to handle slight staging plate tilt relative to machine axes.
+// Rows: A=0, B=1, ... G=6. Odd columns on even rows (A,C,E,G), even columns on odd rows (B,D,F).
+const GRID_TRANSFORM = fromTriangles(
+  [[11, 0], [33, 0], [34, 5]],           // grid coords: [col, row]
+  [[82.62, 105.8], [412.84, 106.45], [427.84, 181.45]]  // machine coords
+)
 
 export const useJobStore = defineStore('job', () => {
   // Store references
@@ -533,6 +542,17 @@ export const useJobStore = defineStore('job', () => {
     console.log('Rough calibration complete')
     console.log('Rough board matrix:', roughBoardMatrix.value)
     console.log('Base Z:', baseZ.value)
+  }
+
+  function gridToMachine(col, row) {
+    const [x, y] = applyToPoint(GRID_TRANSFORM, [col, row])
+    return { x, y }
+  }
+
+  function setPositionFromGrid(col, row) {
+    const { x, y } = gridToMachine(col, row)
+    roughBoardMatrix.value = translate(x, y)
+    console.log(`Grid position set: col=${col}, row=${row} → machine (${x.toFixed(2)}, ${y.toFixed(2)})`)
   }
 
   async function findZHeight(toast) {
@@ -1139,6 +1159,8 @@ export const useJobStore = defineStore('job', () => {
     startFiducialSelection,
     selectFiducials,
     findBoardRoughPosition,
+    gridToMachine,
+    setPositionFromGrid,
     findZHeight,
     performFiducialCalibration,
     clearFiducialCalibration,

@@ -1,10 +1,33 @@
 <template>
   <Card title="Calibration">
     <div class="grid gap-x-4 gap-y-3 items-center" style="grid-template-columns: max-content 1fr max-content;">
+      <!-- Grid-based board positioning -->
+      <div class="flex items-center gap-2">
+        <select v-model="gridRow" class="bg-gray-700 text-white rounded px-2 h-11 text-base">
+          <option v-for="letter in 'ABCDEFG'" :key="letter" :value="letter">{{ letter }}</option>
+        </select>
+        <input
+          v-model.number="gridCol"
+          type="number"
+          min="1"
+          max="52"
+          placeholder="Col"
+          class="bg-gray-700 text-white rounded px-2 h-11 w-16 text-base"
+        />
+        <Button @click="handleSetFromGrid" text="Set from Grid" type="secondary" />
+      </div>
+      <div class="flex items-center gap-2">
+        <font-awesome-icon v-if="hasRoughPosition" icon="circle-check" class="w-6 h-6 flex-shrink-0 text-lg text-green-600" />
+        <div v-else class="w-6 h-6 flex-shrink-0"></div>
+        <span class="text-sm text-gray-300">{{ roughPositionStatusText }}</span>
+      </div>
+      <Button v-if="hasRoughPosition" @click="handleClearRoughPosition" icon="xmark" type="tertiary" class="!px-3" />
+      <div v-else></div>
+
       <CalibrationRow
         button-text="Get Board Position"
-        :status-text="roughPositionStatusText"
-        :is-calibrated="hasRoughPosition"
+        :status-text="'Manual fallback'"
+        :is-calibrated="false"
         @calibrate="handleGetRoughPosition"
         @clear="handleClearRoughPosition"
       />
@@ -34,14 +57,19 @@
 </template>
 
 <script setup>
-import { computed, inject } from 'vue'
+import { ref, computed, inject } from 'vue'
 import Card from './Card.vue'
 import CalibrationRow from './CalibrationRow.vue'
+import Button from './Button.vue'
 import { useJobStore } from '../stores/job'
 import { decomposeTSR } from 'transformation-matrix'
 
 const jobStore = useJobStore()
 const toast = inject('toast')
+
+// Grid position inputs
+const gridRow = ref('A')
+const gridCol = ref(11)
 
 // Computed properties for calibration status
 const hasNozzleOffset = computed(() => {
@@ -108,6 +136,11 @@ const fidCalStatusText = computed(() => {
 })
 
 // Event handlers
+function handleSetFromGrid() {
+  const rowIndex = gridRow.value.charCodeAt(0) - 'A'.charCodeAt(0)
+  jobStore.setPositionFromGrid(gridCol.value, rowIndex)
+}
+
 async function handleNozzleOffsetCal() {
   console.log('Nozzle Offset Cal clicked')
   try {
