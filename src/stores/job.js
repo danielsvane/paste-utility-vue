@@ -53,8 +53,10 @@ export const useJobStore = defineStore('job', () => {
   const planeCoefficients = ref(null)     // { A, B, C, D } from plane calibration
   const meshCalibrationMethod = ref('plane') // 'plane' = flat plane fit, 'mesh' = triangulation mesh
   const triangulationData = ref(null)     // Delaunay triangulation data for mesh interpolation
-  const tipXoffset = ref(0)
-  const tipYoffset = ref(0)
+  const DEFAULT_TIP_X_OFFSET = -50.3
+  const DEFAULT_TIP_Y_OFFSET = 63.3
+  const tipXoffset = ref(null)
+  const tipYoffset = ref(null)
 
   // FIDUCIAL SELECTION MODE - Temporary state during user selection
   const potentialFiducials = ref([])      // All mask-only points before selection
@@ -72,7 +74,12 @@ export const useJobStore = defineStore('job', () => {
   const hasZCalibration = computed(() => baseZ.value !== null)
   const hasFidCalibration = computed(() => fidCalMatrix.value !== null)
   const hasPlaneCalibration = computed(() => planeCoefficients.value !== null)
+  const hasNozzleOffsetCalibration = computed(() => tipXoffset.value !== null && tipYoffset.value !== null)
   const isCalibrated = computed(() => activeTransformMatrix.value !== null)
+
+  // Effective tip offsets — fall back to defaults when not calibrated
+  const effectiveTipXoffset = computed(() => tipXoffset.value ?? DEFAULT_TIP_X_OFFSET)
+  const effectiveTipYoffset = computed(() => tipYoffset.value ?? DEFAULT_TIP_Y_OFFSET)
 
   // COMPUTED - Placements with calibrated Z values
   const placementsWithCalibratedZ = computed(() => {
@@ -168,8 +175,8 @@ export const useJobStore = defineStore('job', () => {
       planeCoefficients.value = data.calibration.planeCoefficients
       meshCalibrationMethod.value = data.calibration.meshCalibrationMethod || 'plane' // Default to plane for backwards compatibility
       triangulationData.value = data.calibration.triangulationData || null
-      tipXoffset.value = data.calibration.tipXoffset
-      tipYoffset.value = data.calibration.tipYoffset
+      tipXoffset.value = data.calibration.tipXoffset ?? null
+      tipYoffset.value = data.calibration.tipYoffset ?? null
 
       // Update settings if provided
       if (data.settings.dispenseDegrees) dispenseDegrees.value = data.settings.dispenseDegrees
@@ -341,8 +348,8 @@ export const useJobStore = defineStore('job', () => {
   async function moveNozzleToPosition(position, placementIndex = -1) {
     // Move to XYZ position with tip offset applied
     // Position should be from calibratedPlacements or calibratedFiducials
-    const x = position.x + tipXoffset.value
-    const y = position.y + tipYoffset.value
+    const x = position.x + effectiveTipXoffset.value
+    const y = position.y + effectiveTipYoffset.value
     const z = position.z - EXTRUSION_HEIGHT  // Lift 0.2mm above the saved pad touch position
 
     // Safety: lift to safe Z, move XY, then descend to extrusion height
@@ -653,8 +660,8 @@ export const useJobStore = defineStore('job', () => {
   }
 
   function clearNozzleOffsetCalibration() {
-    tipXoffset.value = 0
-    tipYoffset.value = 0
+    tipXoffset.value = null
+    tipYoffset.value = null
     console.log('Nozzle offset calibration cleared')
   }
 
@@ -906,8 +913,8 @@ export const useJobStore = defineStore('job', () => {
         }
 
         // Apply tip offset and extrusion height (same as moveNozzleToPosition)
-        const x = position.x + tipXoffset.value
-        const y = position.y + tipYoffset.value
+        const x = position.x + effectiveTipXoffset.value
+        const y = position.y + effectiveTipYoffset.value
         const z = position.z - EXTRUSION_HEIGHT  // Lift above the saved pad touch position
 
         // Execute placement sequence
@@ -1127,6 +1134,8 @@ export const useJobStore = defineStore('job', () => {
     triangulationData,
     tipXoffset,
     tipYoffset,
+    DEFAULT_TIP_X_OFFSET,
+    DEFAULT_TIP_Y_OFFSET,
 
     // Fiducial selection mode
     potentialFiducials,
@@ -1139,6 +1148,9 @@ export const useJobStore = defineStore('job', () => {
     hasZCalibration,
     hasFidCalibration,
     hasPlaneCalibration,
+    hasNozzleOffsetCalibration,
+    effectiveTipXoffset,
+    effectiveTipYoffset,
     isCalibrated,
     placementsWithCalibratedZ,
     calibratedPlacementIndices,

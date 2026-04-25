@@ -39,8 +39,8 @@ export async function parseJobFile(file) {
     fidCalMatrix: data.fidCalMatrix || null,
     baseZ: data.baseZ || null,
     planeCoefficients: data.planeCoefficients || null,
-    tipXoffset: data.tipXoffset || 0,
-    tipYoffset: data.tipYoffset || 0
+    tipXoffset: data.tipXoffset ?? null,
+    tipYoffset: data.tipYoffset ?? null
   }
 
   // Extract settings

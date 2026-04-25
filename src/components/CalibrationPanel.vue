@@ -72,12 +72,10 @@ const gridRow = ref('A')
 const gridCol = ref(11)
 
 // Computed properties for calibration status
-const hasNozzleOffset = computed(() => {
-  return jobStore.tipXoffset !== 0 || jobStore.tipYoffset !== 0
-})
+const hasNozzleOffset = computed(() => jobStore.hasNozzleOffsetCalibration)
 
-const tipXoffset = computed(() => jobStore.tipXoffset)
-const tipYoffset = computed(() => jobStore.tipYoffset)
+const tipXoffset = computed(() => jobStore.effectiveTipXoffset)
+const tipYoffset = computed(() => jobStore.effectiveTipYoffset)
 
 // Use new calibration status flags
 const hasRoughPosition = computed(() => jobStore.hasRoughCalibration)
@@ -88,10 +86,8 @@ const hasFidCal = computed(() => jobStore.hasFidCalibration)
 
 // Status text for each calibration item
 const nozzleOffsetStatusText = computed(() => {
-  if (!hasNozzleOffset.value) {
-    return 'Nozzle offset not calibrated'
-  }
-  return `X: ${tipXoffset.value.toFixed(3)}mm, Y: ${tipYoffset.value.toFixed(3)}mm`
+  const prefix = hasNozzleOffset.value ? '' : 'Default: '
+  return `${prefix}X: ${tipXoffset.value.toFixed(3)}mm, Y: ${tipYoffset.value.toFixed(3)}mm`
 })
 
 const roughPositionStatusText = computed(() => {
