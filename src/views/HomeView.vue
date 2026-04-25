@@ -99,9 +99,16 @@ async function handleResetProject() {
 }
 
 async function handleRunJob() {
-  // Confirm with user
+  const isAdaptive = jobStore.extrusionMode === 'adaptive'
+  const dispenseLine = isAdaptive
+    ? `- Dispense: ${jobStore.dispenseAdaptive} °/mm² (adaptive)`
+    : `- Dispense: ${jobStore.dispenseDegrees}° (fixed)`
+  const dwellLine = isAdaptive
+    ? `- Dwell: ${jobStore.dwellAdaptive} ms/mm² (adaptive)`
+    : `- Dwell: ${jobStore.dwellMilliseconds}ms (fixed)`
+
   const confirmed = await modalStore.showConfirm(
-    `Run job with ${jobStore.calibratedPlacements.length} placements?\n\nSettings:\n- Dispense: ${jobStore.dispenseDegrees}°\n- Retraction: ${jobStore.retractionDegrees}°\n- Dwell: ${jobStore.dwellMilliseconds}ms`,
+    `Run job with ${jobStore.calibratedPlacements.length} placements?\n\nSettings:\n${dispenseLine}\n- Retraction: ${jobStore.retractionDegrees}°\n${dwellLine}`,
     'Confirm Run Job'
   )
 

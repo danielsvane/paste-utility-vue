@@ -28,11 +28,11 @@ export const useJobStore = defineStore('job', () => {
   const originalFiducials = ref([])   // { x, y, z: 31.5 }
 
   const dispenseDegrees = ref(30)
-  const dispenseAdaptive = ref(9) // Degrees per mm² for adaptive mode
+  const dispenseAdaptive = ref(100) // Degrees per mm² for adaptive mode
   const extrusionMode = ref('fixed') // 'fixed' or 'adaptive'
   const retractionDegrees = ref(1)
   const dwellMilliseconds = ref(100)
-  const dwellAdaptive = ref(25) // Milliseconds per mm² for adaptive mode
+  const dwellAdaptive = ref(500) // Milliseconds per mm² for adaptive mode
   const depressurizeAfterJob = ref(true)
 
   const boardSide = ref('front') // 'front' or 'back'
