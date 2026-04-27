@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useJobStore } from './job'
+import { inverse, applyToPoint } from 'transformation-matrix'
 
 export const usePreviewStore = defineStore('preview', () => {
   const jobStore = useJobStore()
@@ -87,6 +88,29 @@ export const usePreviewStore = defineStore('preview', () => {
   // Get indices of placements with calibration points (for highlighting)
   const calibratedPlacementIndices = computed(() => {
     return jobStore.calibratedPlacementIndices
+  })
+
+  // Prime position transformed into the SVG's gerber coordinate space.
+  // Prime XY is stored in machine coords, so we inverse-transform via the active
+  // calibration matrix to get gerber-space coords, then apply the same X-flip
+  // for backside boards as transformPoint does.
+  const transformedPrimePosition = computed(() => {
+    if (!jobStore.calibratedPrimePosition || !jobStore.activeTransformMatrix) {
+      return null
+    }
+
+    const inverseMatrix = inverse(jobStore.activeTransformMatrix)
+    const [gerberX, gerberY] = applyToPoint(
+      inverseMatrix,
+      [jobStore.calibratedPrimePosition.x, jobStore.calibratedPrimePosition.y]
+    )
+
+    const x = boardSide.value === 'back'
+      ? bounds.value.maxX - (gerberX - bounds.value.minX)
+      : gerberX
+    const y = -gerberY
+
+    return { x, y }
   })
 
   // Calculate min/max Z from calibrated placements for opacity mapping
@@ -242,6 +266,7 @@ export const usePreviewStore = defineStore('preview', () => {
     boardSide,
     activePlacementIndex,
     calibratedPlacementIndices,
+    transformedPrimePosition,
 
     // Mesh visualization
     showMesh,

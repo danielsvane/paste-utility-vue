@@ -31,6 +31,16 @@
             'animate-pulse': placement.index === previewStore.activePlacementIndex
           }" @click.stop="handlePlacementClick(placement.index)" />
       </g>
+
+      <!-- Prime position (purple circle with P label) -->
+      <g v-if="previewStore.transformedPrimePosition" style="pointer-events: none">
+        <circle :cx="previewStore.transformedPrimePosition.x" :cy="previewStore.transformedPrimePosition.y"
+          :r="previewStore.pointRadius * 2" fill="#9333ea" stroke="white" :stroke-width="0.5"
+          class="transition-all duration-200" />
+        <text :x="previewStore.transformedPrimePosition.x" :y="previewStore.transformedPrimePosition.y"
+          text-anchor="middle" dominant-baseline="central" fill="white" :font-size="previewStore.pointRadius * 1.5"
+          font-weight="bold">P</text>
+      </g>
     </svg>
   </div>
 </template>

@@ -107,6 +107,24 @@
         <span class="text-white">Depressurize after job</span>
       </label>
     </div>
+
+    <!-- Extrude Prime Blob Checkbox -->
+    <div class="mt-2">
+      <label class="flex items-center cursor-pointer">
+        <input
+          v-model="jobStore.primeEnabled"
+          type="checkbox"
+          class="mr-2 cursor-pointer"
+        />
+        <span class="text-white">Extrude prime blob before job</span>
+      </label>
+      <p
+        v-if="jobStore.primeEnabled && !jobStore.primePosition"
+        class="ml-6 mt-1 text-sm text-yellow-400"
+      >
+        ⚠ No prime position set — use "Save Prime Position" in Job Positions.
+      </p>
+    </div>
   </Card>
 </template>
 

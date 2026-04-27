@@ -2,6 +2,18 @@
   <Card title="Job Positions">
     <template #actions>
       <div class="flex items-center gap-2">
+        <!-- Save Prime Position Button -->
+        <Button
+          icon="crosshairs"
+          size="small"
+          type="secondary"
+          @click="handleSavePrimePosition"
+          :disabled="!jobStore.isCalibrated"
+          title="Save current camera position as prime blob location"
+        >
+          Prime Position
+        </Button>
+
         <!-- Clear All Button -->
         <Button
           v-if="jobStore.originalPlacements.length > 0 || jobStore.originalFiducials.length > 0"
@@ -54,6 +66,37 @@
           <div class="grid-header">Area</div>
           <div class="grid-header"></div>
           <div class="grid-header">Actions</div>
+
+          <!-- Prime Position Section -->
+          <template v-if="jobStore.calibratedPrimePosition">
+            <div class="section-header">
+              Prime Position <span class="text-gray-300">(5mm blob)</span>
+            </div>
+
+            <div class="grid-row prime-row">
+              <div class="grid-cell text-purple-400">P</div>
+              <div class="grid-cell">{{ jobStore.calibratedPrimePosition.x.toFixed(3) }}</div>
+              <div class="grid-cell">{{ jobStore.calibratedPrimePosition.y.toFixed(3) }}</div>
+              <div class="grid-cell">{{ jobStore.calibratedPrimePosition.z.toFixed(3) }}</div>
+              <div class="grid-cell text-gray-500">{{ PRIME_PAD_AREA.toFixed(1) }}</div>
+              <div class="grid-cell"></div>
+              <div class="grid-cell">
+                <div class="action-buttons">
+                  <Button icon="eye" size="small" type="tertiary"
+                    @click="handleMoveCameraToPosition(jobStore.calibratedPrimePosition)"
+                    :disabled="!jobStore.isCalibrated"
+                    title="Move camera to prime position" />
+                  <Button icon="syringe" size="small" type="tertiary"
+                    @click="handleMoveNozzleToPosition(jobStore.calibratedPrimePosition)"
+                    :disabled="!jobStore.isCalibrated"
+                    title="Move nozzle to prime position" />
+                  <Button icon="trash" size="small" type="tertiary"
+                    @click="handleClearPrimePosition"
+                    title="Clear prime position" />
+                </div>
+              </div>
+            </div>
+          </template>
 
           <!-- Fiducials Section -->
           <template v-if="jobStore.originalFiducials.length > 0">
@@ -134,6 +177,7 @@
 <script setup>
 import { computed, nextTick, watch } from 'vue'
 import { useJobStore } from '../stores/job'
+import { PRIME_PAD_AREA } from '../constants'
 import Button from './Button.vue'
 import Card from './Card.vue'
 import InfoBox from './InfoBox.vue'
@@ -234,6 +278,21 @@ function handleClearAllPositions() {
     console.log('Cleared all positions and calibration data')
   }
 }
+
+async function handleSavePrimePosition() {
+  try {
+    await jobStore.savePrimePosition()
+  } catch (error) {
+    console.error('Error saving prime position:', error)
+    alert('Failed to save prime position: ' + error.message)
+  }
+}
+
+function handleClearPrimePosition() {
+  if (confirm('Clear the prime position?')) {
+    jobStore.clearPrimePosition()
+  }
+}
 </script>
 
 <style scoped>
@@ -292,5 +351,13 @@ function handleClearAllPositions() {
 
 .calibrated-z {
   @apply text-green-400 font-semibold;
+}
+
+.prime-row {
+  @apply bg-purple-900/20;
+}
+
+.prime-row:hover {
+  @apply bg-purple-900/30;
 }
 </style>

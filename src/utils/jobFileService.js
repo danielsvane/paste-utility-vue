@@ -47,7 +47,9 @@ export async function parseJobFile(file) {
   const settings = {
     dispenseDegrees: data.dispenseDegrees,
     retractionDegrees: data.retractionDegrees,
-    dwellMilliseconds: data.dwellMilliseconds
+    dwellMilliseconds: data.dwellMilliseconds,
+    primePosition: data.primePosition ?? null,
+    primeEnabled: data.primeEnabled ?? false
   }
 
   return {
@@ -90,7 +92,9 @@ export function exportJobToFile(jobData) {
     // Settings
     dispenseDegrees: jobData.dispenseDegrees,
     retractionDegrees: jobData.retractionDegrees,
-    dwellMilliseconds: jobData.dwellMilliseconds
+    dwellMilliseconds: jobData.dwellMilliseconds,
+    primePosition: jobData.primePosition,
+    primeEnabled: jobData.primeEnabled
   }
 
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })

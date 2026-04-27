@@ -7,7 +7,14 @@ import { createDelaunayTriangulation, interpolateZFromTriangulation } from '../u
 import { parseJobFile, exportJobToFile } from '../utils/jobFileService'
 import { useSerialStore } from './serial'
 import { fromTriangles, applyToPoint, translate } from 'transformation-matrix'
-import { SAFE_Z_HEIGHT, DEFAULT_Z_HEIGHT, EXTRUSION_HEIGHT } from '../constants'
+import {
+  SAFE_Z_HEIGHT,
+  DEFAULT_Z_HEIGHT,
+  EXTRUSION_HEIGHT,
+  PRIME_DISPENSE_DEGREES,
+  PRIME_RETRACTION_DEGREES,
+  PRIME_DWELL_MILLISECONDS
+} from '../constants'
 import * as macros from '../utils/macros'
 
 // LumenPnP staging plate grid → machine coordinate transform (hardcoded from 3 measured points)
@@ -34,6 +41,10 @@ export const useJobStore = defineStore('job', () => {
   const dwellMilliseconds = ref(100)
   const dwellAdaptive = ref(500) // Milliseconds per mm² for adaptive mode
   const depressurizeAfterJob = ref(true)
+
+  // Prime blob - extruded before the rest of the job to clear out air/dry paste
+  const primePosition = ref(null) // { x, y } in machine coordinates (Z resolved from calibration)
+  const primeEnabled = ref(false)
 
   const boardSide = ref('front') // 'front' or 'back'
 
@@ -92,6 +103,22 @@ export const useJobStore = defineStore('job', () => {
       .filter(index => index !== null)
   })
 
+  // Resolve Z for a machine-coordinate XY position
+  // Priority: mesh > plane > baseZ > fallback
+  function getCalibratedZ(x, y, fallbackZ = DEFAULT_Z_HEIGHT) {
+    if (planeCoefficients.value) {
+      if (meshCalibrationMethod.value === 'mesh' && triangulationData.value) {
+        const z = interpolateZFromTriangulation(x, y, triangulationData.value)
+        if (z !== null) return z
+      }
+      return getZForPlane(x, y, planeCoefficients.value)
+    }
+    if (baseZ.value !== null) {
+      return baseZ.value
+    }
+    return fallbackZ
+  }
+
   // COMPUTED CALIBRATED POSITIONS - Reactive, not saved
   const calibratedPlacements = computed(() => {
     if (!activeTransformMatrix.value || originalPlacements.value.length === 0) {
@@ -99,29 +126,8 @@ export const useJobStore = defineStore('job', () => {
     }
 
     return originalPlacements.value.map(p => {
-      // Apply active XY transformation
       const [x, y] = applyToPoint(activeTransformMatrix.value, [p.x, p.y])
-
-      // Apply Z calibration (priority: mesh/plane > baseZ > original)
-      let z
-      if (planeCoefficients.value) {
-        // Check which calibration method to use
-        if (meshCalibrationMethod.value === 'mesh' && triangulationData.value) {
-          z = interpolateZFromTriangulation(x, y, triangulationData.value)
-          // Fall back to plane if mesh interpolation fails
-          if (z === null) {
-            z = getZForPlane(x, y, planeCoefficients.value)
-          }
-        } else {
-          // Use plane fit (default)
-          z = getZForPlane(x, y, planeCoefficients.value)
-        }
-      } else if (baseZ.value !== null) {
-        z = baseZ.value
-      } else {
-        z = p.z  // Default 31.5
-      }
-
+      const z = getCalibratedZ(x, y, p.z)
       return { x, y, z, area: p.area }
     })
   })
@@ -132,31 +138,20 @@ export const useJobStore = defineStore('job', () => {
     }
 
     return originalFiducials.value.map(f => {
-      // Apply active XY transformation
       const [x, y] = applyToPoint(activeTransformMatrix.value, [f.x, f.y])
-
-      // Apply Z calibration (priority: mesh/plane > baseZ > original)
-      let z
-      if (planeCoefficients.value) {
-        // Check which calibration method to use
-        if (meshCalibrationMethod.value === 'mesh' && triangulationData.value) {
-          z = interpolateZFromTriangulation(x, y, triangulationData.value)
-          // Fall back to plane if mesh interpolation fails
-          if (z === null) {
-            z = getZForPlane(x, y, planeCoefficients.value)
-          }
-        } else {
-          // Use plane fit (default)
-          z = getZForPlane(x, y, planeCoefficients.value)
-        }
-      } else if (baseZ.value !== null) {
-        z = baseZ.value
-      } else {
-        z = f.z  // Default 31.5
-      }
-
+      const z = getCalibratedZ(x, y, f.z)
       return { x, y, z }
     })
+  })
+
+  // Prime position with Z resolved from calibration
+  // Prime XY is stored in machine coordinates directly (not gerber space),
+  // so no transform is applied - only Z is resolved.
+  const calibratedPrimePosition = computed(() => {
+    if (!primePosition.value) return null
+    const { x, y } = primePosition.value
+    const z = getCalibratedZ(x, y)
+    return { x, y, z }
   })
 
   // Methods
@@ -186,6 +181,8 @@ export const useJobStore = defineStore('job', () => {
       if (data.settings.dwellMilliseconds) dwellMilliseconds.value = data.settings.dwellMilliseconds
       if (data.settings.dwellAdaptive !== undefined) dwellAdaptive.value = data.settings.dwellAdaptive
       if (data.settings.depressurizeAfterJob !== undefined) depressurizeAfterJob.value = data.settings.depressurizeAfterJob
+      if (data.settings.primePosition !== undefined) primePosition.value = data.settings.primePosition
+      if (data.settings.primeEnabled !== undefined) primeEnabled.value = data.settings.primeEnabled
 
       console.log(`Loaded ${originalPlacements.value.length} placements and ${originalFiducials.value.length} fiducials`)
       console.log('Calibration status:', {
@@ -218,7 +215,9 @@ export const useJobStore = defineStore('job', () => {
       retractionDegrees: retractionDegrees.value,
       dwellMilliseconds: dwellMilliseconds.value,
       dwellAdaptive: dwellAdaptive.value,
-      depressurizeAfterJob: depressurizeAfterJob.value
+      depressurizeAfterJob: depressurizeAfterJob.value,
+      primePosition: primePosition.value,
+      primeEnabled: primeEnabled.value
     }
 
     exportJobToFile(jobData)
@@ -673,6 +672,22 @@ export const useJobStore = defineStore('job', () => {
     await macros.depressurize()
   }
 
+  async function savePrimePosition() {
+    // Capture the current camera XY as the prime location.
+    // Z is computed from calibration data on demand (see calibratedPrimePosition).
+    const position = await serialStore.grabBoardPosition()
+    primePosition.value = {
+      x: parseFloat(position[0]),
+      y: parseFloat(position[1])
+    }
+    console.log('Prime position saved:', primePosition.value)
+  }
+
+  function clearPrimePosition() {
+    primePosition.value = null
+    console.log('Prime position cleared')
+  }
+
   async function extrude() {
     await macros.extrudePaste()
   }
@@ -880,6 +895,28 @@ export const useJobStore = defineStore('job', () => {
         'G90',
         `G0 Z${SAFE_Z_HEIGHT}`
       ])
+
+      // Extrude prime blob first if enabled and a position is set
+      if (primeEnabled.value && calibratedPrimePosition.value && !cancelled) {
+        console.log('Extruding prime blob at:', calibratedPrimePosition.value)
+
+        const primeX = calibratedPrimePosition.value.x + effectiveTipXoffset.value
+        const primeY = calibratedPrimePosition.value.y + effectiveTipYoffset.value
+        const primeZ = calibratedPrimePosition.value.z - EXTRUSION_HEIGHT
+
+        await serialStore.send([
+          `G0 X${primeX.toFixed(3)} Y${primeY.toFixed(3)}`,
+          `G0 Z${primeZ.toFixed(3)}`,
+          'G91',
+          `G0 B-${PRIME_DISPENSE_DEGREES}`,
+          `G0 B${PRIME_RETRACTION_DEGREES}`,
+          'G90',
+          `G4 P${PRIME_DWELL_MILLISECONDS}`,
+          `G0 Z${SAFE_Z_HEIGHT}`
+        ])
+
+        console.log('Prime blob completed')
+      }
 
       // Process each placement
       for (let i = 0; i < calibratedPlacements.value.length; i++) {
@@ -1115,6 +1152,8 @@ export const useJobStore = defineStore('job', () => {
     dwellMilliseconds,
     dwellAdaptive,
     depressurizeAfterJob,
+    primePosition,
+    primeEnabled,
     boardSide,
     currentPlacementIndex,
     lastNavigatedPlacementIndex,
@@ -1156,6 +1195,7 @@ export const useJobStore = defineStore('job', () => {
     calibratedPlacementIndices,
     calibratedPlacements,
     calibratedFiducials,
+    calibratedPrimePosition,
 
     // Methods
     importFromFile,
@@ -1182,6 +1222,8 @@ export const useJobStore = defineStore('job', () => {
     performTipCalibration,
     pressurize,
     depressurize,
+    savePrimePosition,
+    clearPrimePosition,
     extrude,
     startSlowExtrude,
     stopExtrude,
@@ -1208,6 +1250,8 @@ export const useJobStore = defineStore('job', () => {
       'dwellMilliseconds',
       'dwellAdaptive',
       'depressurizeAfterJob',
+      'primePosition',
+      'primeEnabled',
       'boardSide',
       'roughBoardMatrix',
       'fidCalMatrix',
