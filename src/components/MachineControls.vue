@@ -16,6 +16,15 @@
       <div>
         <Button type="secondary" text="Disable Steppers" @click="controls.disableSteppers" />
       </div>
+
+      <div>
+        <Button
+          type="secondary"
+          text="Test Prime"
+          :disabled="!job.isCalibrated || !job.primePosition"
+          @click="handleTestPrime"
+        />
+      </div>
     </div>
   </Card>
 </template>
@@ -30,6 +39,15 @@ import Card from './Card.vue'
 const serial = useSerialStore()
 const controls = useControlsStore()
 const job = useJobStore()
+
+async function handleTestPrime() {
+  try {
+    await job.runPrimeBlob()
+  } catch (error) {
+    console.error('Test prime failed:', error)
+    alert('Test prime failed: ' + error.message)
+  }
+}
 </script>
 
 <style scoped>

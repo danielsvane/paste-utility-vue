@@ -688,6 +688,36 @@ export const useJobStore = defineStore('job', () => {
     console.log('Prime position cleared')
   }
 
+  // Move to prime position, extrude prime blob, lift back to safe Z.
+  // Used both by runJob and the standalone "Test Prime" button.
+  async function runPrimeBlob() {
+    if (!calibratedPrimePosition.value) {
+      throw new Error('No prime position set')
+    }
+    if (!isCalibrated.value) {
+      throw new Error('Job is not calibrated')
+    }
+
+    const primeX = calibratedPrimePosition.value.x + effectiveTipXoffset.value
+    const primeY = calibratedPrimePosition.value.y + effectiveTipYoffset.value
+    const primeZ = calibratedPrimePosition.value.z - EXTRUSION_HEIGHT
+
+    await serialStore.send([
+      'G90',
+      `G0 Z${SAFE_Z_HEIGHT}`,
+      `G0 X${primeX.toFixed(3)} Y${primeY.toFixed(3)}`,
+      `G0 Z${primeZ.toFixed(3)}`,
+      'G91',
+      `G0 B-${PRIME_DISPENSE_DEGREES}`,
+      `G0 B${PRIME_RETRACTION_DEGREES}`,
+      'G90',
+      `G4 P${PRIME_DWELL_MILLISECONDS}`,
+      `G0 Z${SAFE_Z_HEIGHT}`
+    ])
+
+    console.log('Prime blob completed')
+  }
+
   async function extrude() {
     await macros.extrudePaste()
   }
@@ -898,24 +928,7 @@ export const useJobStore = defineStore('job', () => {
 
       // Extrude prime blob first if enabled and a position is set
       if (primeEnabled.value && calibratedPrimePosition.value && !cancelled) {
-        console.log('Extruding prime blob at:', calibratedPrimePosition.value)
-
-        const primeX = calibratedPrimePosition.value.x + effectiveTipXoffset.value
-        const primeY = calibratedPrimePosition.value.y + effectiveTipYoffset.value
-        const primeZ = calibratedPrimePosition.value.z - EXTRUSION_HEIGHT
-
-        await serialStore.send([
-          `G0 X${primeX.toFixed(3)} Y${primeY.toFixed(3)}`,
-          `G0 Z${primeZ.toFixed(3)}`,
-          'G91',
-          `G0 B-${PRIME_DISPENSE_DEGREES}`,
-          `G0 B${PRIME_RETRACTION_DEGREES}`,
-          'G90',
-          `G4 P${PRIME_DWELL_MILLISECONDS}`,
-          `G0 Z${SAFE_Z_HEIGHT}`
-        ])
-
-        console.log('Prime blob completed')
+        await runPrimeBlob()
       }
 
       // Process each placement
@@ -1224,6 +1237,7 @@ export const useJobStore = defineStore('job', () => {
     depressurize,
     savePrimePosition,
     clearPrimePosition,
+    runPrimeBlob,
     extrude,
     startSlowExtrude,
     stopExtrude,
